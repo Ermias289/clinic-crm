@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Clinic_CRM.DTOs.CompanySettingDTOs;
+using Clinic_CRM.Models;
 
 namespace Clinic_CRM.Profiles
 {
@@ -6,7 +8,9 @@ namespace Clinic_CRM.Profiles
     {
         public AutoMapperProfile()
         {
-            // Create your mappings here
+            // Company Setting Mappings 
+            CreateMap<CompanySetting, UpdateCompanySettingDto>();
+            CreateMap<UpdateCompanySettingDto, CompanySetting>();
         }
     }
 }

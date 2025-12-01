@@ -1,4 +1,7 @@
+using Clinic_CRM;
 using Clinic_CRM.ApplicationDbContext;
+using Clinic_CRM.Helpers;
+using Clinic_CRM.Profiles;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +12,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddScoped<SeedData>();
+AppServiceRegistration.AddAppServiceRegistration(builder.Services);
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 
 builder.Services.AddDbContext<Context>(options =>
 {
@@ -36,6 +41,7 @@ using (var scope = app.Services.CreateScope())
         {
             logger.LogInformation("No pending migrations. Database is up to date.");
         }
+        await scope.ServiceProvider.GetRequiredService<SeedData>().Seed();
     }
     catch (Exception ex)
     {
