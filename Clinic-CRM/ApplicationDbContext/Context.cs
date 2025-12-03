@@ -12,6 +12,7 @@ namespace Clinic_CRM.ApplicationDbContext
 
         public DbSet<User> Users { get; set; }
         public DbSet<CompanySetting> CompanySetting { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             

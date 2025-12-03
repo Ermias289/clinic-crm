@@ -1,4 +1,5 @@
 ﻿using Clinic_CRM.Services.CompanySettingServices;
+using Clinic_CRM.Services.UserServices;
 
 namespace Clinic_CRM
 {
@@ -7,6 +8,7 @@ namespace Clinic_CRM
         public static void AddAppServiceRegistration(IServiceCollection services)
         {
             services.AddScoped<ICompanySettingServices, CompanySettingService>();
+            services.AddScoped<IUserService, UserService>();
 
         }
     }

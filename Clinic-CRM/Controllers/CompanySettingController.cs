@@ -8,7 +8,7 @@ namespace Clinic_CRM.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class CompanySettingController : ControllerBase
     {
         private readonly ICompanySettingServices _companySettingServcies;
@@ -44,8 +44,5 @@ namespace Clinic_CRM.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
-        //[HttpDelete]
-        //public async Task<ActionResult> D
     }
 }

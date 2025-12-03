@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\UserDTOs\" />
+    <Folder Include="Services\UserRoleServices\" />
     <Folder Include="UploadedFiles\" />
   </ItemGroup>
 
