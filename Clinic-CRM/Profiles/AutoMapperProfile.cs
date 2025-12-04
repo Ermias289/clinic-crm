@@ -1,7 +1,11 @@
 ﻿using AutoMapper;
+using Clinic_CRM.DTOs.CardSettingDTOs;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
+using Clinic_CRM.DTOs.UserOnBoardingSettingDTOs;
+using Clinic_CRM.DTOs.UserRoleDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Models.Settings;
 
 namespace Clinic_CRM.Profiles
 {
@@ -25,6 +29,23 @@ namespace Clinic_CRM.Profiles
             // Company Setting Mappings 
             CreateMap<CompanySetting, UpdateCompanySettingDto>();
             CreateMap<UpdateCompanySettingDto, CompanySetting>();
+
+            // User role
+            CreateMap<UpdateUserRoleDTO, UserRole>();
+            CreateMap<UserRole, UpdateUserRoleDTO>();
+
+            //User OnBoarding Page
+            CreateMap<AddUserOnBoardingSettingDTO, UserOnBoardingSetting>();
+            CreateMap<UserOnBoardingSetting, AddUserOnBoardingSettingDTO>();
+            CreateMap<UpdateUserOnBoardingSettingDTO, UserOnBoardingSetting>();
+            CreateMap<UserOnBoardingSetting, UpdateUserOnBoardingSettingDTO>();
+
+            //Card Setting
+            CreateMap<AddCardSettingDTO, CardSetting>();
+            CreateMap<CardSetting, AddCardSettingDTO>();
+            CreateMap<UpdateCardSettingDTO, CardSetting>();
+            CreateMap<CardSetting, UpdateCardSettingDTO>();
+
         }
     }
 }

@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251204110406_roleUpdate")]
+    partial class roleUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,32 +25,7 @@ namespace Clinic_CRM.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Clinic_CRM.Models.Settings.CardSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ExpirationDuration")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CardSettings");
-                });
-
-            modelBuilder.Entity("Clinic_CRM.Models.Settings.CompanySetting", b =>
+            modelBuilder.Entity("Clinic_CRM.Models.CompanySetting", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -100,31 +78,6 @@ namespace Clinic_CRM.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CompanySetting");
-                });
-
-            modelBuilder.Entity("Clinic_CRM.Models.Settings.UserOnBoardingSetting", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PictureUploaded")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserOnBoardingSettings");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.User", b =>
@@ -195,46 +148,19 @@ namespace Clinic_CRM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("CanAddCardSetting")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanAddRole")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanAddUser")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanAddUserOnBoarding")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanEditCardSetting")
+                    b.Property<bool>("CanDeleteUser")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanEditCompanySettings")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanEditRole")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanEditUser")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanEditUserOnBoarding")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewCardSetting")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanViewCompanySettings")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewRole")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewUser")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewUserOnBoardingSetting")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("CreatedAt")

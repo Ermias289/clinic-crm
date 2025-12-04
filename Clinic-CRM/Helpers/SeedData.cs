@@ -5,6 +5,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Models.Settings;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using static Clinic_CRM.Helpers.Constants;
@@ -73,6 +74,13 @@ namespace Clinic_CRM.Helpers
                 new UserRole
                 {
                     Name = USER_ROLES.RECEPTIONIST,
+                },
+                new UserRole
+                {
+                    Name = USER_ROLES.PATIENT,
+                    CanAddUser = true,
+                    CanEditUser = true,
+                    CanViewUser = true,
                 }
             };
 

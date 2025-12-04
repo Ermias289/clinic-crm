@@ -2,10 +2,12 @@
 using System.Text;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.UserDTOs;
+using Clinic_CRM.Helpers;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Controllers
 {
@@ -27,16 +29,16 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                //var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();
 
-                //if (currentUser == null || (!currentUser.UserRole.IsAdmin && !currentUser.UserRole.CanCreateUser))
-                //    throw new UnauthorizedAccessException();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCompanySettings))
+                    throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.CreateUserAsync(dto));
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
         }
 

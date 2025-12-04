@@ -1,8 +1,12 @@
-﻿using Clinic_CRM.DTOs.CompanySettingDTOs;
+﻿using System.Reflection.Metadata;
+using Clinic_CRM.DTOs.CompanySettingDTOs;
+using Clinic_CRM.Helpers;
 using Clinic_CRM.Services.CompanySettingServices;
+using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Controllers
 {
@@ -12,10 +16,11 @@ namespace Clinic_CRM.Controllers
     public class CompanySettingController : ControllerBase
     {
         private readonly ICompanySettingServices _companySettingServcies;
-
-        public CompanySettingController(ICompanySettingServices companySettingServcies)
+        private readonly IUserService _userService;
+        public CompanySettingController(ICompanySettingServices companySettingServcies, IUserService userService)
         {
             _companySettingServcies = companySettingServcies;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -23,12 +28,17 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCompanySettings))
+                    throw new UnauthorizedAccessException();
+
                 return Ok(await _companySettingServcies.GetCompanySetting());
 
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return this.ParseException(ex);
             }
         }
 
@@ -37,11 +47,16 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanEditCompanySettings))
+                    throw new UnauthorizedAccessException();
+
                 return Ok(await _companySettingServcies.UpdateCompanySetting(updateCompanySettingDto));
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return this.ParseException(ex);
             }
         }
     }

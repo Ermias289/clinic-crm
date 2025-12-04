@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Clinic_CRM.Models
+namespace Clinic_CRM.Models.Settings
 {
     public class CompanySetting
     {

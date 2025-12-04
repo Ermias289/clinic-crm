@@ -1,5 +1,5 @@
 ﻿using Clinic_CRM.DTOs.CompanySettingDTOs;
-using Clinic_CRM.Models;
+using Clinic_CRM.Models.Settings;
 
 namespace Clinic_CRM.Services.CompanySettingServices
 {

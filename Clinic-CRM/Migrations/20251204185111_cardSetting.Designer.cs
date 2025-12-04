@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251204185111_cardSetting")]
+    partial class cardSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -195,9 +198,6 @@ namespace Clinic_CRM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("CanAddCardSetting")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanAddRole")
                         .HasColumnType("bit");
 
@@ -205,9 +205,6 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanAddUserOnBoarding")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanEditCardSetting")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanEditCompanySettings")
@@ -220,9 +217,6 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanEditUserOnBoarding")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewCardSetting")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewCompanySettings")

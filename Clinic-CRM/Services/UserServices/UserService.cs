@@ -8,6 +8,7 @@ using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Services.UserServices
 {
@@ -96,6 +97,20 @@ namespace Clinic_CRM.Services.UserServices
             user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(dto.Password));
             user.PasswordSalt = hmac.Key;
 
+            var role = _context.UserRoles
+                .FirstOrDefault(r => r.Id == dto.UserRoleId)
+                ??
+                throw new KeyNotFoundException("Role Not Found.");
+
+            if (role.Name == USER_ROLES.SUPER_ADMIN)
+            {
+                var superAdminExists = await _context.Users
+                    .AnyAsync(u => u.UserRole.Name == USER_ROLES.SUPER_ADMIN);
+
+                if (superAdminExists)
+                    throw new InvalidOperationException("There can only be one Super Admin.");
+            }
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -116,16 +131,40 @@ namespace Clinic_CRM.Services.UserServices
 
         public async Task<List<GetUserDTO>> GetAllUsersAsync()
         {
-            var users = await _context.Users
-                .ToListAsync();
+            var currentUser = await _context.Users
+                .Include(u => u.UserRole)
+                .Where(u => u.Id == GetCurrentUser().Id)
+                .FirstOrDefaultAsync();
 
-            var toReturn = _mapper.Map<List<GetUserDTO>>(users);
+            var users = _context.Users
+                .AsQueryable();
+
+            if (currentUser.UserRole.Name == USER_ROLES.PATIENT)
+            {
+                users = users.Where(x => x.Id == currentUser.Id);
+            }
+
+            var usersReturn = await users.ToListAsync();
+
+            var toReturn = _mapper.Map<List<GetUserDTO>>(usersReturn);
 
             return toReturn;
         }
 
         public async Task<GetUserDTO> GetUserByIdAsync(int id)
         {
+            var currentUser = await _context.Users
+               .Include(u => u.UserRole)
+               .Where(u => u.Id == GetCurrentUser().Id)
+               .FirstOrDefaultAsync();
+
+
+            if (currentUser.UserRole.Name == USER_ROLES.PATIENT)
+            {
+                if (id != currentUser.Id)
+                    throw new KeyNotFoundException("You don't have access to this user account.");
+            }
+
             var user = await _context.Users
                 .FirstOrDefaultAsync(x => x.Id == id)
                 ??
@@ -137,10 +176,24 @@ namespace Clinic_CRM.Services.UserServices
 
         public async Task<GetUserDTO> UpdateUserAsync(UpdateUserAccountDTO dto)
         {
+            var currentUser = await _context.Users
+             .Include(u => u.UserRole)
+             .Where(u => u.Id == GetCurrentUser().Id)
+             .FirstOrDefaultAsync();
+
+
+            if (currentUser.UserRole.Name == USER_ROLES.PATIENT)
+            {
+                if (dto.Id != currentUser.Id)
+                    throw new KeyNotFoundException("You don't have access to this user account.");
+            }
+
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == dto.Id)
                 ??
                 throw new KeyNotFoundException("User Not Found.");
+
+            
 
             user.Fullname = dto.FullName;
             user.FName = dto.FName;
@@ -156,6 +209,18 @@ namespace Clinic_CRM.Services.UserServices
 
         public async Task<bool> DeleteUserAsync(int id)
         {
+            var currentUser = await _context.Users
+             .Include(u => u.UserRole)
+             .Where(u => u.Id == GetCurrentUser().Id)
+             .FirstOrDefaultAsync();
+
+
+            if (currentUser.UserRole.Name == USER_ROLES.PATIENT)
+            {
+                if (id != currentUser.Id)
+                    throw new KeyNotFoundException("You don't have access to this user account.");
+            }
+
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Id == id)
                 ??

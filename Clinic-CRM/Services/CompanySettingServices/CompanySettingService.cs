@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
-using Clinic_CRM.Models;
+using Clinic_CRM.Models.Settings;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinic_CRM.Services.CompanySettingServices

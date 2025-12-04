@@ -1,8 +1,10 @@
 ﻿using Clinic_CRM.DTOs.UserDTOs;
+using Clinic_CRM.Helpers;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Controllers
 {
@@ -12,11 +14,11 @@ namespace Clinic_CRM.Controllers
     public class UserController : ControllerBase
     {
         IUserService _userService;
-        //IUserRoleService _userRoleService;
+        IUserService _userRoleService;
         public UserController(IUserService userService)
         {
             _userService = userService;
-            //_userRoleService = userRoleService;
+            _userRoleService = userService;
         }
 
         [HttpPost]
@@ -24,19 +26,19 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                //var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();
 
-                //if (currentUser == null || (!currentUser.UserRole.IsAdmin && !currentUser.UserRole.CanCreateUser))
-                //    throw new UnauthorizedAccessException();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUser))
+                    throw new UnauthorizedAccessException();
 
-                //if (!_userService.UserRole.IsAdmin && !_userService.UserRole.CanCreateUser)
-                //    throw new UnauthorizedAccessException();
+                if (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !_userService.UserRole.CanAddUser)
+                    throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.CreateUserAsync(dto));
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
         }
 
@@ -45,19 +47,19 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                //var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();
 
-                //if (currentUser == null || (!currentUser.UserRole.IsAdmin && !currentUser.UserRole.CanCreateUser))
-                //    throw new UnauthorizedAccessException();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUser))
+                    throw new UnauthorizedAccessException();
 
-                //if (!_userService.UserRole.IsAdmin && !_userService.UserRole.CanCreateUser)
-                //    throw new UnauthorizedAccessException();
+                if (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !_userService.UserRole.CanAddUser)
+                    throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.ImportUserAsync(dto));
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
         }
 
@@ -66,17 +68,17 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                //var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();
 
-                //if (currentUser == null || (!_userService.UserRole.IsAdmin && !_userService.UserRole.CanViewUsers))
-                //    throw new UnauthorizedAccessException();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewUser))
+                    throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.GetAllUsersAsync());
 
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
 
         }
@@ -86,17 +88,17 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                //var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();
 
-                //if (currentUser == null || (!currentUser.UserRole.IsAdmin && !currentUser.UserRole.CanViewUsers))
-                //    throw new UnauthorizedAccessException();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewUser))
+                    throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.GetUserByIdAsync(id));
 
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
 
         }
@@ -106,17 +108,17 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                //var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();
 
-                //if (currentUser == null || (!currentUser.UserRole.IsAdmin && !currentUser.UserRole.CanEditUser))
-                //    throw new UnauthorizedAccessException();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanEditUser))
+                    throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.UpdateUserAsync(dto));
 
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
         }
 
@@ -126,17 +128,17 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                //var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();
 
-                //if (currentUser == null || (!currentUser.UserRole.IsAdmin && !currentUser.UserRole.CanCreateUser))
-                //    throw new UnauthorizedAccessException();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUser))
+                    throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.DeleteUserAsync(id));
 
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
         }
     }
