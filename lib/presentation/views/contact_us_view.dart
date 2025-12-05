@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../core/theme/app_colors.dart';
@@ -10,6 +11,14 @@ class ContactUsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Set status bar to be visible
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
