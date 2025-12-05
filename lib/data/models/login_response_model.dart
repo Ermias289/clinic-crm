@@ -1,3 +1,5 @@
+import 'user_model.dart';
+
 class LoginResponseModel {
   final String token;
   final UserRoleModel userRole;
@@ -34,28 +36,3 @@ class UserRoleModel {
   }
 }
 
-class UserModel {
-  final int id;
-  final String username;
-  final String fullname;
-  final String email;
-  final String phoneNumber;
-
-  UserModel({
-    required this.id,
-    required this.username,
-    required this.fullname,
-    required this.email,
-    required this.phoneNumber,
-  });
-
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id'],
-      username: json['username'],
-      fullname: json['fullname'],
-      email: json['email'],
-      phoneNumber: json['phoneNumber'],
-    );
-  }
-}
