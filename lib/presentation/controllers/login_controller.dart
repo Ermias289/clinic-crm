@@ -21,6 +21,23 @@ class LoginController extends GetxController {
     }
 
     isLoading.value = true;
+    
+    // TEMPORARY: Mock login for testing without backend
+    // TODO: Remove this before production
+    if (emailController.text == 'aaa' && passwordController.text == 'aaa') {
+      await Future.delayed(const Duration(milliseconds: 500)); // Simulate API call
+      
+      // Mock user data
+      await box.write('token', 'mock_token_12345');
+      await box.write('user', 'Test User');
+      await box.write('userId', 1);
+      
+      isLoading.value = false;
+      Get.offAllNamed('/dashboard');
+      return;
+    }
+    // END TEMPORARY
+    
     try {
       final request = LoginRequestModel(
         phoneOrEmail: emailController.text,
