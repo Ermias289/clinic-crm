@@ -16,4 +16,9 @@ class UserRepositoryImpl implements UserRepository {
   Future<UserModel> getUserById(int id) async {
     return await remoteDataSource.getUserById(id);
   }
+
+  @override
+  Future<UserModel> updateUser(int id, Map<String, dynamic> data) async {
+    return await remoteDataSource.updateUser(id, data);
+  }
 }

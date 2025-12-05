@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../controllers/dashboard_controller.dart';
 import '../widgets/dashboard_card.dart';
 import '../../core/theme/app_colors.dart';
@@ -10,50 +11,115 @@ class DashboardView extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
+    final box = GetStorage();
+    final userName = box.read('user') ?? 'User';
+    
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Header with Gradient
             Container(
               decoration: const BoxDecoration(
                 gradient: AppColors.primaryGradient,
                 borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
               ),
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Top Row - Profile and Notification
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      Row(
                         children: [
-                          Text(
-                            "Dashboard",
-                            style: AppTextStyles.h2.copyWith(
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
                               color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 24,
+                              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                              child: Icon(
+                                Icons.person,
+                                color: AppColors.primaryBlue,
+                                size: 28,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Welcome back!",
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white.withOpacity(0.9),
-                            ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Welcome back,',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              Text(
+                                userName,
+                                style: AppTextStyles.h3.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        child: const Icon(
-                          Icons.person,
+                      IconButton(
+                        onPressed: () {
+                          Get.toNamed('/profile');
+                        },
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.settings_outlined,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Quick Stats Cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.people_outline,
+                          label: 'Patients',
+                          value: '0',
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatCard(
+                          icon: Icons.calendar_today_outlined,
+                          label: 'Appointments',
+                          value: '0',
                           color: Colors.white,
                         ),
                       ),
@@ -63,60 +129,108 @@ class DashboardView extends GetView<DashboardController> {
               ),
             ),
 
-            // Content
+            // Content Section
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    DashboardCard(
-                      icon: Icons.people_outline,
-                      title: 'Patients',
-                      iconColor: AppColors.primaryBlue,
-                      onTap: () {
-                        Get.snackbar('Info', 'Patients feature coming soon');
-                      },
+                    // Section Title
+                    Text(
+                      'Quick Actions',
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
                     ),
-                    DashboardCard(
-                      icon: Icons.calendar_today_outlined,
-                      title: 'Appointments',
-                      iconColor: AppColors.accentBlue,
-                      onTap: () {
-                        Get.snackbar('Info', 'Appointments feature coming soon');
-                      },
-                    ),
-                    DashboardCard(
-                      icon: Icons.medical_services_outlined,
-                      title: 'Treatments',
-                      iconColor: AppColors.successGreen,
-                      onTap: () {
-                        Get.snackbar('Info', 'Treatments feature coming soon');
-                      },
-                    ),
-                    DashboardCard(
-                      icon: Icons.analytics_outlined,
-                      title: 'Reports',
-                      iconColor: AppColors.warningOrange,
-                      onTap: () {
-                        Get.snackbar('Info', 'Reports feature coming soon');
-                      },
-                    ),
-                    DashboardCard(
-                      icon: Icons.settings_outlined,
-                      title: 'Settings',
-                      iconColor: AppColors.textSecondary,
-                      onTap: () {
-                        Get.snackbar('Info', 'Settings feature coming soon');
-                      },
-                    ),
-                    DashboardCard(
-                      icon: Icons.logout,
-                      title: 'Logout',
-                      iconColor: Colors.red.shade400,
-                      onTap: controller.logout,
+                    const SizedBox(height: 16),
+                    
+                    // Feature Grid
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.1,
+                      children: [
+                        DashboardCard(
+                          icon: Icons.people_outline,
+                          title: 'Patients',
+                          iconColor: AppColors.primaryBlue,
+                          onTap: () {
+                            Get.snackbar(
+                              'Coming Soon',
+                              'Patient management feature is under development',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                              colorText: AppColors.primaryBlue,
+                            );
+                          },
+                        ),
+                        DashboardCard(
+                          icon: Icons.calendar_today_outlined,
+                          title: 'Appointments',
+                          iconColor: AppColors.accentBlue,
+                          onTap: () {
+                            Get.snackbar(
+                              'Coming Soon',
+                              'Appointment scheduling feature is under development',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: AppColors.accentBlue.withOpacity(0.1),
+                              colorText: AppColors.accentBlue,
+                            );
+                          },
+                        ),
+                        DashboardCard(
+                          icon: Icons.medical_services_outlined,
+                          title: 'Treatments',
+                          iconColor: AppColors.successGreen,
+                          onTap: () {
+                            Get.snackbar(
+                              'Coming Soon',
+                              'Treatment management feature is under development',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: AppColors.successGreen.withOpacity(0.1),
+                              colorText: AppColors.successGreen,
+                            );
+                          },
+                        ),
+                        DashboardCard(
+                          icon: Icons.analytics_outlined,
+                          title: 'Reports',
+                          iconColor: AppColors.warningOrange,
+                          onTap: () {
+                            Get.snackbar(
+                              'Coming Soon',
+                              'Analytics and reports feature is under development',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: AppColors.warningOrange.withOpacity(0.1),
+                              colorText: AppColors.warningOrange,
+                            );
+                          },
+                        ),
+                        DashboardCard(
+                          icon: Icons.settings_outlined,
+                          title: 'Settings',
+                          iconColor: AppColors.textSecondary,
+                          onTap: () {
+                            Get.snackbar(
+                              'Coming Soon',
+                              'Settings feature is under development',
+                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: AppColors.textSecondary.withOpacity(0.1),
+                              colorText: AppColors.textSecondary,
+                            );
+                          },
+                        ),
+                        DashboardCard(
+                          icon: Icons.logout,
+                          title: 'Logout',
+                          iconColor: Colors.red.shade400,
+                          onTap: controller.logout,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -124,6 +238,49 @@ class DashboardView extends GetView<DashboardController> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 24,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: AppTextStyles.h2.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: color.withOpacity(0.9),
+            ),
+          ),
+        ],
       ),
     );
   }

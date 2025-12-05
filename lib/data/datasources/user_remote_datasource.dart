@@ -26,4 +26,27 @@ class UserRemoteDataSource {
 
     return UserModel.fromJson(response.body);
   }
+
+  Future<UserModel> updateUser(int id, Map<String, dynamic> data) async {
+    final response = await client.put('/api/User/$id', data);
+
+    if (response.hasError) {
+      throw Exception(response.statusText);
+    }
+
+    return UserModel.fromJson(response.body);
+  }
+
+  Future<void> changePassword(String phoneOrEmail, String oldPassword, String newPassword) async {
+    final response = await client.post('/api/Auth/changePassword', {
+      'phoneOrEmail': phoneOrEmail,
+      'password': oldPassword,
+      'newPassword': newPassword,
+      'reset': false,
+    });
+
+    if (response.hasError) {
+      throw Exception(response.statusText);
+    }
+  }
 }

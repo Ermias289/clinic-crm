@@ -28,9 +28,10 @@ class LoginController extends GetxController {
       );
       final response = await loginUseCase(request);
       
-      // Save token and user info
+      // Save token, user info, and userId
       await box.write('token', response.token);
-      await box.write('user', response.user.username); // Save minimal info or full object
+      await box.write('user', response.user.username);
+      await box.write('userId', response.user.id);
       
       Get.offAllNamed('/dashboard');
     } catch (e) {
