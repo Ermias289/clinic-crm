@@ -1,6 +1,9 @@
-﻿using Clinic_CRM.Services.CardSettingServices;
+﻿using Clinic_CRM.Services.BranchServices;
+using Clinic_CRM.Services.CardSettingServices;
+using Clinic_CRM.Services.CardTypeServices;
 using Clinic_CRM.Services.CompanySettingServices;
 using Clinic_CRM.Services.FileUploadServices;
+using Clinic_CRM.Services.PatientServices;
 using Clinic_CRM.Services.UserOnBoardingSettingServices;
 using Clinic_CRM.Services.UserRoleServices;
 using Clinic_CRM.Services.UserServices;
@@ -26,8 +29,17 @@ namespace Clinic_CRM
             //Card Setting
             services.AddScoped<ICardSettingService, CardSettingService>();
 
+            //Card Type
+            services.AddScoped<ICardTypeService, CardTypeService>();
+
             //File Upload
             services.AddScoped<IFileUploadService, FileUploadService>();
+
+            //Branch Setting
+            services.AddScoped<IBranchSettingService, BranchSettingService>();
+
+            //Patient
+            services.AddScoped<IPatientService, PatientServices>();
         }
     }
 }

@@ -7,7 +7,8 @@ namespace Clinic_CRM.Services.CardSettingServices
     {
         Task<CardSetting> AddCardSetting(AddCardSettingDTO dto);
         Task<CardSetting> UpdateCardSettingService(UpdateCardSettingDTO dto);
-        Task<CardSetting> GetCardSetting();
+        Task<List<CardSetting>> GetAllCardSettings();
         Task<CardSetting> DeleteCardSetting(int Id);
+        Task<CardSetting> GetCardSettingById(int Id);
     }
 }

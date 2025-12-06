@@ -29,6 +29,7 @@ namespace Clinic_CRM.Helpers
             await SeedCompanySetting();
             await SeedRoles();
             await SeedUser();
+            await SeedCardType();
 
 
         }
@@ -86,7 +87,7 @@ namespace Clinic_CRM.Helpers
 
             foreach(var role in roles)
             {
-                if (!existingRoles.Any(r => r.Name == role.Name))
+                if (!existingRoles.Any(r => r.Name.ToLower() == role.Name.ToLower()))
                 {
                     _context.UserRoles.Add(role);
                 }
@@ -130,6 +131,26 @@ namespace Clinic_CRM.Helpers
 
             await _context.SaveChangesAsync();
         }
+
+        async Task SeedCardType()
+        {
+            var exostingTypes = await _context.CardTypes.ToListAsync();
+            var cardTypes = new CardType[]
+            {
+                new CardType{Name = "Regular", Description = "Regular"}
+            };
+
+            foreach (var cardType in cardTypes)
+            {
+                if (!exostingTypes.Any(x => x.Name.ToLower() == cardType.Name.ToLower()))
+                {
+                    _context.CardTypes.Add(cardType);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
 
     }
 }

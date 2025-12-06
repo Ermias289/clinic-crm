@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Clinic_CRM.DTOs.BranchSettingDTOs;
 using Clinic_CRM.DTOs.CardSettingDTOs;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
+using Clinic_CRM.DTOs.PatientDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.DTOs.UserOnBoardingSettingDTOs;
 using Clinic_CRM.DTOs.UserRoleDTOs;
@@ -45,6 +47,18 @@ namespace Clinic_CRM.Profiles
             CreateMap<CardSetting, AddCardSettingDTO>();
             CreateMap<UpdateCardSettingDTO, CardSetting>();
             CreateMap<CardSetting, UpdateCardSettingDTO>();
+
+            //Patients
+            CreateMap<AddPatientDTO, Patient>();
+            CreateMap<Patient, AddPatientDTO>();
+            CreateMap<Patient, UpdatePatientDTO>();
+            CreateMap<UpdatePatientDTO, Patient>();
+
+            //Branch Setting
+            CreateMap<BranchSetting, AddBranchSettingDTO>();
+            CreateMap<AddBranchSettingDTO, BranchSetting>();
+            CreateMap<UpdateBranchSettingDTO, BranchSetting>();
+            CreateMap<BranchSetting, UpdateBranchSettingDTO>();
 
         }
     }

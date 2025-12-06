@@ -6,13 +6,8 @@ namespace Clinic_CRM.Models
     public class User
     {
         public int Id { get; set; }
-
         public string Username { get; set; } = string.Empty;
-
-        public string Fullname { get; set; } = string.Empty;
-
         public string FName { get; set; } = string.Empty;
-
         public string MName { get; set; } = string.Empty;
 
         public string LName { get; set; } = string.Empty;

@@ -4,7 +4,6 @@
     {
         public int Id { get; set; }
         public string Username { get; set; }
-        public string FullName { get; set; } = string.Empty;
 
         public string FName { get; set; } = string.Empty;
         public string MName { get; set; } = string.Empty;

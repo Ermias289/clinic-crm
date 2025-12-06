@@ -33,7 +33,25 @@ namespace Clinic_CRM.Controllers
                 if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCardSetting))
                     throw new UnauthorizedAccessException();
 
-                return Ok(await _cardSettingService.GetCardSetting());
+                return Ok(await _cardSettingService.GetAllCardSettings());
+            }
+            catch(Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+        [HttpGet("{Id}")]
+        public async Task<ActionResult> GetCardSettingsById(int Id)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCardSetting))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _cardSettingService.GetCardSettingById(Id));
             }
             catch(Exception ex)
             {

@@ -24,5 +24,9 @@ namespace Clinic_CRM.Services.UserServices
         Task<LogInReturnDTO> CreateToken(User user);
         Task<LogInReturnDTO> Login(LogInDTO dto);
         Task<bool> SetPassword(ChangePasswordDTO dto);
+
+        string GenerateTemporaryPassword(int length = 10);
+
+
     }
 }

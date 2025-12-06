@@ -3,8 +3,6 @@
     public class CreateUserAccountDTO
     {
         public string Username { get; set; }
-        public string Fullname { get; set; } = string.Empty;
-
         public string FName { get; set; } = string.Empty;
         public string MName { get; set; } = string.Empty;
         public string LName { get; set; } = string.Empty;

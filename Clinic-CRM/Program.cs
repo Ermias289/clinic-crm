@@ -102,7 +102,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "CRM API V1");
-        c.DefaultModelsExpandDepth(-1); // hide schemas
+        c.DefaultModelsExpandDepth(1); // hide schemas
         c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None); // collapse endpoints
     });
 }

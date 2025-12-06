@@ -111,6 +111,11 @@ namespace Clinic_CRM.Services.UserServices
                     throw new InvalidOperationException("There can only be one Super Admin.");
             }
 
+            var userE = await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber || u.Email == dto.Email);
+
+            if (userE)
+                throw new KeyNotFoundException("Phone Numebr or Email Is Already In Use.");
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
@@ -195,7 +200,6 @@ namespace Clinic_CRM.Services.UserServices
 
             
 
-            user.Fullname = dto.FullName;
             user.FName = dto.FName;
             user.LName = dto.LName;
             user.MName = dto.MName;
@@ -357,6 +361,26 @@ namespace Clinic_CRM.Services.UserServices
             _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public string GenerateTemporaryPassword(int length = 10)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var bytes = new byte[length];
+
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(bytes);
+            }
+
+            var result = new char[length];
+
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = chars[bytes[i] % chars.Length];
+            }
+
+            return new string(result);
         }
     }
 }

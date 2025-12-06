@@ -10,6 +10,10 @@
             public const string PATIENT = "Patient";
         }
 
-        
+        public class MEDICAL_PROFESSIONS_STATUS
+        {
+            public const string ACTIVE = "Active";
+            public const string INACTIVE = "InActive";
+        }
     }
 }
