@@ -2,6 +2,7 @@
 using Clinic_CRM.DTOs.BranchSettingDTOs;
 using Clinic_CRM.DTOs.CardSettingDTOs;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
+using Clinic_CRM.DTOs.DoctorScheduleDTOs;
 using Clinic_CRM.DTOs.PatientDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.DTOs.UserOnBoardingSettingDTOs;
@@ -59,6 +60,12 @@ namespace Clinic_CRM.Profiles
             CreateMap<AddBranchSettingDTO, BranchSetting>();
             CreateMap<UpdateBranchSettingDTO, BranchSetting>();
             CreateMap<BranchSetting, UpdateBranchSettingDTO>();
+
+            //Doctor Schedule
+            CreateMap<DoctorSchedule, AddDoctorScheduleDTO>();
+            CreateMap<AddDoctorScheduleDTO, DoctorSchedule>();
+            CreateMap<UpdateDoctorScheduleDTO, DoctorSchedule>();
+            CreateMap<DoctorSchedule, UpdateDoctorScheduleDTO>();
 
         }
     }
