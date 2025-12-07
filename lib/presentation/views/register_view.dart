@@ -157,6 +157,16 @@ class RegisterView extends GetView<RegisterController> {
                       obscureText: true,
                     ),
 
+                    const SizedBox(height: 16),
+
+                    // Confirm Password
+                    CustomTextField(
+                      controller: controller.confirmPasswordController,
+                      labelText: 'Confirm Password',
+                      prefixIcon: Icons.lock_outline,
+                      obscureText: true,
+                    ),
+
                     const SizedBox(height: 32),
 
                     // Register Button

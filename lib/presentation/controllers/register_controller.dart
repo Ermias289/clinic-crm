@@ -16,6 +16,7 @@ class RegisterController extends GetxController {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
   
   // Default user role ID (assuming 2 is for standard user, 1 for admin based on API ref)
   final int userRoleId = 2; 
@@ -77,6 +78,16 @@ class RegisterController extends GetxController {
     
     if (passwordController.text.length < 8) {
       Get.snackbar('Error', 'Password must be at least 8 characters long');
+      return;
+    }
+    
+    if (confirmPasswordController.text.isEmpty) {
+      Get.snackbar('Error', 'Please confirm your password');
+      return;
+    }
+    
+    if (passwordController.text != confirmPasswordController.text) {
+      Get.snackbar('Error', 'Passwords do not match');
       return;
     }
 
