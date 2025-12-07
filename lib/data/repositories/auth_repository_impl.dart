@@ -1,5 +1,5 @@
 import '../../domain/repositories/auth_repository.dart';
-import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/models/login_request_model.dart';
 import '../../data/models/login_response_model.dart';
 import '../../data/models/register_request_model.dart';

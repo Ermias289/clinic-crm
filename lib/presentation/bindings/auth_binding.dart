@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import '../../core/api_client.dart';
-import '../../data/datasources/auth_remote_datasource.dart';
+import '../../data/datasources/auth_remote_data_source.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/login_usecase.dart';
@@ -13,7 +13,7 @@ class AuthBinding extends Bindings {
   @override
   void dependencies() {
     Get.lazyPut(() => ApiClient());
-    Get.lazyPut(() => AuthRemoteDataSource());
+    Get.lazyPut<AuthRemoteDataSource>(() => AuthRemoteDataSourceImpl(apiClient: Get.find()));
     Get.lazyPut<AuthRepository>(() => AuthRepositoryImpl(remoteDataSource: Get.find()));
     Get.lazyPut(() => LoginUseCase(Get.find()));
     Get.lazyPut(() => RegisterUseCase(Get.find()));

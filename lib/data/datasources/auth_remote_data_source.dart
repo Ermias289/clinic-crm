@@ -17,19 +17,37 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<LoginResponseModel> login(LoginRequestModel request) async {
-    final response = await apiClient.post('/api/Auth/login', request.toJson());
-    if (response.hasError) {
-      throw Exception(response.statusText ?? 'Login failed');
+    print('🔐 Attempting login for: ${request.phoneOrEmail}');
+    print('🌐 API endpoint: ${apiClient.baseUrl}/api/Auth/login');
+    
+    try {
+      final response = await apiClient.post('/api/Auth/login', request.toJson());
+      print('📡 Response status: ${response.statusCode}');
+      print('📡 Response hasError: ${response.hasError}');
+      
+      if (response.hasError) {
+        print('❌ Login error: ${response.statusText}');
+        throw Exception(response.statusText ?? 'Login failed');
+      }
+      
+      print('✅ Login successful');
+      return LoginResponseModel.fromJson(response.body);
+    } catch (e) {
+      print('💥 Login exception: $e');
+      rethrow;
     }
-    return LoginResponseModel.fromJson(response.body);
   }
 
   @override
   Future<RegisterResponseModel> register(RegisterRequestModel request) async {
-    final response = await apiClient.post('/api/Auth/register', request.toJson());
-    if (response.hasError) {
-      throw Exception(response.statusText ?? 'Registration failed');
+    try {
+      final response = await apiClient.post('/api/Auth/register-patient', request.toJson());
+      if (response.hasError) {
+        throw Exception(response.body['message'] ?? response.statusText ?? 'Registration failed');
+      }
+      return RegisterResponseModel.fromJson(response.body);
+    } catch (e) {
+      throw Exception('Registration error: ${e.toString()}');
     }
-    return RegisterResponseModel.fromJson(response.body);
   }
 }

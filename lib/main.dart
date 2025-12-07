@@ -12,6 +12,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await dotenv.load(fileName: ".env");
+  
+  // Debug logging
+  print('📱 App starting...');
+  print('🔧 API_BASE_URL: ${dotenv.env['API_BASE_URL']}');
+  
   runApp(const MyApp());
 }
 

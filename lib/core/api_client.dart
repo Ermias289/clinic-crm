@@ -11,6 +11,10 @@ class ApiClient extends GetConnect {
     httpClient.baseUrl = baseUrl;
     httpClient.timeout = const Duration(seconds: 30);
     
+    // Debug logging
+    print('🌐 API Client initialized with baseUrl: $baseUrl');
+    
     AuthInterceptor.attach(httpClient);
+    super.onInit();
   }
 }

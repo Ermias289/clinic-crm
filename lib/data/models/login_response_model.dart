@@ -22,16 +22,16 @@ class LoginResponseModel {
 
 class UserRoleModel {
   final int id;
-  final String roleName;
-  final bool isAdmin;
+  final String name;
+  final bool? isAdmin;
 
-  UserRoleModel({required this.id, required this.roleName, required this.isAdmin});
+  UserRoleModel({required this.id, required this.name, this.isAdmin});
 
   factory UserRoleModel.fromJson(Map<String, dynamic> json) {
     return UserRoleModel(
       id: json['id'],
-      roleName: json['roleName'],
-      isAdmin: json['isAdmin'] ?? false,
+      name: json['name'],
+      isAdmin: json['isAdmin'],
     );
   }
 }
