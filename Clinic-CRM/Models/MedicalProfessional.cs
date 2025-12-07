@@ -13,7 +13,7 @@ namespace Clinic_CRM.Models
         [Phone]
         public string PhoneNumber { get; set; } = string.Empty;
 
-        public string ProfessionalName { get; set; } = string.Empty;
+        public string JobTitle { get; set; } = string.Empty;
         public string Specialty { get; set; } = string.Empty;
         public string LicenseNumber { get; set; } = string.Empty;
         public string EducationalBackground { get; set; } = string.Empty;
@@ -26,6 +26,6 @@ namespace Clinic_CRM.Models
         public ICollection<DoctorSchedule>? DoctorSchedules { get; set; }
         public ICollection<DentistryService>? DentistryServices { get; set; }
         public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set;}
+        public DateTime UpdatedAt { get; set; }
     }
 }

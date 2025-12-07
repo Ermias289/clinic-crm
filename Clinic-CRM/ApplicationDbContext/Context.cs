@@ -23,9 +23,21 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
         public DbSet<MedicalProfessional> MedicalProfessionals { get; set; }
         public DbSet<Card> Cards { get; set; }
+        public DbSet<WorkingDaySetting> Workdays { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
+            modelBuilder.Entity<Patient>()
+               .HasOne(c => c.User)
+               .WithMany()
+               .HasForeignKey(c => c.UserId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Card>()
+               .HasOne(c => c.Patient)
+               .WithMany()
+               .HasForeignKey(c => c.PatientId)
+               .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

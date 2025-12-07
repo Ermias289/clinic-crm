@@ -40,7 +40,10 @@ namespace Clinic_CRM.Services.CompanySettingServices
 
         public async Task<CompanySetting> GetCompanySetting()
         {
-            var companySetting = await _context.CompanySetting.FirstOrDefaultAsync();
+            var companySetting = await _context.CompanySetting
+                .Include(x => x.Workdays)
+                .Include(x => x.Branches)
+                .FirstOrDefaultAsync();
 
             return companySetting;
         }

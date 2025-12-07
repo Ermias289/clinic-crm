@@ -15,5 +15,30 @@
             public const string ACTIVE = "Active";
             public const string INACTIVE = "InActive";
         }
+
+        public static class DAYS_OF_WEEK
+        {
+            public const string MONDAY = "Monday";
+            public const string TUESDAY = "Tuesday";
+            public const string WEDNESDAY = "Wednesday";
+            public const string THURSDAY = "Thursday";
+            public const string FRIDAY = "Friday";
+            public const string SATURDAY = "Saturday";
+            public const string SUNDAY = "Sunday";
+        }
+
+        public static class CARD_STATUS
+        {
+            public const string ACTIVE = "Active";
+            public const string EXPIRED = "Expired";
+            public const string INACTIVE = "InActive";
+            public const string PENDING = "Pending";
+        }
+
+        public static class PREFIX
+        {
+            public const string CARD = "CARD";
+            public const int PADDING = 6;
+        }
     }
 }

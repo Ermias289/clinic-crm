@@ -44,6 +44,22 @@
         public bool CanAddPatient { get; set; } = false;    
         public bool CanEditPatient { get; set; } = false;   
         public bool CanViewPatient { get; set; } = false;
+
+
+        //Doctor Schedule
+        public bool CanAddDoctorSchedule { get; set; } = false;
+        public bool CanEditDoctorSchedule { get; set; } = false;
+        public bool CanViewDoctorSchedule { get; set; } = false;
+
+
+        //Working Day Setting
+        public bool CanAddWorkingSetting { get; set; } = false;
+        public bool CanEditWorkingSetting { get; set; } = false;
+
+
+        //Card
+        public bool CanRequestCard { get; set; } = false;
+       
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

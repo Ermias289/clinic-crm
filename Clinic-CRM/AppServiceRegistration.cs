@@ -1,12 +1,15 @@
 ﻿using Clinic_CRM.Services.BranchServices;
+using Clinic_CRM.Services.CardServices;
 using Clinic_CRM.Services.CardSettingServices;
 using Clinic_CRM.Services.CardTypeServices;
 using Clinic_CRM.Services.CompanySettingServices;
+using Clinic_CRM.Services.DoctorScheduleServices;
 using Clinic_CRM.Services.FileUploadServices;
 using Clinic_CRM.Services.PatientServices;
 using Clinic_CRM.Services.UserOnBoardingSettingServices;
 using Clinic_CRM.Services.UserRoleServices;
 using Clinic_CRM.Services.UserServices;
+using Clinic_CRM.Services.WorkingDaySettingServices;
 
 namespace Clinic_CRM
 {
@@ -40,6 +43,16 @@ namespace Clinic_CRM
 
             //Patient
             services.AddScoped<IPatientService, PatientServices>();
+
+            //Doctor Schedule
+            services.AddScoped<IDoctorScheduleServices, DoctorScheduleServices>();
+
+            //WorkingDaySetting
+            services.AddScoped<IWorkingDaySettingService, WorkingDaySettingService>();
+
+            //Card Services
+            services.AddScoped<ICardService, CardService>();
+
         }
     }
 }

@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251207204949_companyUPdate")]
+    partial class companyUPdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,17 +79,7 @@ namespace Clinic_CRM.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("ActivatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ActivatedById")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ActivationRemark")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CardNumber")
+                    b.Property<string>("CardNumebr")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -96,20 +89,7 @@ namespace Clinic_CRM.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("ExpiredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PatientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RequestRemark")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RequestedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("RequestedById")
+                    b.Property<int?>("PatientId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -119,15 +99,16 @@ namespace Clinic_CRM.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
 
-                    b.HasIndex("ActivatedById");
+                    b.HasKey("Id");
 
                     b.HasIndex("CardTypeId");
 
                     b.HasIndex("PatientId");
 
-                    b.HasIndex("RequestedById");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Cards");
                 });
@@ -695,9 +676,6 @@ namespace Clinic_CRM.Migrations
                     b.Property<bool>("CanEditWorkingSetting")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanRequestCard")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanViewBranchSetting")
                         .HasColumnType("bit");
 
@@ -807,10 +785,6 @@ namespace Clinic_CRM.Migrations
 
             modelBuilder.Entity("Clinic_CRM.Models.Card", b =>
                 {
-                    b.HasOne("Clinic_CRM.Models.User", "ActivatedBy")
-                        .WithMany()
-                        .HasForeignKey("ActivatedById");
-
                     b.HasOne("Clinic_CRM.Models.Settings.CardType", "CardType")
                         .WithMany()
                         .HasForeignKey("CardTypeId")
@@ -819,21 +793,17 @@ namespace Clinic_CRM.Migrations
 
                     b.HasOne("Clinic_CRM.Models.Patient", "Patient")
                         .WithMany()
-                        .HasForeignKey("PatientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("PatientId");
 
-                    b.HasOne("Clinic_CRM.Models.User", "RequestedBy")
+                    b.HasOne("Clinic_CRM.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("RequestedById");
-
-                    b.Navigation("ActivatedBy");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("CardType");
 
                     b.Navigation("Patient");
 
-                    b.Navigation("RequestedBy");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.DentistryService", b =>
@@ -869,8 +839,7 @@ namespace Clinic_CRM.Migrations
                 {
                     b.HasOne("Clinic_CRM.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });

@@ -82,7 +82,11 @@ namespace Clinic_CRM.Helpers
                     CanAddUser = true,
                     CanEditUser = true,
                     CanViewUser = true,
-                }
+                    CanRequestCard = true,
+                    CanEditPatient = true,
+                    CanViewPatient = true,
+                    CanAddPatient = true
+    }
             };
 
             foreach(var role in roles)

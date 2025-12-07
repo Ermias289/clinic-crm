@@ -69,7 +69,7 @@ namespace Clinic_CRM.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex);
+                return this.ParseException(ex);
             }
         }
 

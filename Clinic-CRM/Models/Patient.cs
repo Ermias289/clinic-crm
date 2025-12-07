@@ -25,7 +25,7 @@ namespace Clinic_CRM.Models
         public string City { get; set; } = string.Empty;
 
         [ForeignKey("UserId")]
-        public User User { get; set; }
+        public User? User { get; set; }
         public int? UserId { get; set; }
 
         public DateOnly DateOfBirth { get; set; }

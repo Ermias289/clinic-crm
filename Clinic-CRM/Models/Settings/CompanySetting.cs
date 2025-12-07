@@ -18,6 +18,8 @@ namespace Clinic_CRM.Models.Settings
         public string Country { get; set; } = string.Empty;
         public string SubCity { get; set; } = string.Empty;
         public ICollection<BranchSetting>? Branches { get; set; }
+        public ICollection<WorkingDaySetting>? Workdays { get; set; }
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
