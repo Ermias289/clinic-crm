@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251208195219_paymentModel")]
+    partial class paymentModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,7 +414,10 @@ namespace Clinic_CRM.Migrations
                     b.Property<DateTime>("CheckedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("CheckedById")
+                    b.Property<int>("CheckedById")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CheckedById1")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
@@ -464,11 +470,11 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("ApprovedById");
 
-                    b.HasIndex("CanceledById");
-
                     b.HasIndex("CardId");
 
                     b.HasIndex("CheckedById");
+
+                    b.HasIndex("CheckedById1");
 
                     b.HasIndex("RejectedById");
 
@@ -1013,21 +1019,23 @@ namespace Clinic_CRM.Migrations
                         .HasForeignKey("ApprovedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Clinic_CRM.Models.User", "CanceledBy")
-                        .WithMany()
-                        .HasForeignKey("CanceledById")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinic_CRM.Models.Card", "Card")
                         .WithMany()
                         .HasForeignKey("CardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Clinic_CRM.Models.User", "CheckedBy")
+                    b.HasOne("Clinic_CRM.Models.User", "CanceledBy")
                         .WithMany()
                         .HasForeignKey("CheckedById")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinic_CRM.Models.User", "CheckedBy")
+                        .WithMany()
+                        .HasForeignKey("CheckedById1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Clinic_CRM.Models.User", "RejectedBy")
                         .WithMany()

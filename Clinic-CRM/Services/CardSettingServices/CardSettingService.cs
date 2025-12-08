@@ -48,8 +48,9 @@ namespace Clinic_CRM.Services.CardSettingServices
             var setting = _mapper.Map<CardSetting>(dto);
             var existing = await _context.CardSettings.Where(x => x.CardTypeId == dto.CardTypeId).FirstOrDefaultAsync();
 
-            if (existing == null)
+            if (existing != null)
                 throw new Exception("Only One Card Setting Can be Set For This Card Type.");
+
             setting.CreatedAt = DateTime.UtcNow;
             _context.CardSettings.Add(setting);
             await _context.SaveChangesAsync();

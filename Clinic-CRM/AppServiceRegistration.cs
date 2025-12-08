@@ -6,6 +6,7 @@ using Clinic_CRM.Services.CompanySettingServices;
 using Clinic_CRM.Services.DoctorScheduleServices;
 using Clinic_CRM.Services.FileUploadServices;
 using Clinic_CRM.Services.PatientServices;
+using Clinic_CRM.Services.PaymentServices;
 using Clinic_CRM.Services.UserOnBoardingSettingServices;
 using Clinic_CRM.Services.UserRoleServices;
 using Clinic_CRM.Services.UserServices;
@@ -53,6 +54,8 @@ namespace Clinic_CRM
             //Card Services
             services.AddScoped<ICardService, CardService>();
 
+            //Payment 
+            services.AddScoped<IPaymentService, PaymentService>();
         }
     }
 }

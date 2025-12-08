@@ -5,6 +5,7 @@ using Clinic_CRM.DTOs.CardSettingDTOs;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
 using Clinic_CRM.DTOs.DoctorScheduleDTOs;
 using Clinic_CRM.DTOs.PatientDTOs;
+using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.DTOs.UserOnBoardingSettingDTOs;
 using Clinic_CRM.DTOs.UserRoleDTOs;
@@ -80,6 +81,10 @@ namespace Clinic_CRM.Profiles
             CreateMap<Card, RequestCardDTO>();
             CreateMap<UpdateCardDTO, Card>();
             CreateMap<Card, UpdateCardDTO>();
+
+            //Payment
+            CreateMap<Payment, CreatePaymentDTO>();
+            CreateMap<CreatePaymentDTO, Payment>();
 
         }
     }

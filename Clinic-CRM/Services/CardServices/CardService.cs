@@ -2,7 +2,9 @@
 using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.CardDTOs;
+using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Services.PaymentServices;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +17,14 @@ namespace Clinic_CRM.Services.CardServices
         private readonly IMapper _mapper;
         private readonly Context _context;
         private readonly IUserService _userService;
+        private readonly IPaymentService _paymentService;
 
-        public CardService(IMapper mapper, Context context, IUserService userService)
+        public CardService(IMapper mapper, Context context, IUserService userService, IPaymentService paymentService)
         {
             _mapper = mapper;
             _context = context;
             _userService = userService;
+            _paymentService = paymentService;
         }
 
         public async Task<Card> RequestCard(RequestCardDTO dto)
@@ -30,6 +34,7 @@ namespace Clinic_CRM.Services.CardServices
              .Include(u => u.UserRole)
              .Where(u => u.Id == _userService.GetCurrentUser().Id)
              .FirstOrDefaultAsync();
+            Console.WriteLine("Working...");
 
             card.CreatedAt = DateTime.UtcNow;
             card.CardNumber = _context.CompanySetting.AsNoTracking().FirstOrDefault()?.Prefix ?? "" +
@@ -37,6 +42,7 @@ namespace Clinic_CRM.Services.CardServices
 
             if (user == null)
                 throw new KeyNotFoundException("User Not Found. Please try again later.");
+            Console.WriteLine("Working...");
 
             if (user.UserRole.Name == USER_ROLES.PATIENT)
             {
@@ -45,9 +51,24 @@ namespace Clinic_CRM.Services.CardServices
                 card.Status = CARD_STATUS.PENDING;
             }
 
+            Console.WriteLine("Working...");
+            
+            var price = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
+            Console.WriteLine("Working...");
+
+          
 
             _context.Cards.Add(card);
             await _context.SaveChangesAsync();
+
+            var payCard = new CreatePaymentDTO
+            {
+                RequestedAmount = price.Price,
+                CardId = card.Id,
+            };
+            await _paymentService.CreatePayment(payCard);
+            Console.WriteLine("Working...");
+
             return card;
         }
         //Task<Card> UpdateCard(UpdateCardDTO dto);

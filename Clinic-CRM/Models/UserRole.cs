@@ -59,6 +59,17 @@
 
         //Card
         public bool CanRequestCard { get; set; } = false;
+
+
+        //Payment
+        public bool CanApproveCardPayment { get; set; } = false;
+        public bool CanCheckCardPayment { get; set; } = false;
+        public bool CanRejectCardPayment { get; set; } = false;
+        public bool CanViewCardPayment { get; set; } = false;
+        public bool CanDeleteCardPayment { get; set; } = false;
+        public bool CanCancelCardPayment { get; set; } = false;
+        public bool CanEditCardPayment { get; set; } = false;
+        public bool CanRequestCardPayment { get;set; } = false;
        
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

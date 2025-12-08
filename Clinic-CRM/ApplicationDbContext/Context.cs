@@ -24,6 +24,7 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<MedicalProfessional> MedicalProfessionals { get; set; }
         public DbSet<Card> Cards { get; set; }
         public DbSet<WorkingDaySetting> Workdays { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Patient>()
@@ -37,6 +38,32 @@ namespace Clinic_CRM.ApplicationDbContext
                .WithMany()
                .HasForeignKey(c => c.PatientId)
                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+               .HasOne(c => c.RequestedBy)
+               .WithMany()
+               .HasForeignKey(c => c.RequestedById)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+               .HasOne(c => c.ApprovedBy)
+               .WithMany()
+               .HasForeignKey(c => c.ApprovedById)
+               .OnDelete(DeleteBehavior.Restrict);
+            
+            modelBuilder.Entity<Payment>()
+               .HasOne(c => c.CanceledBy)
+               .WithMany()
+               .HasForeignKey(c => c.CanceledById)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Payment>()
+               .HasOne(c => c.CheckedBy)
+               .WithMany()
+               .HasForeignKey(c => c.CheckedById)
+               .OnDelete(DeleteBehavior.Restrict);
+
+
 
         }
     }

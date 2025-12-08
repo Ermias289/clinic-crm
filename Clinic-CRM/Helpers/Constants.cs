@@ -38,7 +38,17 @@
         public static class PREFIX
         {
             public const string CARD = "CARD";
+            public const string CARD_PAYMENT = "CP";
             public const int PADDING = 6;
+        }
+
+        public static class PAYMENT_STATUS
+        {
+            public const string REQUESTED = "Requested";
+            public const string APPROVED = "Approved";
+            public const string REJECTED = "Rejected";
+            public const string CANCELED = "Canceled";
+            public const string PARTIALLYPAID = "PartiallyPaid";
         }
     }
 }
