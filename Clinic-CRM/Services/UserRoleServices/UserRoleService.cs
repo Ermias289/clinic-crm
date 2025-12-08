@@ -79,5 +79,17 @@ namespace Clinic_CRM.Services.UserRoleServices
 
             return role;
         }
+
+        public async Task<UserRole> GetUserRoleByRoleName(string userRoleName)
+        {
+            var role = await _context.UserRoles
+                .Where(x => x.Name.ToLower() == userRoleName.ToLower())
+                .FirstOrDefaultAsync();
+
+            if (role == null)
+                throw new KeyNotFoundException("User Role Not Found");
+
+            return role;
+        }
     }
 }

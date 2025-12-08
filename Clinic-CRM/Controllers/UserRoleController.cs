@@ -14,7 +14,7 @@ namespace Clinic_CRM.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class UserRoleController : ControllerBase
     {
         private readonly IUserRoleService _userRoleService;
@@ -81,6 +81,19 @@ namespace Clinic_CRM.Controllers
 
                 return Ok(await _userRoleService.GetRoleByIdAsync(id));
 
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+        [HttpGet("getRoleByName")]
+        public async Task<IActionResult> GetRoleByName(string Name)
+        {
+            try
+            {
+                return Ok(await _userRoleService.GetUserRoleByRoleName(Name));
             }
             catch (Exception ex)
             {
