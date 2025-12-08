@@ -4,4 +4,5 @@ abstract class Routes {
   static const DASHBOARD = '/dashboard';
   static const ONBOARDING = '/onboarding';
   static const PROFILE = '/profile';
+  static const CARDS = '/cards';
 }

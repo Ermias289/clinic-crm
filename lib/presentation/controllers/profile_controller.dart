@@ -140,9 +140,10 @@ class ProfileController extends GetxController {
         colorText: Colors.green.shade900,
       );
     } catch (e) {
+      print('💥 Profile update error: $e');
       Get.snackbar(
         'Error',
-        'Failed to update profile: \${e.toString()}',
+        'Failed to update profile: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade100,
         colorText: Colors.red.shade900,
@@ -199,9 +200,10 @@ class ProfileController extends GetxController {
         colorText: Colors.green.shade900,
       );
     } catch (e) {
+      print('💥 Password change error: $e');
       Get.snackbar(
         'Error',
-        'Failed to change password: \${e.toString()}',
+        'Failed to change password: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade100,
         colorText: Colors.red.shade900,

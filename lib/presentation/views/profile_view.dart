@@ -21,15 +21,22 @@ class ProfileView extends GetView<ProfileController> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      body: SafeArea(
-        child: Obx(() {
-          if (controller.isLoading.value && controller.currentUser.value == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    return Obx(() => PopScope(
+      canPop: !controller.isEditing.value,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        controller.isEditing.value = false;
+        controller.loadUserProfile(); // Reset changes
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        body: SafeArea(
+          child: Builder(builder: (context) {
+            if (controller.isLoading.value && controller.currentUser.value == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          return Column(
+            return Column(
             children: [
               // Header - Fixed at top
               Container(
@@ -83,25 +90,63 @@ class ProfileView extends GetView<ProfileController> {
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      // Profile Avatar
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primaryBlue,
-                            width: 3,
+                      // Profile Avatar with Edit Button
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primaryBlue,
+                                width: 3,
+                              ),
+                            ),
+                            child: CircleAvatar(
+                              radius: 60,
+                              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                              child: Icon(
+                                Icons.person,
+                                size: 60,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
-                          child: Icon(
-                            Icons.person,
-                            size: 60,
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
+                          // Edit Profile Icon Button
+                          Obx(() => !controller.isEditing.value
+                              ? Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: controller.toggleEdit,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryBlue,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: AppColors.backgroundLight,
+                                          width: 3,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primaryBlue.withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.edit,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink()),
+                        ],
                       ),
 
                       const SizedBox(height: 16),
@@ -131,6 +176,7 @@ class ProfileView extends GetView<ProfileController> {
                         labelText: 'Username',
                         prefixIcon: Icons.person_outline,
                         keyboardType: TextInputType.text,
+                        enabled: controller.isEditing.value,
                       ),
 
                       const SizedBox(height: 16),
@@ -139,6 +185,7 @@ class ProfileView extends GetView<ProfileController> {
                         controller: controller.fNameController,
                         labelText: 'First Name',
                         prefixIcon: Icons.badge_outlined,
+                        enabled: controller.isEditing.value,
                       ),
 
                       const SizedBox(height: 16),
@@ -147,6 +194,7 @@ class ProfileView extends GetView<ProfileController> {
                         controller: controller.mNameController,
                         labelText: 'Middle Name',
                         prefixIcon: Icons.badge_outlined,
+                        enabled: controller.isEditing.value,
                       ),
 
                       const SizedBox(height: 16),
@@ -155,6 +203,7 @@ class ProfileView extends GetView<ProfileController> {
                         controller: controller.lNameController,
                         labelText: 'Last Name',
                         prefixIcon: Icons.badge_outlined,
+                        enabled: controller.isEditing.value,
                       ),
 
                       const SizedBox(height: 16),
@@ -164,6 +213,7 @@ class ProfileView extends GetView<ProfileController> {
                         labelText: 'Email',
                         prefixIcon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
+                        enabled: controller.isEditing.value,
                       ),
 
                       const SizedBox(height: 16),
@@ -173,6 +223,7 @@ class ProfileView extends GetView<ProfileController> {
                         labelText: 'Phone Number',
                         prefixIcon: Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
+                        enabled: controller.isEditing.value,
                       ),
 
                       const SizedBox(height: 32),
@@ -180,27 +231,38 @@ class ProfileView extends GetView<ProfileController> {
                       // Action Buttons
                       Obx(() {
                         if (controller.isEditing.value) {
-                          return CustomButton(
-                            text: 'Save Changes',
-                            onPressed: controller.updateProfile,
-                            isLoading: controller.isLoading.value,
-                            type: ButtonType.primary,
+                          return Column(
+                            children: [
+                              CustomButton(
+                                text: 'Save Changes',
+                                onPressed: controller.updateProfile,
+                                isLoading: controller.isLoading.value,
+                                type: ButtonType.primary,
+                              ),
+                              const SizedBox(height: 16),
+                              CustomButton(
+                                text: 'Cancel',
+                                onPressed: () {
+                                  controller.isEditing.value = false;
+                                  controller.loadUserProfile(); // Reload to reset fields
+                                },
+                                type: ButtonType.secondary,
+                              ),
+                            ],
                           );
                         } else {
                           return Column(
                             children: [
-                              CustomButton(
-                                text: 'Edit Profile',
-                                onPressed: controller.toggleEdit,
-                                type: ButtonType.secondary,
-                                icon: Icons.edit,
-                              ),
-                              const SizedBox(height: 16),
-                              CustomButton(
-                                text: 'Change Password',
+                              TextButton.icon(
                                 onPressed: controller.showChangePasswordDialog,
-                                type: ButtonType.secondary,
-                                icon: Icons.lock_outline,
+                                icon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textSecondary),
+                                label: Text(
+                                  'Change Password',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                               const SizedBox(height: 16),
                               CustomButton(
@@ -224,6 +286,6 @@ class ProfileView extends GetView<ProfileController> {
           );
         }),
       ),
-    );
+    )));
   }
 }

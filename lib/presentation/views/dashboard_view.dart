@@ -5,6 +5,7 @@ import '../controllers/dashboard_controller.dart';
 import '../widgets/dashboard_card.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../config/app_routes.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -209,6 +210,12 @@ class DashboardView extends GetView<DashboardController> {
                               colorText: AppColors.warningOrange,
                             );
                           },
+                        ),
+                        DashboardCard(
+                          icon: Icons.credit_card,
+                          title: 'My Cards',
+                          iconColor: AppColors.primaryBlue,
+                          onTap: () => Get.toNamed(Routes.CARDS),
                         ),
                         DashboardCard(
                           icon: Icons.settings_outlined,

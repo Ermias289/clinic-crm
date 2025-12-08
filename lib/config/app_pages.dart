@@ -7,6 +7,8 @@ import '../presentation/views/login_view.dart';
 import '../presentation/views/register_view.dart';
 import '../presentation/views/main_navigation_view.dart';
 import '../presentation/views/onboarding_view.dart';
+import '../presentation/views/card_selection_view.dart';
+import '../presentation/bindings/card_binding.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -31,6 +33,11 @@ class AppPages {
       name: Routes.DASHBOARD,
       page: () => const MainNavigationView(),
       binding: MainNavigationBinding(),
+    ),
+    GetPage(
+      name: Routes.CARDS,
+      page: () => const CardSelectionView(),
+      binding: CardBinding(),
     ),
   ];
 }
