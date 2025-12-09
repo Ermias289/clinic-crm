@@ -30,9 +30,63 @@ namespace Clinic_CRM.Helpers
             await SeedRoles();
             await SeedUser();
             await SeedCardType();
+            await SeedPatients();
 
 
         }
+
+        async Task SeedPatients()
+        {
+            // 1. Ensure Nexa (Super Admin) has a Patient record
+            var nexaUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == "Nexa");
+            if (nexaUser != null)
+            {
+                await CreatePatientForUser(nexaUser);
+            }
+
+            // 2. Repair any other users (like 'mamaruyirga...') who are missing Patient records
+            // Get all User IDs
+            var allUserIds = await _context.Users.Select(u => u.Id).ToListAsync();
+            // Get all Patient IDs
+            var allPatientIds = await _context.Patients.Select(p => p.Id).ToListAsync();
+            
+            // Find users who don't have a patient record
+            var missingPatientUserIds = allUserIds.Except(allPatientIds).ToList();
+
+            foreach (var userId in missingPatientUserIds)
+            {
+                var user = await _context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    await CreatePatientForUser(user);
+                }
+            }
+        }
+
+        async Task CreatePatientForUser(User user)
+        {
+            var existingPatient = await _context.Patients.AsNoTracking().FirstOrDefaultAsync(p => p.Id == user.Id);
+            if (existingPatient == null)
+            {
+                // Use raw SQL to force insert with specific ID (matching User ID)
+                var query = @"
+                    SET IDENTITY_INSERT Patients ON;
+                    INSERT INTO Patients (Id, FName, MName, LName, Email, PhoneNumber, Gender, Alergies, ChronicConditions, EmergencyContactName, EmergencyContactPhone, Address, SubCity, City, Country, CreatedAt, UpdatedAt, DateOfBirth, RequiresUserAccount, UserId)
+                    VALUES ({0}, {1}, '', {2}, {3}, {4}, 'Male', '', '', '', '', 'Addis Ababa', 'Bole', 'Addis Ababa', 'Ethiopia', GETDATE(), GETDATE(), '1990-01-01', 0, {0});
+                    SET IDENTITY_INSERT Patients OFF;";
+                
+                try
+                {
+                    await _context.Database.ExecuteSqlRawAsync(query, user.Id, user.FName ?? "Unknown", user.LName ?? "Unknown", user.Email ?? "noemail@test.com", user.PhoneNumber ?? "0000000000");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error creating patient for user {user.Username} (ID: {user.Id}): {ex.Message}");
+                    // Continue to next user
+                }
+            }
+        }
+
 
         async Task SeedCompanySetting()
         {
@@ -83,17 +137,25 @@ namespace Clinic_CRM.Helpers
                     CanEditUser = true,
                     CanViewUser = true,
                     CanRequestCard = true,
+                    CanViewCardSetting = true, // Added Permission
                     CanEditPatient = true,
                     CanViewPatient = true,
                     CanAddPatient = true
-    }
+                }
             };
 
             foreach(var role in roles)
             {
-                if (!existingRoles.Any(r => r.Name.ToLower() == role.Name.ToLower()))
+                var existingRole = existingRoles.FirstOrDefault(r => r.Name.ToLower() == role.Name.ToLower());
+                if (existingRole == null)
                 {
                     _context.UserRoles.Add(role);
+                }
+                else if (role.Name == USER_ROLES.PATIENT)
+                {
+                    // Force update permissions for Patient if they already exist
+                    existingRole.CanViewCardSetting = true;
+                    existingRole.CanRequestCard = true;
                 }
             }
 
@@ -136,12 +198,16 @@ namespace Clinic_CRM.Helpers
             await _context.SaveChangesAsync();
         }
 
+
+
         async Task SeedCardType()
         {
             var exostingTypes = await _context.CardTypes.ToListAsync();
             var cardTypes = new CardType[]
             {
-                new CardType{Name = "Regular", Description = "Regular"}
+                new CardType{Name = "Regular", Description = "Standard membership card"},
+                new CardType{Name = "Gold", Description = "Premium gold membership with priority access"},
+                new CardType{Name = "Platinum", Description = "Exclusive platinum membership with full benefits"}
             };
 
             foreach (var cardType in cardTypes)
@@ -152,6 +218,58 @@ namespace Clinic_CRM.Helpers
                 }
             }
 
+            await _context.SaveChangesAsync();
+            await SeedCardSetting();
+        }
+
+        async Task SeedCardSetting()
+        {
+            var existingSettings = await _context.CardSettings.Include(x => x.CardType).ToListAsync();
+            var regularType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Regular");
+            var goldType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Gold");
+            var platinumType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Platinum");
+
+            var settings = new List<CardSetting>();
+
+            if (regularType != null)
+            {
+                settings.Add(new CardSetting
+                {
+                    CardTypeId = regularType.Id,
+                    Price = 500,
+                    ExpirationDuration = 365 // 1 Year
+                });
+            }
+
+            if (goldType != null)
+            {
+                settings.Add(new CardSetting
+                {
+                    CardTypeId = goldType.Id,
+                    Price = 1500,
+                    ExpirationDuration = 365 // 1 Year
+                });
+            }
+
+            if (platinumType != null)
+            {
+                settings.Add(new CardSetting
+                {
+                    CardTypeId = platinumType.Id,
+                    Price = 3000,
+                    ExpirationDuration = 730 // 2 Years
+                });
+            }
+
+            foreach (var setting in settings)
+            {
+                // Check if a setting for this card type already exists with the same price/duration
+                if (!existingSettings.Any(x => x.CardTypeId == setting.CardTypeId && x.Price == setting.Price))
+                {
+                    _context.CardSettings.Add(setting);
+                }
+            }
+            
             await _context.SaveChangesAsync();
         }
 

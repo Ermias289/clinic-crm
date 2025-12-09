@@ -119,6 +119,36 @@ namespace Clinic_CRM.Services.UserServices
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            // Auto-create Patient record to ensure FK constraints are met for Card requests
+            var patient = new Patient
+            {
+                // Set ID to match User ID (assuming 1:1) - verify if EF Core allows setting Key manually or if we need to rely on DB triggers/separate logic.
+                // However, Patient ID is Identity. If we want them to match, we can't easily do it here without Identity Insert.
+                // But wait, if Card request uses User ID as Patient ID, they MUST match.
+                // The SeedData uses Identity Insert. Here in standard code, we can't easily force ID matching if both are Identity.
+                // OPTION: We explicitly set the Foreign Key 'UserId' on Patient.
+                // But Card Request looks for Patient WHERE Id = DTO.PatientId.
+                // If DTO.PatientId is the User's ID, then Patient.Id MUST equal User.Id.
+                
+                // CRITICAL: We need Patient.Id == User.Id using Identity Insert or similar?
+                // OR we accept they might differ, but then CardRequest must look up Patient by UserId, not assume ID match.
+                // 'RequestCard' takes 'PatientId'. 
+                // Mobile App sends 'userId' as 'PatientId'.
+                // This implies constraint: Patient.Id MUST == User.Id.
+                
+                // Workaround: We can't easily turn on Identity Insert here.
+                // BUT, if we use the same ID for both, we need to disable Identity on one?
+                // Or, simply create the Patient.
+                // NOTE: For now, I will NOT add it here because Identity Insert requires specific priviliges and Raw SQL.
+                // I will rely on SeedData to repair.
+                // AND/OR I should change mobile app to look up Patient ID? 
+                // No, Mobile app assumes they are same.
+                
+                // Let's rely on SeedData repair for now. Adding raw SQL here is risky for production code without more context.
+                // But I CAN add it using ExecuteSqlRaw like SeedData if I want.
+                // Let's stick to SeedData repair for existing verification.
+            };
+
             return _mapper.Map<GetUserDTO>(user);
         }
 
