@@ -3,8 +3,6 @@
     public class Appointment
     {
         public int Id { get; set; }
-        public User User { get; set; }
-        public int UserId { get; set; }
         public DentistryService DentistryService { get; set; }
         public int DentistryId { get; set; }
         public MedicalProfessional MedicalProfessionals { get; set; }

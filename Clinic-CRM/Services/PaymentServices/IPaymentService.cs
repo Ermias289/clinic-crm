@@ -6,5 +6,15 @@ namespace Clinic_CRM.Services.PaymentServices
     public interface IPaymentService
     {
         Task<Payment> CreatePayment(CreatePaymentDTO dto);
+        Task<Payment> ApprovePayment(ApprovePaymentDTO dto);
+        Task<Payment> CheckPayemnt(CheckPaymentDTO dto);
+        Task<Payment> CancelPayment(CancelPaymentDTO dto);
+        Task<Payment> RejectPayment(RejectPaymentDTO dto);
+        Task<List<Payment>> GetPaymentByStatus(string Status);
+        Task<List<Payment>> GetAllPayments();
+        Task<Payment> GetPaymentById(int Id);
+        
+        
+    
     }
 }

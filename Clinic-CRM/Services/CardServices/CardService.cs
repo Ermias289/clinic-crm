@@ -36,9 +36,12 @@ namespace Clinic_CRM.Services.CardServices
              .FirstOrDefaultAsync();
             Console.WriteLine("Working...");
 
+            var prefix = await _context.CompanySetting
+              .AsNoTracking()
+              .Select(x => x.Prefix)
+              .FirstOrDefaultAsync() ?? "";
+
             card.CreatedAt = DateTime.UtcNow;
-            card.CardNumber = _context.CompanySetting.AsNoTracking().FirstOrDefault()?.Prefix ?? "" +
-            PREFIX.CARD + card.Id.ToString().PadLeft(PREFIX.PADDING, '0') + "/" + card.CreatedAt.Year;
 
             if (user == null)
                 throw new KeyNotFoundException("User Not Found. Please try again later.");
@@ -61,17 +64,25 @@ namespace Clinic_CRM.Services.CardServices
             _context.Cards.Add(card);
             await _context.SaveChangesAsync();
 
+            card.CardNumber = $"{prefix}/{PREFIX.CARD}/{card.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{card.CreatedAt.Year}";
+
+
             var payCard = new CreatePaymentDTO
             {
                 RequestedAmount = price.Price,
                 CardId = card.Id,
             };
             await _paymentService.CreatePayment(payCard);
+
+            await _context.SaveChangesAsync();
             Console.WriteLine("Working...");
 
             return card;
         }
-        //Task<Card> UpdateCard(UpdateCardDTO dto);
+        public async Task<Card> UpdateCard(UpdateCardDTO dto)
+        {
+
+        }
         //Task<Card> GetCardByReference(string Ref);
         //Task<Card> GetCardById(int Id);
         //Task<Card> GetAllCards();

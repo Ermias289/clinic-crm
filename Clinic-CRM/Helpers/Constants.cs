@@ -47,6 +47,7 @@
             public const string REQUESTED = "Requested";
             public const string APPROVED = "Approved";
             public const string REJECTED = "Rejected";
+            public const string CHECKED = "Checked";
             public const string CANCELED = "Canceled";
             public const string PARTIALLYPAID = "PartiallyPaid";
         }
