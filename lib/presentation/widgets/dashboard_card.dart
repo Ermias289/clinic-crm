@@ -19,13 +19,17 @@ class DashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
+      color: AppColors.cardBackground,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          print('DEBUG: DashboardCard tapped: $title'); // Debug print
+          onTap();
+        },
         borderRadius: BorderRadius.circular(16),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            // color removed here to allow InkWell ripple
             borderRadius: BorderRadius.circular(16),
             boxShadow: AppColors.softShadow,
           ),

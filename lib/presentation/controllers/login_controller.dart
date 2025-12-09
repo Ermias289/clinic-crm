@@ -30,7 +30,8 @@ class LoginController extends GetxController {
       // Mock user data
       await box.write('token', 'mock_token_12345');
       await box.write('user', 'Test User');
-      await box.write('userId', 1);
+      await box.write('user', 'Test User');
+      await box.write('userId', 3); // Matches SeedData.cs User ID
       
       isLoading.value = false;
       Get.offAllNamed('/dashboard');

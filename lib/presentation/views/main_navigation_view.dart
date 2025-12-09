@@ -4,6 +4,7 @@ import '../controllers/main_navigation_controller.dart';
 import '../views/appointments_view.dart';
 import '../views/profile_view.dart';
 import '../views/contact_us_view.dart';
+import '../views/card_selection_view.dart';
 import '../../core/theme/app_colors.dart';
 
 class MainNavigationView extends GetView<MainNavigationController> {
@@ -13,6 +14,7 @@ class MainNavigationView extends GetView<MainNavigationController> {
   Widget build(BuildContext context) {
     final pages = [
       const AppointmentsView(),
+      const CardSelectionView(), // Added Card Page
       const ProfileView(),
       const ContactUsView(),
     ];
@@ -42,14 +44,19 @@ class MainNavigationView extends GetView<MainNavigationController> {
                       index: 0,
                     ),
                     _buildNavItem(
+                      icon: Icons.credit_card,
+                      label: 'Cards',
+                      index: 1,
+                    ),
+                    _buildNavItem(
                       icon: Icons.settings,
                       label: 'Settings',
-                      index: 1,
+                      index: 2,
                     ),
                     _buildNavItem(
                       icon: Icons.contact_support,
                       label: 'Contact',
-                      index: 2,
+                      index: 3,
                     ),
                   ],
                 ),

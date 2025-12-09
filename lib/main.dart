@@ -6,12 +6,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'config/app_pages.dart';
 import 'config/app_routes.dart';
 import 'core/theme/app_theme.dart';
+import 'core/api_client.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await dotenv.load(fileName: ".env");
+  Get.put(ApiClient());
+  
   
   // Debug logging
   print('📱 App starting...');

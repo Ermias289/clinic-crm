@@ -54,15 +54,20 @@ class CardController extends GetxController {
         return;
       }
 
+      print('DEBUG: Requesting card for user: $patientId');  // Debug print
+      
       final request = RequestCardModel(
         patientId: patientId, 
         cardTypeId: cardSetting.cardTypeId ?? 0,
         requestRemark: 'Requested from Mobile App',
       );
 
+      print('DEBUG: Calling repository...'); // Debug print
       await repository.requestCard(request);
+      print('DEBUG: Repository call success'); // Debug print
       Get.snackbar('Success', 'Card requested successfully!', snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
+      print('DEBUG: Error in requestCard: $e'); // Debug print
       Get.snackbar('Error', 'Failed to request card: $e', snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
