@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -7,6 +6,8 @@ import 'config/app_pages.dart';
 import 'config/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'core/api_client.dart';
+import 'presentation/views/request_card_details_view.dart';
+import 'presentation/views/request_card_payment_view.dart';
 
 
 void main() async {
@@ -36,7 +37,19 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       initialRoute: onboardingComplete ? Routes.LOGIN : Routes.ONBOARDING,
-      getPages: AppPages.routes,
+      getPages: [
+        ...AppPages.routes,
+        GetPage(
+          name: '/request-card-details',
+          page: () => const RequestCardDetailsView(),
+        ),
+        GetPage(
+          name: '/request-card-payment',
+          page: () => const RequestCardPaymentView(),
+        ),
+      ],
     );
   }
 }
+
+

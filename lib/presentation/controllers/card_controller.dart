@@ -1,4 +1,7 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../../data/models/card_setting_model.dart';
 import '../../data/models/request_card_model.dart';
 import '../../data/repositories/card_repository_impl.dart';
@@ -12,6 +15,14 @@ class CardController extends GetxController {
 
   final RxList<CardSettingModel> cardSettings = <CardSettingModel>[].obs;
   final RxBool isLoading = false.obs;
+
+  // Request Flow State
+  final Rx<CardSettingModel?> selectedCard = Rx<CardSettingModel?>(null);
+  final TextEditingController chronicDiseasesController = TextEditingController();
+  final Rx<File?> selectedPaymentProof = Rx<File?>(null);
+  
+  // Dependencies
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void onInit() {
@@ -31,7 +42,66 @@ class CardController extends GetxController {
     }
   }
 
-  Future<void> requestCard(CardSettingModel cardSetting) async {
+  void startRequest(CardSettingModel cardSetting) {
+    selectedCard.value = cardSetting;
+    chronicDiseasesController.clear();
+    selectedPaymentProof.value = null;
+    Get.toNamed('/request-card-details');
+  }
+
+  Future<void> pickPaymentProof() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        selectedPaymentProof.value = File(image.path);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to pick image: $e', snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  Future<void> submitRequest() async {
+    if (selectedPaymentProof.value == null) {
+       Get.snackbar('Required', 'Please upload a payment receipt.', snackPosition: SnackPosition.BOTTOM);
+       return;
+    }
+
+    try {
+      isLoading.value = true;
+      final patientId = _box.read('userId') ?? 0;
+      
+      // Mock Submission for now (Backend Deferred)
+      await Future.delayed(const Duration(seconds: 2)); // Simulate network
+
+      print('DEBUG: Submitting Request');
+      print('User ID: $patientId');
+      print('Card: ${selectedCard.value?.cardType?.name}');
+      print('Chronic Diseases: ${chronicDiseasesController.text}');
+      print('Payment Proof Path: ${selectedPaymentProof.value?.path}');
+
+      // Navigate back to success or home
+      // Close all dialogs/forms
+      Get.until((route) => Get.currentRoute == '/main-navigation');
+      
+      Get.snackbar(
+        'Success', 
+        'Your request has been submitted successfully! We will review your payment.', 
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 4),
+      );
+
+    } catch (e) {
+      print('DEBUG: Error in submitRequest: $e');
+      Get.snackbar('Error', 'Failed to submit request: $e', snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Legacy method - keeping for reference or if used elsewhere, but startRequest is new entry point
+  Future<void> requestCardLegacy(CardSettingModel cardSetting) async {
     try {
       isLoading.value = true;
       

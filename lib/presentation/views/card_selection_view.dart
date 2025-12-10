@@ -193,7 +193,7 @@ class CardSelectionView extends GetView<CardController> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () => controller.requestCard(card),
+                      onPressed: () => controller.startRequest(card),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
