@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251210132201_Appointment")]
+    partial class Appointment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,9 +51,6 @@ namespace Clinic_CRM.Migrations
 
                     b.Property<int?>("CompletedById")
                         .HasColumnType("int");
-
-                    b.Property<DateOnly>("Day")
-                        .HasColumnType("date");
 
                     b.Property<int>("DentistryId")
                         .HasColumnType("int");
@@ -320,12 +320,6 @@ namespace Clinic_CRM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CardId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CardId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("ChronicConditions")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -390,8 +384,6 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CardId1");
 
                     b.HasIndex("UserId");
 
@@ -1043,16 +1035,10 @@ namespace Clinic_CRM.Migrations
 
             modelBuilder.Entity("Clinic_CRM.Models.Patient", b =>
                 {
-                    b.HasOne("Clinic_CRM.Models.Card", "Card")
-                        .WithMany()
-                        .HasForeignKey("CardId1");
-
                     b.HasOne("Clinic_CRM.Models.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Card");
 
                     b.Navigation("User");
                 });

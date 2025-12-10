@@ -1,4 +1,5 @@
-﻿using Clinic_CRM.Services.BranchServices;
+﻿using Clinic_CRM.Services.AppointmentServices;
+using Clinic_CRM.Services.BranchServices;
 using Clinic_CRM.Services.CardServices;
 using Clinic_CRM.Services.CardSettingServices;
 using Clinic_CRM.Services.CardTypeServices;
@@ -56,6 +57,9 @@ namespace Clinic_CRM
 
             //Payment 
             services.AddScoped<IPaymentService, PaymentService>();
+
+            //Appointment
+            services.AddScoped <IAppointmentService, AppointmentService>();
         }
     }
 }

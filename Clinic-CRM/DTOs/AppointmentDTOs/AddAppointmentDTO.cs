@@ -1,6 +1,8 @@
-﻿namespace Clinic_CRM.Models
+﻿using Clinic_CRM.Models;
+
+namespace Clinic_CRM.DTOs.AppointmentDTOs
 {
-    public class Appointment
+    public class AddAppointmentDTO
     {
         public int Id { get; set; }
         public DentistryService DentistryService { get; set; }

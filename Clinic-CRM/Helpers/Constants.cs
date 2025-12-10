@@ -52,5 +52,13 @@
             public const string PARTIALLYPAID = "Partially-Paid";
             public const string AUTOPREPARED = "Auto-Prepared";
         }
+
+        public static class APPOINTMENT_STATUS
+        {
+            public const string SCHEDULED = "Scheduled";
+            public const string RESCHEDULED = "ReScheduled";
+            public const string CANCELED = "Canceled";
+            public const string COMPLETED = "Completed";
+        }
     }
 }

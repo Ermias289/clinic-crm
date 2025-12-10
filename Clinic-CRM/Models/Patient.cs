@@ -28,6 +28,9 @@ namespace Clinic_CRM.Models
         public User? User { get; set; }
         public int? UserId { get; set; }
 
+        public Card? Card { get; set; }
+        public int? CardId { get; set; }
+
         public DateOnly DateOfBirth { get; set; }
         public bool RequiresUserAccount { get; set; }
         public DateTime CreatedAt { get; set; }

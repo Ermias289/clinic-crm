@@ -74,6 +74,13 @@
         public bool CanRequestCardPayment { get;set; } = false;
 
 
+        //Appointment
+        public bool CanMakeAppointment { get; set; } = false;
+        public bool CanCancelAppointment { get; set; } = false;
+        public bool CanCompleteAppointment { get; set; } = false;
+        public bool CanViewAppointment { get; set; } = false;
+        public bool CanEditAppointment { get; set; } = false;
+
        
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

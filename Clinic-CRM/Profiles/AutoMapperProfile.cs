@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Clinic_CRM.DTOs.AppointmentDTOs;
 using Clinic_CRM.DTOs.BranchSettingDTOs;
 using Clinic_CRM.DTOs.CardDTOs;
 using Clinic_CRM.DTOs.CardSettingDTOs;
@@ -94,6 +95,12 @@ namespace Clinic_CRM.Profiles
             CreateMap<RejectPaymentDTO, Payment>();
             CreateMap<Payment, RejectPaymentDTO>();
 
+
+            //Appointment
+            CreateMap<Appointment, AddAppointmentDTO>();
+            CreateMap<AddAppointmentDTO, Appointment>();
+            CreateMap<UpdateAppointmentDTO, Appointment>();
+            CreateMap<Appointment, UpdateAppointmentDTO>();
         }
     }
 }

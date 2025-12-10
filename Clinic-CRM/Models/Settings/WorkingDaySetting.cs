@@ -15,6 +15,5 @@ namespace Clinic_CRM.Models.Settings
         [ForeignKey("CompanySettingId")]
         public CompanySetting CompanySetting { get; set; }
         public int CompanySettingId { get; set; }
-
     }
 }

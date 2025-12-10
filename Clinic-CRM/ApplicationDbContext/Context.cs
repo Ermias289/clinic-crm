@@ -25,6 +25,7 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<Card> Cards { get; set; }
         public DbSet<WorkingDaySetting> Workdays { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Appointment> Appointments { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Patient>()

@@ -56,20 +56,7 @@ namespace Clinic_CRM.Services.CardServices
 
             Console.WriteLine("Working...");
 
-            if (user.UserRole.Name == USER_ROLES.PATIENT)
-            {
-                card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
-                card.RequestRemark = "Requested By Patient.";
-                card.Status = CARD_STATUS.PENDING;
-
-                if (dto.PatientId == 0)
-                {
-                    var patient = _mapper.Map<AddPatientDTO>(dto.Patient);
-
-                    await _patientService.AddPatient(patient);
-
-                }
-            }
+           
 
             Console.WriteLine("Working...");
 
@@ -91,6 +78,22 @@ namespace Clinic_CRM.Services.CardServices
             };
             await _paymentService.AutoPrepare(payCard);
 
+            if (user.UserRole.Name == USER_ROLES.PATIENT)
+            {
+                card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
+                card.RequestRemark = "Requested By Patient.";
+                card.Status = CARD_STATUS.PENDING;
+
+                if (dto.PatientId == 0)
+                {
+                    var patient = _mapper.Map<AddPatientDTO>(dto.Patient);
+                    
+                    patient.CardId = card.Id;
+
+                    await _patientService.AddPatient(patient);
+
+                }
+            }
             await _context.SaveChangesAsync();
             Console.WriteLine("Working...");
 
