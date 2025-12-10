@@ -21,54 +21,77 @@ namespace Clinic_CRM.Services.AppointmentServices
 
         public async Task<Appointment> MakeAppointment(AddAppointmentDTO dto)
         {
+            // Map DTO to entity
             var app = _mapper.Map<Appointment>(dto);
 
-            var services = await _context.MedicalServices.FindAsync(app.DentistryId);
+            // Load the service
+            var service = await _context.MedicalServices.FindAsync(app.DentistryId);
+            
+            if (service == null)
+                throw new KeyNotFoundException("Medical service not found.");
 
-            var doc = await _context.MedicalProfessionals.FindAsync(app.MedicalProfessionalId);
+            // Load doctor with schedules
+            var doc = await _context.MedicalProfessionals
+                .Include(d => d.DoctorSchedules)
+                .FirstOrDefaultAsync(d => d.Id == app.MedicalProfessionalId);
 
             if (doc == null)
-                throw new KeyNotFoundException("Doctor Not Found.");
+                throw new KeyNotFoundException("Doctor not found.");
 
-            var schedule = doc.DoctorSchedules?.Where(x => x.StartTime <= app.ReservationTime && x.EndTime >= app.ReservationTime).ToList();
+            // Compute appointment weekday
+            var appointmentWeekDay = app.Day.DayOfWeek.ToString();
 
-            if (schedule == null)
-                throw new KeyNotFoundException("The doctor isn't available at this time. ");
+            // Check if doctor has schedule on that day and time
+            var scheduleAvailable = doc.DoctorSchedules?
+                .Any(s =>
+                    s.WeekDay.Equals(appointmentWeekDay, StringComparison.OrdinalIgnoreCase) &&
+                    s.StartTime <= app.ReservationTime &&
+                    s.EndTime >= app.ReservationTime
+                ) ?? false;
+
+            if (!scheduleAvailable)
+                throw new KeyNotFoundException("The doctor isn't available at this time.");
+
+            // Check company working hours
+            var companyOpen = await _context.Workdays
+                              .Where(x =>
+                                  x.Day.ToLower() == appointmentWeekDay.ToLower() &&
+                                  x.IsWorkingDay &&
+                                  x.OpeningTime <= app.ReservationTime &&
+                                  x.ClosingTime >= app.ReservationTime
+                              )
+                              .AnyAsync();
 
 
-            var company = await _context.Workdays
-                .Where(x => (x.Day.ToLower() == app.Day.DayOfWeek.ToString().ToLower())
-                            && (x.IsWorkingDay)
-                            && (x.OpeningTime <= app.ReservationTime
-                            && x.ClosingTime >= app.ReservationTime))
-                .ToListAsync();
+            if (!companyOpen)
+                throw new KeyNotFoundException("The clinic is not open on this date.");
 
-            if (company == null)
-                throw new KeyNotFoundException("We are not open on this date.");
-
+            // Load patient
             var patient = await _context.Patients.FindAsync(app.PatientId);
-
             if (patient == null)
-                throw new KeyNotFoundException("Patient Not Found.");
+                throw new KeyNotFoundException("Patient not found.");
 
-            var card = await _context.Cards.Where(x => x.Id == patient.CardId && x.PatientId == app.PatientId).FirstOrDefaultAsync();
+            // Check patient's card
+            var card = await _context.Cards
+                .Where(c => c.Id == patient.CardId && c.PatientId == app.PatientId)
+                .FirstOrDefaultAsync();
 
             if (card == null)
-                throw new KeyNotFoundException("You don't have a card please get a card to make appointment.");
+                throw new KeyNotFoundException("Patient does not have a card. Please get a card to make an appointment.");
 
             if (card.Status != CARD_STATUS.ACTIVE)
-                throw new KeyNotFoundException("Your Card Isn't Active. Please Activate your account to make payment.");
+                throw new KeyNotFoundException("Patient's card is not active. Please activate it before making a payment.");
 
+            // Set status
             app.Status = APPOINTMENT_STATUS.SCHEDULED;
 
+            // Add appointment
             _context.Appointments.Add(app);
             await _context.SaveChangesAsync();
 
-
             return app;
-
-
         }
+
         public async Task<Appointment> UpdateAppointment(UpdateAppointmentDTO dto)
         {
             var app = await _context.Appointments.FindAsync(dto.Id);
@@ -86,10 +109,12 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (doc == null)
                 throw new KeyNotFoundException("Doctor Not Found.");
 
-            var schedule = doc.DoctorSchedules?.Where(x => x.StartTime <= app.ReservationTime && x.EndTime >= app.ReservationTime).ToList();
+            var schedule = doc.DoctorSchedules?
+                         .Where(x => x.StartTime <= app.ReservationTime && x.EndTime >= app.ReservationTime)
+                         .ToList();
 
-            if (schedule == null)
-                throw new KeyNotFoundException("The doctor isn't available at this time. ");
+            if (schedule == null || !schedule.Any())
+                throw new KeyNotFoundException("The doctor isn't available at this time.");
 
             var company = await _context.Workdays
                 .Where(x => (x.Day == app.Day.DayOfWeek.ToString().ToLower())

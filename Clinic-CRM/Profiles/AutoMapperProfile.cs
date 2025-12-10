@@ -96,6 +96,8 @@ namespace Clinic_CRM.Profiles
             CreateMap<Payment, CancelPaymentDTO>();
             CreateMap<RejectPaymentDTO, Payment>();
             CreateMap<Payment, RejectPaymentDTO>();
+            CreateMap<AutoPaymentPrepareDTO, Payment>();
+            CreateMap<Payment, AutoPaymentPrepareDTO>();
 
 
             //Appointment

@@ -42,6 +42,7 @@ namespace Clinic_CRM.Services.PaymentServices
 
             var cardPrice = await _context.CardSettings.FirstOrDefaultAsync(x => x.CardTypeId == cardType.Id);
 
+            card.RequestedById = _userService.GetCurrentUser().Id;
 
             if (cardPrice == null)
                 throw new KeyNotFoundException("Card Price with the specified Card type does not exist.");
