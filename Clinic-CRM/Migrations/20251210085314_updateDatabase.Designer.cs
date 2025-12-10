@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251210085314_updateDatabase")]
+    partial class updateDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -782,9 +785,6 @@ namespace Clinic_CRM.Migrations
                     b.Property<bool>("CanEditBranchSetting")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanEditCard")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanEditCardPayment")
                         .HasColumnType("bit");
 
@@ -825,9 +825,6 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewBranchSetting")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewCard")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewCardPayment")

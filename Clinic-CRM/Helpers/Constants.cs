@@ -49,7 +49,8 @@
             public const string REJECTED = "Rejected";
             public const string CHECKED = "Checked";
             public const string CANCELED = "Canceled";
-            public const string PARTIALLYPAID = "PartiallyPaid";
+            public const string PARTIALLYPAID = "Partially-Paid";
+            public const string AUTOPREPARED = "Auto-Prepared";
         }
     }
 }

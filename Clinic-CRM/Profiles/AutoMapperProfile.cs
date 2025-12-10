@@ -85,6 +85,14 @@ namespace Clinic_CRM.Profiles
             //Payment
             CreateMap<Payment, CreatePaymentDTO>();
             CreateMap<CreatePaymentDTO, Payment>();
+            CreateMap<CheckPaymentDTO, Payment>();
+            CreateMap<Payment, CheckPaymentDTO>();
+            CreateMap<ApprovePaymentDTO, Payment>();
+            CreateMap<Payment, ApprovePaymentDTO>();
+            CreateMap<CancelPaymentDTO, Payment>();
+            CreateMap<Payment, CancelPaymentDTO>();
+            CreateMap<RejectPaymentDTO, Payment>();
+            CreateMap<Payment, RejectPaymentDTO>();
 
         }
     }

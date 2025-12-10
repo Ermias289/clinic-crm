@@ -4,6 +4,7 @@ using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.Models;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client.AppConfig;
 using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Services.PaymentServices
@@ -14,6 +15,8 @@ namespace Clinic_CRM.Services.PaymentServices
         private readonly Context _context;
         private readonly IUserService _userService;
 
+
+
         public PaymentService(IMapper mapper, Context context, IUserService userService)
         {
             _mapper = mapper;
@@ -21,9 +24,11 @@ namespace Clinic_CRM.Services.PaymentServices
             _userService = userService;
         }
 
-        public async Task<Payment> CreatePayment(CreatePaymentDTO dto)
+        public async Task<Payment> AutoPrepare(AutoPaymentPrepareDTO dto)
         {
             var payment = _mapper.Map<Payment>(dto);
+
+            payment.Status = PAYMENT_STATUS.AUTOPREPARED;
 
             var card = await _context.Cards.FindAsync(payment.CardId);
 
@@ -35,22 +40,65 @@ namespace Clinic_CRM.Services.PaymentServices
             if (cardType == null)
                 throw new KeyNotFoundException("Card Type Does not exist.");
 
-            
             var cardPrice = await _context.CardSettings.FirstOrDefaultAsync(x => x.CardTypeId == cardType.Id);
 
-           
 
             if (cardPrice == null)
                 throw new KeyNotFoundException("Card Price with the specified Card type does not exist.");
 
+            payment.ExpectedAmount = cardPrice.Price;
 
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+
+            return payment;
+        }
+
+
+        public async Task<Payment> CreatePayment(CreatePaymentDTO dto)
+        {
+            var payment = await _context.Payments.FindAsync(dto.Id);
+
+            _mapper.Map(payment, dto);
+
+            if (payment == null)
+                throw new KeyNotFoundException("Payment Not Prepared Yet.");
+
+            var card = await _context.Cards.FindAsync(payment.CardId);
+
+            if (card == null)
+                throw new KeyNotFoundException("Card Not Found");
+
+            if (card.Status == CARD_STATUS.ACTIVE)
+                throw new KeyNotFoundException("Card Is Already Active. No Pending Payment");
+          
             payment.Status = PAYMENT_STATUS.REQUESTED;
             payment.CreatedAt = DateTime.UtcNow;
-            payment.ExpectedAmount = cardPrice.Price - payment.PaidAmount; 
             payment.UnPaidAmount = payment.ExpectedAmount;
             payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
 
-            _context.Payments.Add(payment);
+            var existPayment = await _context.Payments.Where(x => x.CardId == dto.CardId)
+                .OrderBy(x => x.UnPaidAmount)
+                .ToListAsync();
+
+            if (existPayment.Any(x => x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status == PAYMENT_STATUS.REJECTED))
+                throw new KeyNotFoundException("There is incomplete payment process, please complete that first.");
+
+            if(existPayment.Any())
+            {
+                var existingPayment = existPayment.Where( x => x.Status == PAYMENT_STATUS.PARTIALLYPAID).FirstOrDefault();
+                var paid = existPayment.Sum(x => x.PaidAmount);
+
+                if(existingPayment != null)
+                {
+                    payment.ExpectedAmount = existingPayment.UnPaidAmount;
+                    payment.UnPaidAmount = existingPayment.UnPaidAmount;
+                    payment.PaidAmount = paid;
+                    payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
+                }
+            }
+
+            _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
 
             var prefix = await _context.CompanySetting
@@ -91,16 +139,19 @@ namespace Clinic_CRM.Services.PaymentServices
 
         public async Task<Payment> ApprovePayment(ApprovePaymentDTO dto)
         {
+
             var payment = await _context.Payments.FindAsync(dto.Id);
 
             if (payment == null)
                 throw new KeyNotFoundException("Payment Request Not Found.");
-
+            _mapper.Map(dto, payment);
             if (payment.Status == PAYMENT_STATUS.REJECTED)
                 throw new KeyNotFoundException("Payment request has already been rejected.");
 
             if (payment.Status != PAYMENT_STATUS.CHECKED)
                 throw new KeyNotFoundException("Payment should be checked first to be approved.");
+
+            var card = await _context.Cards.FindAsync(payment.CardId);
 
             payment.ApprovedBy = _userService.GetCurrentUserNoInclude();
             payment.ApprovedAt = DateTime.UtcNow;
@@ -114,10 +165,13 @@ namespace Clinic_CRM.Services.PaymentServices
             }
             else 
             {
-                payment.Status = PAYMENT_STATUS.APPROVED;    
+                if (card == null)
+                    throw new KeyNotFoundException("Card Not Found.");
+
+                payment.Status = PAYMENT_STATUS.APPROVED;
+                card.Status = CARD_STATUS.ACTIVE;
             }
 
-             _mapper.Map(dto, payment);
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
            
@@ -159,7 +213,7 @@ namespace Clinic_CRM.Services.PaymentServices
                 throw new KeyNotFoundException("Payment request has already been rejected.");
 
             if (payment.Status != PAYMENT_STATUS.CHECKED || payment.Status != PAYMENT_STATUS.REQUESTED)
-                throw new KeyNotFoundException("Payment should be either on checked or requested status to cancel.");
+                throw new KeyNotFoundException("Payment should be either on checked or requested status to reject.");
 
             payment.Status = PAYMENT_STATUS.REJECTED;
             payment.RejectedById = _userService.GetCurrentUserNoInclude().Id;

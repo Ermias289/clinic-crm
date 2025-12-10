@@ -31,13 +31,17 @@ namespace Clinic_CRM.Services.PatientServices
 
             var User = await _context.Users.Where(x => x.Id == dto.UserId).FirstOrDefaultAsync();
 
-           
+            var existingPatient = await _context.Patients.Where(x => x.UserId ==_userService.GetCurrentUser().Id).FirstOrDefaultAsync();
 
+            if (existingPatient != null)
+                throw new KeyNotFoundException("User already registered as patient.");
 
             if (_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
             {
+                Console.WriteLine("It works here on if");
                 if (User == null)
                     throw new KeyNotFoundException("User Account Not Found.");
+
                 patient.FName = User.FName;
                 patient.MName = User.MName;
                 patient.LName = User.LName;

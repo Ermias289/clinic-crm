@@ -2,8 +2,10 @@
 using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.CardDTOs;
+using Clinic_CRM.DTOs.PatientDTOs;
 using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Services.PatientServices;
 using Clinic_CRM.Services.PaymentServices;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -18,22 +20,26 @@ namespace Clinic_CRM.Services.CardServices
         private readonly Context _context;
         private readonly IUserService _userService;
         private readonly IPaymentService _paymentService;
+        private readonly IPatientService _patientService;
 
-        public CardService(IMapper mapper, Context context, IUserService userService, IPaymentService paymentService)
+        public CardService(IMapper mapper, Context context, IUserService userService, IPaymentService paymentService, IPatientService patientService)
         {
             _mapper = mapper;
             _context = context;
             _userService = userService;
             _paymentService = paymentService;
+            _patientService = patientService;
         }
 
         public async Task<Card> RequestCard(RequestCardDTO dto)
         {
             var card = _mapper.Map<Card>(dto);
+
             var user = await _context.Users
              .Include(u => u.UserRole)
              .Where(u => u.Id == _userService.GetCurrentUser().Id)
              .FirstOrDefaultAsync();
+
             Console.WriteLine("Working...");
 
             var prefix = await _context.CompanySetting
@@ -45,6 +51,9 @@ namespace Clinic_CRM.Services.CardServices
 
             if (user == null)
                 throw new KeyNotFoundException("User Not Found. Please try again later.");
+
+            var existingCard = await _context.Cards.Where(x => x.PatientId == dto.PatientId).FirstOrDefaultAsync();
+
             Console.WriteLine("Working...");
 
             if (user.UserRole.Name == USER_ROLES.PATIENT)
@@ -52,14 +61,22 @@ namespace Clinic_CRM.Services.CardServices
                 card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
                 card.RequestRemark = "Requested By Patient.";
                 card.Status = CARD_STATUS.PENDING;
+
+                if (dto.PatientId == 0)
+                {
+                    var patient = _mapper.Map<AddPatientDTO>(dto.Patient);
+
+                    await _patientService.AddPatient(patient);
+
+                }
             }
 
             Console.WriteLine("Working...");
-            
+
             var price = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
             Console.WriteLine("Working...");
 
-          
+
 
             _context.Cards.Add(card);
             await _context.SaveChangesAsync();
@@ -67,24 +84,51 @@ namespace Clinic_CRM.Services.CardServices
             card.CardNumber = $"{prefix}/{PREFIX.CARD}/{card.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{card.CreatedAt.Year}";
 
 
-            var payCard = new CreatePaymentDTO
+            var payCard = new AutoPaymentPrepareDTO
             {
                 RequestedAmount = price.Price,
                 CardId = card.Id,
             };
-            await _paymentService.CreatePayment(payCard);
+            await _paymentService.AutoPrepare(payCard);
 
             await _context.SaveChangesAsync();
             Console.WriteLine("Working...");
 
             return card;
         }
+
         public async Task<Card> UpdateCard(UpdateCardDTO dto)
         {
+            var card = await _context.Cards.FindAsync(dto.Id);
 
+            _mapper.Map(card, dto);
+
+            await _patientService.UpdatePatient(dto.PatientDTO);
+            _context.Cards.Update(card);
+
+            return card;
         }
-        //Task<Card> GetCardByReference(string Ref);
-        //Task<Card> GetCardById(int Id);
-        //Task<Card> GetAllCards();
+        public async Task<Card> GetCardByReference(string Ref)
+        {
+            var card = await _context.Cards.Where(x => x.CardNumber == Ref).FirstOrDefaultAsync();
+
+            if (card == null)
+                throw new KeyNotFoundException("Card Not Found.");
+
+            return card;
+        }
+        public async Task<Card> GetCardById(int Id)
+        {
+            var card = await _context.Cards.FindAsync(Id);
+            
+            if (card == null)
+                throw new KeyNotFoundException("Card Not Found.");
+
+            return card;
+        }
+       public async Task<List<Card>> GetAllCards()
+       {
+            return await _context.Cards.ToListAsync();
+       }
     }
 }

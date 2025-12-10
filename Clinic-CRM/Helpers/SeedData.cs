@@ -140,7 +140,12 @@ namespace Clinic_CRM.Helpers
                     CanViewCardSetting = true, // Added Permission
                     CanEditPatient = true,
                     CanViewPatient = true,
-                    CanAddPatient = true
+                    CanAddPatient = true,
+                    CanRequestCardPayment = true,
+                    CanViewCardPayment = true,
+                    CanCancelCardPayment = true,
+                    CanViewCard = true,
+                    CanEditCard = true
                 }
             };
 
