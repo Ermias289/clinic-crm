@@ -81,7 +81,17 @@
         public bool CanViewAppointment { get; set; } = false;
         public bool CanEditAppointment { get; set; } = false;
 
-       
+        //Medical Professional
+        public bool CanAddMedicalProfessional { get; set; } = false;
+        public bool CanEditMedicalProfessional { get; set; } = false;
+        public bool CanViewMedicalProfessional { get; set; } = false;
+
+
+        //Medical Services
+        public bool CanAddMedicalService { get; set; } = false;
+        public bool CanUpdateMedicalService { get; set; } = false;
+        public bool CanViewMedicalService { get; set; } = false;
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

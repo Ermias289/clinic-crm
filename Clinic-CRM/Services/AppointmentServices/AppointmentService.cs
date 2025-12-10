@@ -23,7 +23,7 @@ namespace Clinic_CRM.Services.AppointmentServices
         {
             var app = _mapper.Map<Appointment>(dto);
 
-            var services = await _context.DentistryServices.FindAsync(app.DentistryId);
+            var services = await _context.MedicalServices.FindAsync(app.DentistryId);
 
             var doc = await _context.MedicalProfessionals.FindAsync(app.MedicalProfessionalId);
 
@@ -72,7 +72,7 @@ namespace Clinic_CRM.Services.AppointmentServices
         public async Task<Appointment> UpdateAppointment(UpdateAppointmentDTO dto)
         {
             var app = await _context.Appointments.FindAsync(dto.Id);
-            var services = await _context.DentistryServices.FindAsync(app.DentistryId);
+            var services = await _context.MedicalServices.FindAsync(app.DentistryId);
 
 
             if (app.Day != dto.Day || app.ReservationTime != app.ReservationTime)

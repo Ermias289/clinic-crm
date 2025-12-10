@@ -6,6 +6,8 @@ using Clinic_CRM.Services.CardTypeServices;
 using Clinic_CRM.Services.CompanySettingServices;
 using Clinic_CRM.Services.DoctorScheduleServices;
 using Clinic_CRM.Services.FileUploadServices;
+using Clinic_CRM.Services.MedicalProfessionalServices;
+using Clinic_CRM.Services.MedicalServices;
 using Clinic_CRM.Services.PatientServices;
 using Clinic_CRM.Services.PaymentServices;
 using Clinic_CRM.Services.UserOnBoardingSettingServices;
@@ -60,6 +62,12 @@ namespace Clinic_CRM
 
             //Appointment
             services.AddScoped <IAppointmentService, AppointmentService>();
+        
+            //Medical Professional
+            services.AddScoped<IMedicalProfessionalService, MedicalProfessionalService>();
+
+            //Medical Service
+            services.AddScoped<IMedicalService, MedicalServices>();
         }
     }
 }

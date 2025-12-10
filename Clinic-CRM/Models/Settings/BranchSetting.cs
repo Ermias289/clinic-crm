@@ -13,7 +13,7 @@ namespace Clinic_CRM.Models.Settings
         public string City { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
         public ICollection<Appointment>? Appointments { get; set; }
-        public ICollection<DentistryService>? DentistryServices { get; set; }
+        public ICollection<MedicalService>? DentistryServices { get; set; }
         public ICollection<DoctorSchedule>? DoctorSchedules { get; set; }
         public ICollection<MedicalProfessional>? MedicalProfessionals { get; set; }
         //public ICollection<>

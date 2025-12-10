@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251210202006_Medical")]
+    partial class Medical
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -205,6 +208,9 @@ namespace Clinic_CRM.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("DentistryServices")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("EducationalBackground")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -285,6 +291,9 @@ namespace Clinic_CRM.Migrations
 
                     b.Property<int>("DurationInMinutes")
                         .HasColumnType("int");
+
+                    b.Property<string>("MedicalProfessionals")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -941,21 +950,6 @@ namespace Clinic_CRM.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("MedicalProfessionalMedicalService", b =>
-                {
-                    b.Property<int>("MedicalProfessionalsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MedicalServicesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("MedicalProfessionalsId", "MedicalServicesId");
-
-                    b.HasIndex("MedicalServicesId");
-
-                    b.ToTable("MedicalProfessionalMedicalService");
-                });
-
             modelBuilder.Entity("Clinic_CRM.Models.Appointment", b =>
                 {
                     b.HasOne("Clinic_CRM.Models.Settings.BranchSetting", null)
@@ -1157,21 +1151,6 @@ namespace Clinic_CRM.Migrations
                         .IsRequired();
 
                     b.Navigation("UserRole");
-                });
-
-            modelBuilder.Entity("MedicalProfessionalMedicalService", b =>
-                {
-                    b.HasOne("Clinic_CRM.Models.MedicalProfessional", null)
-                        .WithMany()
-                        .HasForeignKey("MedicalProfessionalsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Clinic_CRM.Models.MedicalService", null)
-                        .WithMany()
-                        .HasForeignKey("MedicalServicesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.MedicalProfessional", b =>

@@ -2,7 +2,7 @@
 
 namespace Clinic_CRM.Models
 {
-    public class DentistryService
+    public class MedicalService
     {
         [Key]
         public int Id { get; set; }

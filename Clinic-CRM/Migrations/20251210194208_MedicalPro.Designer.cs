@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251210194208_MedicalPro")]
+    partial class MedicalPro
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,6 +155,45 @@ namespace Clinic_CRM.Migrations
                     b.ToTable("Cards");
                 });
 
+            modelBuilder.Entity("Clinic_CRM.Models.DentistryService", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("BranchSettingId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DurationInMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ServicePicture")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchSettingId");
+
+                    b.ToTable("DentistryServices");
+                });
+
             modelBuilder.Entity("Clinic_CRM.Models.DoctorSchedule", b =>
                 {
                     b.Property<int>("Id")
@@ -204,6 +246,12 @@ namespace Clinic_CRM.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("DentistryServiceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DentistryServices")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EducationalBackground")
                         .IsRequired()
@@ -262,46 +310,9 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("BranchSettingId");
 
+                    b.HasIndex("DentistryServiceId");
+
                     b.ToTable("MedicalProfessionals");
-                });
-
-            modelBuilder.Entity("Clinic_CRM.Models.MedicalService", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("BranchSettingId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("DurationInMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ServicePicture")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BranchSettingId");
-
-                    b.ToTable("MedicalServices");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Patient", b =>
@@ -788,9 +799,6 @@ namespace Clinic_CRM.Migrations
                     b.Property<bool>("CanAddMedicalProfessional")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanAddMedicalService")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanAddPatient")
                         .HasColumnType("bit");
 
@@ -878,9 +886,6 @@ namespace Clinic_CRM.Migrations
                     b.Property<bool>("CanRequestCardPayment")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanUpdateMedicalService")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanViewAppointment")
                         .HasColumnType("bit");
 
@@ -906,9 +911,6 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewMedicalProfessional")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewMedicalService")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewPatient")
@@ -941,21 +943,6 @@ namespace Clinic_CRM.Migrations
                     b.ToTable("UserRoles");
                 });
 
-            modelBuilder.Entity("MedicalProfessionalMedicalService", b =>
-                {
-                    b.Property<int>("MedicalProfessionalsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MedicalServicesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("MedicalProfessionalsId", "MedicalServicesId");
-
-                    b.HasIndex("MedicalServicesId");
-
-                    b.ToTable("MedicalProfessionalMedicalService");
-                });
-
             modelBuilder.Entity("Clinic_CRM.Models.Appointment", b =>
                 {
                     b.HasOne("Clinic_CRM.Models.Settings.BranchSetting", null)
@@ -970,7 +957,7 @@ namespace Clinic_CRM.Migrations
                         .WithMany()
                         .HasForeignKey("CompletedById");
 
-                    b.HasOne("Clinic_CRM.Models.MedicalService", "DentistryService")
+                    b.HasOne("Clinic_CRM.Models.DentistryService", "DentistryService")
                         .WithMany()
                         .HasForeignKey("DentistryServiceId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1030,6 +1017,13 @@ namespace Clinic_CRM.Migrations
                     b.Navigation("RequestedBy");
                 });
 
+            modelBuilder.Entity("Clinic_CRM.Models.DentistryService", b =>
+                {
+                    b.HasOne("Clinic_CRM.Models.Settings.BranchSetting", null)
+                        .WithMany("DentistryServices")
+                        .HasForeignKey("BranchSettingId");
+                });
+
             modelBuilder.Entity("Clinic_CRM.Models.DoctorSchedule", b =>
                 {
                     b.HasOne("Clinic_CRM.Models.Settings.BranchSetting", null)
@@ -1050,13 +1044,10 @@ namespace Clinic_CRM.Migrations
                     b.HasOne("Clinic_CRM.Models.Settings.BranchSetting", null)
                         .WithMany("MedicalProfessionals")
                         .HasForeignKey("BranchSettingId");
-                });
 
-            modelBuilder.Entity("Clinic_CRM.Models.MedicalService", b =>
-                {
-                    b.HasOne("Clinic_CRM.Models.Settings.BranchSetting", null)
-                        .WithMany("DentistryServices")
-                        .HasForeignKey("BranchSettingId");
+                    b.HasOne("Clinic_CRM.Models.DentistryService", null)
+                        .WithMany("MedicalProfessionals")
+                        .HasForeignKey("DentistryServiceId");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Patient", b =>
@@ -1159,19 +1150,9 @@ namespace Clinic_CRM.Migrations
                     b.Navigation("UserRole");
                 });
 
-            modelBuilder.Entity("MedicalProfessionalMedicalService", b =>
+            modelBuilder.Entity("Clinic_CRM.Models.DentistryService", b =>
                 {
-                    b.HasOne("Clinic_CRM.Models.MedicalProfessional", null)
-                        .WithMany()
-                        .HasForeignKey("MedicalProfessionalsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Clinic_CRM.Models.MedicalService", null)
-                        .WithMany()
-                        .HasForeignKey("MedicalServicesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("MedicalProfessionals");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.MedicalProfessional", b =>

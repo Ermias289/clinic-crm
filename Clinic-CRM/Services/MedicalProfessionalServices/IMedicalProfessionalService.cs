@@ -1,10 +1,16 @@
-﻿//using Clinic_CRM.Models;
+﻿using Clinic_CRM.DTOs.MedicalProfessionalDTOs;
+using Clinic_CRM.Models;
 
-//namespace Clinic_CRM.Services.MedicalProfessionalServices
-//{
-//    public class IMedicalProfessionalService
-//    {
-//        Task<MedicalProfessional> AddMedicalProfessional(AddMed) 
-//    }
+namespace Clinic_CRM.Services.MedicalProfessionalServices
+{
+    public interface IMedicalProfessionalService
+    {
+        Task<MedicalProfessional> AddMedicalProfessional(AddMedicalProfessionalDTO dto);
+        Task<MedicalProfessional> UpdateMedicalProfessional(UpdateMedicalProfessionalDTO dto);
+        Task<MedicalProfessional> GetMedicalProfessionalById(int Id);
+        Task<MedicalProfessional> DeleteMedicalProfessionalById(int Id);
+        Task<List<MedicalProfessional>> GetAllMedicalProfessionals();
+        
+    }
 
-//}
+}

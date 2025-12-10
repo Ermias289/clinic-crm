@@ -5,6 +5,8 @@ using Clinic_CRM.DTOs.CardDTOs;
 using Clinic_CRM.DTOs.CardSettingDTOs;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
 using Clinic_CRM.DTOs.DoctorScheduleDTOs;
+using Clinic_CRM.DTOs.MedicalProfessionalDTOs;
+using Clinic_CRM.DTOs.MedicalServiceDTOs;
 using Clinic_CRM.DTOs.PatientDTOs;
 using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
@@ -101,6 +103,18 @@ namespace Clinic_CRM.Profiles
             CreateMap<AddAppointmentDTO, Appointment>();
             CreateMap<UpdateAppointmentDTO, Appointment>();
             CreateMap<Appointment, UpdateAppointmentDTO>();
+
+            //Medical Professional
+            CreateMap<MedicalProfessional, AddMedicalProfessionalDTO>();
+            CreateMap<AddMedicalProfessionalDTO, MedicalProfessional>();
+            CreateMap<UpdateMedicalProfessionalDTO, MedicalProfessional>();
+            CreateMap<MedicalProfessional, UpdateMedicalProfessionalDTO>();
+
+            //Medical Service
+            CreateMap<MedicalService, AddMedicalServiceDTO>();
+            CreateMap<AddMedicalServiceDTO, MedicalService>();
+            CreateMap<UpdateMedicalServiceDTO, MedicalService>();
+            CreateMap<MedicalService, UpdateMedicalServiceDTO>();
         }
     }
 }

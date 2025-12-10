@@ -19,7 +19,7 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<Patient> Patients { get; set; }
         public DbSet<CardType> CardTypes { get; set; }
         public DbSet<BranchSetting> BranchSettings { get; set; }
-        public DbSet<DentistryService> DentistryServices { get; set; }
+        public DbSet<MedicalService> MedicalServices { get; set; }
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
         public DbSet<MedicalProfessional> MedicalProfessionals { get; set; }
         public DbSet<Card> Cards { get; set; }
