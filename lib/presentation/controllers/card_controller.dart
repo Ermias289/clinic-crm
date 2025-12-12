@@ -13,12 +13,30 @@ class CardController extends GetxController {
 
   CardController({required this.repository});
 
+
   final RxList<CardSettingModel> cardSettings = <CardSettingModel>[].obs;
   final RxBool isLoading = false.obs;
 
   // Request Flow State
   final Rx<CardSettingModel?> selectedCard = Rx<CardSettingModel?>(null);
-  final TextEditingController chronicDiseasesController = TextEditingController();
+  
+  // Form Controllers
+  final TextEditingController fNameController = TextEditingController();
+  final TextEditingController mNameController = TextEditingController();
+  final TextEditingController lNameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController genderController = TextEditingController(); // Could be dropdown
+  final TextEditingController allergiesController = TextEditingController();
+  final TextEditingController chronicConditionsController = TextEditingController();
+  final TextEditingController emergencyNameController = TextEditingController();
+  final TextEditingController emergencyPhoneController = TextEditingController();
+  final TextEditingController addressController = TextEditingController();
+  final TextEditingController subCityController = TextEditingController();
+  final TextEditingController countryController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController dobController = TextEditingController(); // Date picker handling needed ideally
+
   final Rx<File?> selectedPaymentProof = Rx<File?>(null);
   
   // Dependencies
@@ -44,9 +62,27 @@ class CardController extends GetxController {
 
   void startRequest(CardSettingModel cardSetting) {
     selectedCard.value = cardSetting;
-    chronicDiseasesController.clear();
-    selectedPaymentProof.value = null;
+    _clearForm();
     Get.toNamed('/request-card-details');
+  }
+
+  void _clearForm() {
+    fNameController.clear();
+    mNameController.clear();
+    lNameController.clear();
+    emailController.clear();
+    phoneController.clear();
+    genderController.clear();
+    allergiesController.clear();
+    chronicConditionsController.clear();
+    emergencyNameController.clear();
+    emergencyPhoneController.clear();
+    addressController.clear();
+    subCityController.clear();
+    countryController.clear();
+    cityController.clear();
+    dobController.clear();
+    selectedPaymentProof.value = null;
   }
 
   Future<void> pickPaymentProof() async {
@@ -68,19 +104,53 @@ class CardController extends GetxController {
 
     try {
       isLoading.value = true;
-      final patientId = _box.read('userId') ?? 0;
+      final patientId = _box.read('userId') ?? 0; // Ensure this is valid or handle 0
       
-      // Mock Submission for now (Backend Deferred)
-      await Future.delayed(const Duration(seconds: 2)); // Simulate network
+      // Construct Patient Details
+      final patientDetails = PatientDetails(
+        fName: fNameController.text,
+        mName: mNameController.text,
+        lName: lNameController.text,
+        email: emailController.text,
+        phoneNumber: phoneController.text,
+        gender: genderController.text,
+        alergies: allergiesController.text,
+        chronicConditions: chronicConditionsController.text,
+        emergencyContactName: emergencyNameController.text,
+        emergencyContactPhone: emergencyPhoneController.text,
+        address: addressController.text,
+        subCity: subCityController.text,
+        country: countryController.text,
+        city: cityController.text,
+        dateOfBirth: dobController.text, // Ensure correct format YYYY-MM-DD
+        requiresUserAccount: false, // Defaulting to false for now, or add checkbox
+      );
 
-      print('DEBUG: Submitting Request');
-      print('User ID: $patientId');
-      print('Card: ${selectedCard.value?.cardType?.name}');
-      print('Chronic Diseases: ${chronicDiseasesController.text}');
-      print('Payment Proof Path: ${selectedPaymentProof.value?.path}');
+      final request = RequestCardModel(
+        patientId: patientId,
+        cardTypeId: selectedCard.value?.cardTypeId ?? 0,
+        requestRemark: 'Mobile App Request',
+        patient: patientDetails,
+      );
 
-      // Navigate back to success or home
-      // Close all dialogs/forms
+      // 1. Request Card
+      print('DEBUG: Requesting Card...');
+      final cardResponse = await repository.requestCard(request);
+      // Assuming response contains 'id' of the created card. 
+      // Need to inspect API response structure. Usually it returns the object.
+      // If 'id' key exists.
+      final int cardId = cardResponse['id'] ?? 0;
+      
+      if (cardId == 0) {
+        throw Exception('Failed to retrieve Card ID from response.');
+      }
+      print('DEBUG: Card Created. ID: $cardId');
+
+      // 2. Create Payment
+      print('DEBUG: Creating Payment...');
+      await repository.createPayment(cardId, selectedPaymentProof.value!.path);
+
+      // Navigation & Success
       Get.until((route) => Get.currentRoute == '/main-navigation');
       
       Get.snackbar(
@@ -95,50 +165,6 @@ class CardController extends GetxController {
     } catch (e) {
       print('DEBUG: Error in submitRequest: $e');
       Get.snackbar('Error', 'Failed to submit request: $e', snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  // Legacy method - keeping for reference or if used elsewhere, but startRequest is new entry point
-  Future<void> requestCardLegacy(CardSettingModel cardSetting) async {
-    try {
-      isLoading.value = true;
-      
-      // Assuming 'user' object in GetStorage has an 'id'. Adjust based on actual User model storage.
-      // If user ID is not stored, we might need to fetch profile first or store it on login.
-      // For now, let's verify what is stored in 'user'. 
-      // Based on DashboardView: final userName = box.read('user') ?? 'User';
-      // It seems 'user' might just be a string name? I need to verify this assumption.
-      // Checking AuthRepositoryImpl or LoginController to see what is stored.
-      
-      // Pending verification of User ID storage. using placeholder 0 for now to compile.
-      // I will check the login logic next to ensure we get the correct ID.
-      // Or I can require the User ID to be passed or fetched.
-      
-      // Let's assume we can get the ID.
-      final int patientId = _box.read('userId') ?? 0;
-
-      if (patientId == 0) {
-        Get.snackbar('Error', 'User ID not found. Please login again.', snackPosition: SnackPosition.BOTTOM);
-        return;
-      }
-
-      print('DEBUG: Requesting card for user: $patientId');  // Debug print
-      
-      final request = RequestCardModel(
-        patientId: patientId, 
-        cardTypeId: cardSetting.cardTypeId ?? 0,
-        requestRemark: 'Requested from Mobile App',
-      );
-
-      print('DEBUG: Calling repository...'); // Debug print
-      await repository.requestCard(request);
-      print('DEBUG: Repository call success'); // Debug print
-      Get.snackbar('Success', 'Card requested successfully!', snackPosition: SnackPosition.BOTTOM);
-    } catch (e) {
-      print('DEBUG: Error in requestCard: $e'); // Debug print
-      Get.snackbar('Error', 'Failed to request card: $e', snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
     }

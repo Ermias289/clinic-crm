@@ -46,7 +46,7 @@ class RequestCardDetailsView extends GetView<CardController> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Step 1: Personal Information',
+                        'Step 1: Patient Information',
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: Colors.white.withOpacity(0.9),
                         ),
@@ -66,31 +66,51 @@ class RequestCardDetailsView extends GetView<CardController> {
                   children: [
                     _buildSectionTitle('Personal Details'),
                     const SizedBox(height: 16),
-                    _buildTextField(
-                      label: 'Full Name',
-                      hint: 'Enter your full name',
-                      icon: Icons.person,
-                      // controller: controller.nameController, // To be added in controller
-                    ),
+                    _buildTextField(label: 'First Name', hint: 'Enter first name', icon: Icons.person, controller: controller.fNameController),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Middle Name', hint: 'Enter middle name', icon: Icons.person_outline, controller: controller.mNameController),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Last Name', hint: 'Enter last name', icon: Icons.person, controller: controller.lNameController),
                     const SizedBox(height: 16),
                     _buildTextField(
-                      label: 'Age',
-                      hint: 'Enter your age',
-                      icon: Icons.calendar_today,
-                      keyboardType: TextInputType.number,
-                      // controller: controller.ageController,
+                      label: 'Date of Birth', 
+                      hint: 'YYYY-MM-DD', 
+                      icon: Icons.calendar_today, 
+                      controller: controller.dobController,
+                      keyboardType: TextInputType.datetime,
                     ),
                     const SizedBox(height: 16),
-                    _buildTextField(
-                      label: 'Phone Number',
-                      hint: 'Enter phone number',
-                      icon: Icons.phone,
-                      keyboardType: TextInputType.phone,
-                      // controller: controller.phoneController,
-                    ),
-                    
+                    _buildTextField(label: 'Gender', hint: 'M / F', icon: Icons.wc, controller: controller.genderController),
+
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('Contact Information'),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Email', hint: 'email@example.com', icon: Icons.email, controller: controller.emailController, keyboardType: TextInputType.emailAddress),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Phone Number', hint: '+251...', icon: Icons.phone, controller: controller.phoneController, keyboardType: TextInputType.phone),
+
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('Address'),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Country', hint: 'Enter country', icon: Icons.public, controller: controller.countryController),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'City', hint: 'Enter city', icon: Icons.location_city, controller: controller.cityController),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'SubCity', hint: 'Enter sub-city', icon: Icons.map, controller: controller.subCityController),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Address/House No.', hint: 'specific address', icon: Icons.home, controller: controller.addressController),
+
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('Emergency Contact'),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Contact Name', hint: 'Emergency contact name', icon: Icons.person_add, controller: controller.emergencyNameController),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Contact Phone', hint: 'Emergency contact phone', icon: Icons.phone_callback, controller: controller.emergencyPhoneController, keyboardType: TextInputType.phone),
+
                     const SizedBox(height: 32),
                     _buildSectionTitle('Medical Information'),
+                    const SizedBox(height: 16),
+                    _buildTextField(label: 'Allergies', hint: 'List any allergies', icon: Icons.warning_amber, controller: controller.allergiesController),
                     const SizedBox(height: 16),
                     Container(
                       decoration: BoxDecoration(
@@ -106,15 +126,13 @@ class RequestCardDetailsView extends GetView<CardController> {
                       ),
                       padding: const EdgeInsets.all(4),
                       child: TextField(
-                        controller: controller.chronicDiseasesController,
-                        maxLines: 5,
+                        controller: controller.chronicConditionsController,
+                        maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: 'List any chronic diseases (or type "None")',
-                          hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
+                          labelText: 'Chronic Conditions',
+                          hintText: 'List any chronic conditions',
+                          prefixIcon: const Icon(Icons.medical_services, color: AppColors.primaryBlue),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                           contentPadding: const EdgeInsets.all(16),
                         ),
                       ),
@@ -139,6 +157,7 @@ class RequestCardDetailsView extends GetView<CardController> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -161,7 +180,7 @@ class RequestCardDetailsView extends GetView<CardController> {
     required String hint,
     required IconData icon,
     TextInputType? keyboardType,
-    TextEditingController? controller,
+    required TextEditingController controller,
   }) {
     return Container(
       decoration: BoxDecoration(
