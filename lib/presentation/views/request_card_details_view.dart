@@ -1,8 +1,10 @@
+import 'package:flutter/services.dart'; // Needed for TextInputFormatter
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../controllers/card_controller.dart';
+import '../../core/utils/date_input_formatter.dart'; // Import formatters
 
 class RequestCardDetailsView extends GetView<CardController> {
   const RequestCardDetailsView({super.key});
@@ -78,6 +80,7 @@ class RequestCardDetailsView extends GetView<CardController> {
                       icon: Icons.calendar_today, 
                       controller: controller.dobController,
                       keyboardType: TextInputType.datetime,
+                      inputFormatters: [DateInputFormatter(), LengthLimitingTextInputFormatter(10)], // Add formatter
                     ),
                     const SizedBox(height: 16),
                     _buildTextField(label: 'Gender', hint: 'M / F', icon: Icons.wc, controller: controller.genderController),
@@ -143,7 +146,7 @@ class RequestCardDetailsView extends GetView<CardController> {
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: () => Get.toNamed('/request-card-payment'), // Navigation path
+                        onPressed: () => controller.validateAndProceed(), // Validated navigation
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryBlue,
                           shape: RoundedRectangleBorder(
@@ -181,6 +184,7 @@ class RequestCardDetailsView extends GetView<CardController> {
     required IconData icon,
     TextInputType? keyboardType,
     required TextEditingController controller,
+    List<TextInputFormatter>? inputFormatters, // New parameter
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -197,6 +201,7 @@ class RequestCardDetailsView extends GetView<CardController> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters, // Pass to TextField
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,

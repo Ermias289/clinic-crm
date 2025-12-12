@@ -66,6 +66,26 @@ class CardController extends GetxController {
     Get.toNamed('/request-card-details');
   }
 
+  void validateAndProceed() {
+    if (fNameController.text.trim().isEmpty || 
+        lNameController.text.trim().isEmpty || 
+        phoneController.text.trim().isEmpty ||
+        dobController.text.trim().isEmpty) {
+      Get.snackbar(
+        'Missing Information', 
+        'Please fill in all required fields (Name, Phone, DOB).',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
+    
+    // Add more validation as needed (Email regex, etc.)
+    
+    Get.toNamed('/request-card-payment');
+  }
+
   void _clearForm() {
     fNameController.clear();
     mNameController.clear();

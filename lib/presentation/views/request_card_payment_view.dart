@@ -60,7 +60,7 @@ class RequestCardPaymentView extends GetView<CardController> {
 
             // Content
             Expanded(
-              child: SingleChildScrollView(
+              child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,7 +69,7 @@ class RequestCardPaymentView extends GetView<CardController> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1E1E1E), // Dark card for credit card look
+                        color: const Color(0xFF1E1E1E),
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
@@ -87,7 +87,7 @@ class RequestCardPaymentView extends GetView<CardController> {
                           ],
                         ),
                       ),
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -101,16 +101,16 @@ class RequestCardPaymentView extends GetView<CardController> {
                               Icon(Icons.account_balance, color: Colors.white70),
                             ],
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Text(
-                            '1000 2345 6789 0000', // Mock Account Number
-                            style: AppTextStyles.h2.copyWith(
+                            '1000 2345 6789 0000',
+                            style: AppTextStyles.h3.copyWith(
                               color: Colors.white,
                               letterSpacing: 2,
-                              fontFamily: 'Courier', // Monospace for numbers
+                              fontFamily: 'Courier',
                             ),
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 16),
                           Row(
                             children: [
                               Column(
@@ -135,28 +135,80 @@ class RequestCardPaymentView extends GetView<CardController> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 24),
+
+                    // Order Summary
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Card Type', style: AppTextStyles.bodySmall),
+                              Obx(() => Text(
+                                controller.selectedCard.value?.cardType?.name ?? 'N/A',
+                                style: AppTextStyles.h3.copyWith(color: AppColors.primaryBlue),
+                              )),
+                            ],
+                          ),
+                          const Divider(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Patient', style: AppTextStyles.bodySmall),
+                              Text(
+                                '${controller.fNameController.text} ${controller.lNameController.text}',
+                                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Amount to Pay', style: AppTextStyles.bodySmall),
+                              Obx(() => Text(
+                                '\$${controller.selectedCard.value?.price?.toStringAsFixed(2) ?? "0.00"}',
+                                style: AppTextStyles.h3.copyWith(color: Colors.green),
+                              )),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                     
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     Text(
-                      'Upload Payment Receipt',
+                      'Payment Proof',
                       style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     
-                    // Image Upload Area
+                    // Image Upload Area - Smaller
                     GestureDetector(
-                      onTap: controller.pickPaymentProof, // Method to pick image
+                      onTap: controller.pickPaymentProof,
                       child: Obx(() {
                         return Container(
-                          height: 200,
+                          height: 120, // Smaller height
                           width: double.infinity,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: AppColors.primaryBlue.withOpacity(0.3),
                               width: 2,
-                              style: BorderStyle.solid, // Dotted requires custom painter, solid for simplicity now
                             ),
                             boxShadow: [
                               BoxShadow(
@@ -168,7 +220,7 @@ class RequestCardPaymentView extends GetView<CardController> {
                           ),
                           child: controller.selectedPaymentProof.value != null
                               ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(22),
+                                  borderRadius: BorderRadius.circular(14),
                                   child: Image.file(
                                     controller.selectedPaymentProof.value!,
                                     fit: BoxFit.cover,
@@ -178,14 +230,14 @@ class RequestCardPaymentView extends GetView<CardController> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      Icons.cloud_upload_outlined,
-                                      size: 48,
-                                      color: AppColors.primaryBlue,
+                                      Icons.image_outlined, // Changed icon
+                                      size: 28,
+                                      color: AppColors.textSecondary,
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 8),
                                     Text(
-                                      'Tap to upload receipt',
-                                      style: AppTextStyles.bodyMedium.copyWith(
+                                      'Click to attach receipt',
+                                      style: AppTextStyles.bodySmall.copyWith(
                                         color: AppColors.textSecondary,
                                       ),
                                     ),
@@ -195,7 +247,8 @@ class RequestCardPaymentView extends GetView<CardController> {
                       }),
                     ),
 
-                    const SizedBox(height: 32),
+                    const Spacer(), // Pushes button to bottom
+
                     SizedBox(
                       width: double.infinity,
                       height: 56,
