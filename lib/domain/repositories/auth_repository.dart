@@ -6,4 +6,5 @@ import '../../data/models/register_response_model.dart';
 abstract class AuthRepository {
   Future<LoginResponseModel> login(LoginRequestModel request);
   Future<RegisterResponseModel> register(RegisterRequestModel request);
+  Future<int> getPatientRoleId(); // New method
 }

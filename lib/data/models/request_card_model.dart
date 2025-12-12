@@ -38,6 +38,7 @@ class PatientDetails {
   final String city;
   final String dateOfBirth; // Using String for ISO8601 format to match backend DateOnly expectations
   final bool requiresUserAccount;
+  final int? userId; // Added userId
 
   PatientDetails({
     required this.fName,
@@ -56,6 +57,7 @@ class PatientDetails {
     required this.city,
     required this.dateOfBirth,
     required this.requiresUserAccount,
+    this.userId, // Added to constructor
   });
 
   Map<String, dynamic> toJson() {
@@ -76,6 +78,7 @@ class PatientDetails {
       'city': city,
       'dateOfBirth': dateOfBirth,
       'requiresUserAccount': requiresUserAccount,
+      'userId': userId, // Added userId to JSON
     };
   }
 }

@@ -95,6 +95,10 @@ class RegisterController extends GetxController {
     try {
       final fullname = '${fNameController.text} ${mNameController.text.isNotEmpty ? mNameController.text + ' ' : ''}${lNameController.text}';
       
+      // Fetch Patient Role ID dynamically
+      final int roleId = await registerUseCase.getPatientRoleId();
+      print('DEBUG: Fetched Patient Role ID: $roleId');
+
       final request = RegisterRequestModel(
         username: usernameController.text.trim(),
         fullname: fullname.trim(),
@@ -104,7 +108,7 @@ class RegisterController extends GetxController {
         email: emailController.text.trim(),
         phoneNumber: phoneController.text.trim(),
         password: passwordController.text,
-        userRoleId: 1, // This will be overridden by backend to PATIENT role
+        userRoleId: roleId,
       );
 
       final response = await registerUseCase(request);

@@ -8,6 +8,7 @@ import '../models/register_response_model.dart';
 abstract class AuthRemoteDataSource {
   Future<LoginResponseModel> login(LoginRequestModel request);
   Future<RegisterResponseModel> register(RegisterRequestModel request);
+  Future<int> getPatientRoleId(); // New method
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -41,13 +42,34 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<RegisterResponseModel> register(RegisterRequestModel request) async {
     try {
-      final response = await apiClient.post('/api/Auth/register-patient', request.toJson());
+      final response = await apiClient.post('/api/Auth/register', request.toJson());
+      print('DEBUG REG: Status ${response.statusCode}, Body: ${response.body}');
+      
       if (response.hasError) {
-        throw Exception(response.body['message'] ?? response.statusText ?? 'Registration failed');
+        String errorMsg = 'Registration failed';
+        if (response.body != null && response.body is Map) {
+          errorMsg = response.body['message'] ?? response.statusText ?? errorMsg;
+        } else {
+          errorMsg = response.statusText ?? errorMsg;
+        }
+        throw Exception(errorMsg);
       }
       return RegisterResponseModel.fromJson(response.body);
     } catch (e) {
       throw Exception('Registration error: ${e.toString()}');
+    }
+  }
+  @override
+  Future<int> getPatientRoleId() async {
+    try {
+      final response = await apiClient.get('/api/UserRole/getRoleByName?Name=Patient');
+      if (response.hasError) {
+        throw Exception(response.statusText ?? 'Failed to fetch Patient role');
+      }
+      return response.body['id']; 
+    } catch (e) {
+      print('Error fetching role: $e');
+      return 4; // Fallback
     }
   }
 }

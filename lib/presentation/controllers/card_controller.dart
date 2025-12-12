@@ -80,6 +80,17 @@ class CardController extends GetxController {
       );
       return;
     }
+
+    if (emailController.text.trim().isEmpty || !emailController.text.contains('@')) {
+       Get.snackbar(
+        'Invalid Email', 
+        'Please enter a valid email address.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+      return;
+    }
     
     // Add more validation as needed (Email regex, etc.)
     
@@ -144,10 +155,11 @@ class CardController extends GetxController {
         city: cityController.text,
         dateOfBirth: dobController.text, // Ensure correct format YYYY-MM-DD
         requiresUserAccount: false, // Defaulting to false for now, or add checkbox
+        userId: patientId, // Linking new patient to current user
       );
 
       final request = RequestCardModel(
-        patientId: patientId,
+        patientId: 0, // 0 because we are creating a *new* patient via the 'patient' object
         cardTypeId: selectedCard.value?.cardTypeId ?? 0,
         requestRemark: 'Mobile App Request',
         patient: patientDetails,

@@ -10,4 +10,8 @@ class RegisterUseCase {
   Future<RegisterResponseModel> call(RegisterRequestModel request) async {
     return await repository.register(request);
   }
+
+  Future<int> getPatientRoleId() async {
+    return await repository.getPatientRoleId();
+  }
 }

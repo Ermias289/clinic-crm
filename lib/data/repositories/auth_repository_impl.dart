@@ -19,4 +19,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<RegisterResponseModel> register(RegisterRequestModel request) async {
     return await remoteDataSource.register(request);
   }
+
+  @override
+  Future<int> getPatientRoleId() async {
+    return await remoteDataSource.getPatientRoleId();
+  }
 }
