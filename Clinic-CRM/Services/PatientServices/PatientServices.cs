@@ -3,7 +3,6 @@ using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.PatientDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
-using Clinic_CRM.Migrations;
 using Clinic_CRM.Models;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;

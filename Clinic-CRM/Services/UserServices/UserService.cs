@@ -9,6 +9,10 @@ using Clinic_CRM.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using static Clinic_CRM.Helpers.Constants;
+//using static Clinic_CRM.Services.OTPGenerator.OTPGenerator;
+using System.IO;
+using Clinic_CRM.Services.EmailService;
+using Clinic_CRM.Services.OTPGenerator;
 
 namespace Clinic_CRM.Services.UserServices
 {
@@ -18,17 +22,21 @@ namespace Clinic_CRM.Services.UserServices
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
+        //private readonly IEmailService _emailService;
+        private readonly IOTPGeneratorService _oTPGeneratorService;
 
         public UserRole UserRole { get; }
         public User User { get; }
 
 
-        public UserService(Context context, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public UserService(Context context, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOTPGeneratorService oTP)
         {
             _context = context;
             _configuration = configuration;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
+            //_emailService = emailService;
+            _oTPGeneratorService = oTP;
 
             var User = context.Users
                 .AsNoTracking()
@@ -102,6 +110,8 @@ namespace Clinic_CRM.Services.UserServices
                 ??
                 throw new KeyNotFoundException("Role Not Found.");
 
+            user.IsEmailConfirmed = false;
+
             if (role.Name == USER_ROLES.SUPER_ADMIN)
             {
                 var superAdminExists = await _context.Users
@@ -111,10 +121,25 @@ namespace Clinic_CRM.Services.UserServices
                     throw new InvalidOperationException("There can only be one Super Admin.");
             }
 
+            
             var userE = await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber || u.Email == dto.Email);
 
             if (userE)
                 throw new KeyNotFoundException("Phone Numebr or Email Is Already In Use.");
+
+            //// Path to your OTP.html file
+            //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "OTP.html");
+
+            //// Read the HTML template
+            //string htmlBody = await File.ReadAllTextAsync(templatePath);
+
+            //// Replace the placeholder with the actual OTP
+            //string otp = GenerateAlphaNumericOtp(); // generated OTP
+            //htmlBody = htmlBody.Replace("{{OTP}}", otp);
+
+            //await _emailService.SendEmailAsync(user.Email, "Verify Your Email – OTP", htmlBody, true);
+
+            await _oTPGeneratorService.SendOtpEmailAsync(user.Email);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -152,18 +177,26 @@ namespace Clinic_CRM.Services.UserServices
             return _mapper.Map<GetUserDTO>(user);
         }
 
-        public async Task<bool> ImportUserAsync(List<CreateUserAccountDTO> dto)
+        //public async Task<bool> ImportUserAsync(List<CreateUserAccountDTO> dto)
+        //{
+
+        //    foreach (var user in dto)
+        //    {
+        //        CreateUserAsync(user, OTP);
+        //    }
+
+        //    return true;
+        //}
+
+        public async Task<string> ConfirmEmailAccount(string OTP)
         {
+            bool validOtp = await _oTPGeneratorService.VerifyOtpAsync(GetCurrentUser().Email, OTP);
+           
+            if(validOtp)
+                GetCurrentUser().IsEmailConfirmed = true;
 
-            foreach (var user in dto)
-            {
-                CreateUserAsync(user);
-            }
-
-            return true;
+            return "Confirmed";
         }
-
-
         public async Task<List<GetUserDTO>> GetAllUsersAsync()
         {
             var currentUser = await _context.Users

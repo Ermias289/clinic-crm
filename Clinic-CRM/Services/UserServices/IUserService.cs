@@ -12,13 +12,13 @@ namespace Clinic_CRM.Services.UserServices
         public User GetCurrentUser();
         public User GetCurrentUserNoInclude();
         Task<GetUserDTO> CreateUserAsync(CreateUserAccountDTO dto);
-        Task<bool> ImportUserAsync(List<CreateUserAccountDTO> dto);
+        //Task<bool> ImportUserAsync(List<CreateUserAccountDTO> dto);
         Task<List<GetUserDTO>> GetAllUsersAsync();
         Task<GetUserDTO> GetUserByIdAsync(int id);
         Task<GetUserDTO> UpdateUserAsync(UpdateUserAccountDTO dto);
         Task<bool> DeleteUserAsync(int id);
 
-
+        Task<string> ConfirmEmailAccount(string OTP);
         // AUTH RELATED
 
         Task<LogInReturnDTO> CreateToken(User user);

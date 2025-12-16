@@ -15,7 +15,7 @@
 
         public decimal RequestedAmount { get; set; } = 0;
         public User RequestedBy { get; set; }
-        public int RequestedById { get; set; }
+        public int? RequestedById { get; set; }
         public DateTime RequestedAt { get; set; }
 
         public DateTime ApprovedAt { get; set; }

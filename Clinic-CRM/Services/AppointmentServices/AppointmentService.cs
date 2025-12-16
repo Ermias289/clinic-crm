@@ -3,6 +3,7 @@ using AutoMapper.Internal;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.AppointmentDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using static Clinic_CRM.Helpers.Constants;
 
@@ -12,11 +13,13 @@ namespace Clinic_CRM.Services.AppointmentServices
     {
         private readonly IMapper _mapper;
         private readonly Context _context;
+        private readonly IUserService _userService;
 
-        public AppointmentService(IMapper mapper, Context context)
+        public AppointmentService(IMapper mapper, Context context, IUserService userService)
         {
             _mapper = mapper;
             _context = context;
+            _userService = userService;
         }
 
         public async Task<Appointment> MakeAppointment(AddAppointmentDTO dto)
@@ -26,10 +29,33 @@ namespace Clinic_CRM.Services.AppointmentServices
 
             // Load the service
             var service = await _context.MedicalServices.FindAsync(app.DentistryId);
-            
+
+
+            if(_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
+            {
+                app.PatientId = _userService.GetCurrentUser().Id;
+            }
+
+            // Load patient
+            var patient = await _context.Patients.FindAsync(app.PatientId);
+
+            if (patient == null)
+                throw new KeyNotFoundException("Patient not found.");
+
+            // Check patient's card
+            var card = await _context.Cards
+                .Where(c => c.PatientId == app.PatientId)
+                .FirstOrDefaultAsync();
+
+            if (card == null)
+                throw new KeyNotFoundException("Patient does not have a card. Please get a card to make an appointment.");
+
+            if (card.Status != CARD_STATUS.ACTIVE)
+                throw new KeyNotFoundException("Patient's card is not active. Please activate it before making a payment.");
+
             if (service == null)
                 throw new KeyNotFoundException("Medical service not found.");
-
+     
             // Load doctor with schedules
             var doc = await _context.MedicalProfessionals
                 .Include(d => d.DoctorSchedules)
@@ -66,22 +92,7 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (!companyOpen)
                 throw new KeyNotFoundException("The clinic is not open on this date.");
 
-            // Load patient
-            var patient = await _context.Patients.FindAsync(app.PatientId);
-            if (patient == null)
-                throw new KeyNotFoundException("Patient not found.");
-
-            // Check patient's card
-            var card = await _context.Cards
-                .Where(c => c.Id == patient.CardId && c.PatientId == app.PatientId)
-                .FirstOrDefaultAsync();
-
-            if (card == null)
-                throw new KeyNotFoundException("Patient does not have a card. Please get a card to make an appointment.");
-
-            if (card.Status != CARD_STATUS.ACTIVE)
-                throw new KeyNotFoundException("Patient's card is not active. Please activate it before making a payment.");
-
+            
             // Set status
             app.Status = APPOINTMENT_STATUS.SCHEDULED;
 
@@ -144,6 +155,7 @@ namespace Clinic_CRM.Services.AppointmentServices
 
             return app;
         }
+
         public async Task<Appointment> GetAppointmentById(int Id)
         {
             var app = await _context.Appointments.FindAsync(Id);
@@ -153,10 +165,12 @@ namespace Clinic_CRM.Services.AppointmentServices
 
             return app;
         }
+
         public async Task<List<Appointment>> GetAllAppointment()
         {
             return await _context.Appointments.ToListAsync();
         }
+
         public async Task<Appointment> DeleteAppointment(int Id)
         {
             var app = await _context.Appointments.FindAsync(Id);
@@ -183,6 +197,7 @@ namespace Clinic_CRM.Services.AppointmentServices
             await _context.SaveChangesAsync();
             return app;
         }
+
         public async Task<bool> CompleteAppointment(List<int> Ids)
         {
             foreach(int Id in Ids)

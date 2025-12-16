@@ -26,6 +26,9 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<WorkingDaySetting> Workdays { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
+        public DbSet<Bank> Banks { get; set; }
+        public DbSet<OTP> OTPs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Patient>()
@@ -64,7 +67,11 @@ namespace Clinic_CRM.ApplicationDbContext
                .HasForeignKey(c => c.CheckedById)
                .OnDelete(DeleteBehavior.Restrict);
 
-
+            //modelBuilder.Entity<DoctorSchedule>()
+            //   .HasOne(c => c.BranchSetting)
+            //   .WithMany()
+            //   .HasForeignKey(c => c.BranchSettingId)
+            //   .OnDelete(DeleteBehavior.Restrict);
 
         }
     }

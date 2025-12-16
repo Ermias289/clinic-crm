@@ -108,13 +108,18 @@ namespace Clinic_CRM.Profiles
 
             //Medical Professional
             CreateMap<MedicalProfessional, AddMedicalProfessionalDTO>();
-            CreateMap<AddMedicalProfessionalDTO, MedicalProfessional>();
+            CreateMap<AddMedicalProfessionalDTO, MedicalProfessional>()
+                .ForMember(dest => dest.Branches, opt => opt.Ignore())
+                .ForMember(dest => dest.MedicalServices, opt => opt.Ignore());
+
             CreateMap<UpdateMedicalProfessionalDTO, MedicalProfessional>();
             CreateMap<MedicalProfessional, UpdateMedicalProfessionalDTO>();
 
             //Medical Service
             CreateMap<MedicalService, AddMedicalServiceDTO>();
-            CreateMap<AddMedicalServiceDTO, MedicalService>();
+            CreateMap<AddMedicalServiceDTO, MedicalService>()
+                .ForMember(dest => dest.Branches, opt => opt.Ignore())
+                .ForMember(dest => dest.MedicalProfessionals, opt => opt.Ignore());
             CreateMap<UpdateMedicalServiceDTO, MedicalService>();
             CreateMap<MedicalService, UpdateMedicalServiceDTO>();
         }

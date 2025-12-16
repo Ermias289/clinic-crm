@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Clinic_CRM.Models.Settings;
 using static Clinic_CRM.Helpers.Constants;
 namespace Clinic_CRM.Models
 {
@@ -20,7 +21,7 @@ namespace Clinic_CRM.Models
         public int YearsOfExperience { get; set; } = 0;
         public string Status { get; set; } = MEDICAL_PROFESSIONS_STATUS.ACTIVE;
         public string ProfilePicture { get; set; } = string.Empty;
-
+        public List<BranchSetting> Branches {  get; set; }
         public bool RequiresUserAccount { get; set; }
         public ICollection<DoctorSchedule>? DoctorSchedules { get; set; }
         public ICollection<MedicalService>? MedicalServices { get; set; }

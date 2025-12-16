@@ -4,6 +4,7 @@ using Clinic_CRM;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.Helpers;
 using Clinic_CRM.Profiles;
+using Clinic_CRM.Services.CardServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -94,6 +95,10 @@ builder.Services.AddDbContext<Context>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+//Background Service
+builder.Services.AddScoped<ICardService, CardService>();
+builder.Services.AddHostedService<CardExpiryBackgroundService>();
 
 builder.Services
     .AddControllers()

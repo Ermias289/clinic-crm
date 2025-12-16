@@ -1,5 +1,6 @@
 ﻿using Clinic_CRM.DTOs.CardDTOs;
 using Clinic_CRM.Helpers;
+using Clinic_CRM.Models;
 using Clinic_CRM.Services.CardServices;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Http;
@@ -101,6 +102,23 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _cardService.GetCardById(Id));
+            }catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+        [HttpPut("{Id}")]
+        public async Task<ActionResult> ReActivateCard(int Id)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanRequestCard))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _cardService.ReActivateCard(Id));
             }catch (Exception ex)
             {
                 return this.ParseException(ex);

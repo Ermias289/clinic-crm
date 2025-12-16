@@ -38,6 +38,23 @@ namespace Clinic_CRM.Controllers
             }
         }
 
+        [HttpGet("filteredService")]
+        public async Task<ActionResult> GetMedicalServicesForAppointment(int? serviceId, int? branchId, int? docId)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewMedicalService))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _medicalService.GetMedicalServicesForAppointment(serviceId, branchId, docId));
+            }catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
         [HttpGet("{Id}")]
         public async Task<ActionResult> GetMedicalService(int Id)
         {

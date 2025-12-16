@@ -10,5 +10,6 @@ namespace Clinic_CRM.Services.MedicalServices
         Task<MedicalService> AddMedicalService(AddMedicalServiceDTO dto);
         Task<MedicalService> UpdateMedicalService(UpdateMedicalServiceDTO dto);
         Task<MedicalService> DeleteMedicalService(int Id);
+        Task<List<MedicalService>> GetMedicalServicesForAppointment(int? serviceId, int? branchId, int? docId);
     }
 }

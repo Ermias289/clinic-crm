@@ -1,4 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
+using System.IO.Pipelines;
+using System.Runtime.CompilerServices;
+using System.Security.AccessControl;
 using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.CardDTOs;
@@ -54,11 +57,8 @@ namespace Clinic_CRM.Services.CardServices
 
             var existingCard = await _context.Cards.Where(x => x.PatientId == dto.PatientId).FirstOrDefaultAsync();
 
-            Console.WriteLine("Working...");
-
-           
-
-            Console.WriteLine("Working...");
+            if (existingCard != null)
+                throw new KeyNotFoundException("You already have a card.");
 
             var price = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
             Console.WriteLine("Working...");
@@ -77,13 +77,11 @@ namespace Clinic_CRM.Services.CardServices
                 CardId = card.Id,
             };
             await _paymentService.AutoPrepare(payCard);
+            Console.WriteLine("Requesting early");
+
 
             if (user.UserRole.Name == USER_ROLES.PATIENT)
             {
-                card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
-                card.RequestRemark = "Requested By Patient.";
-                card.Status = CARD_STATUS.PENDING;
-
                 if (dto.PatientId == 0)
                 {
                     var patient = _mapper.Map<AddPatientDTO>(dto.Patient);
@@ -94,6 +92,12 @@ namespace Clinic_CRM.Services.CardServices
 
                 }
             }
+            Console.WriteLine("Requesting");
+
+            card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
+            card.RequestRemark = "Requested By Patient.";
+            card.Status = CARD_STATUS.PENDING;
+      
             await _context.SaveChangesAsync();
             Console.WriteLine("Working...");
 
@@ -133,5 +137,67 @@ namespace Clinic_CRM.Services.CardServices
        {
             return await _context.Cards.ToListAsync();
        }
+
+       public async Task<Card> ReActivateCard(int Id)
+       {
+            var card = await _context.Cards.FindAsync(Id);
+
+            if (card == null)
+                throw new KeyNotFoundException("Card Not Found");
+
+
+            var price = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
+
+            if (price == null)
+                throw new KeyNotFoundException("Card Price Not Found");
+
+            var payment = await _context.Payments.Where(x => x.CardId == card.Id && (x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status != PAYMENT_STATUS.REJECTED)).FirstOrDefaultAsync();
+
+            if (payment != null)
+                throw new KeyNotFoundException("You have a pending payment. Please complete that first.");
+
+            var payCard = new AutoPaymentPrepareDTO
+            {
+                RequestedAmount = price.Price,
+                CardId = card.Id,
+            };
+            await _paymentService.AutoPrepare(payCard);
+
+            return card;
+        }
+
+
+        public async Task<string> AutoExpire()
+        {
+            var cards = await _context.Cards.ToListAsync();
+            var cardSettings = await _context.CardSettings.ToListAsync();
+
+            int expiredCount = 0;
+
+            foreach (var card in cards)
+            {
+                if (card.Status != CARD_STATUS.ACTIVE || card.ActivatedAt == null)
+                    continue;
+
+                var expiry = cardSettings
+                    .FirstOrDefault(x => x.CardTypeId == card.CardTypeId);
+
+                if (expiry == null)
+                    continue;
+
+                var daysUsed = (DateTime.UtcNow - card.ActivatedAt).TotalDays;
+
+                if (daysUsed >= expiry.ExpirationDuration)
+                {
+                    card.Status = CARD_STATUS.EXPIRED;
+                    card.ExpiredAt = DateTime.UtcNow;
+                    expiredCount++;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return $"{expiredCount} cards expired successfully.";
+        }
     }
 }

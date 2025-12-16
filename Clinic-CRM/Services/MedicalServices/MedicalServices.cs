@@ -1,7 +1,10 @@
-﻿using AutoMapper;
+﻿using System.Runtime.ConstrainedExecution;
+using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
+using Clinic_CRM.DTOs.AppointmentDTOs;
 using Clinic_CRM.DTOs.MedicalServiceDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Models.Settings;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinic_CRM.Services.MedicalServices
@@ -43,6 +46,14 @@ namespace Clinic_CRM.Services.MedicalServices
                     .Where(mp => dto.MedicalProfessionalsId.Contains(mp.Id))
                     .ToListAsync();
             }
+
+            if (dto.Branches.Any())
+            {
+                med.Branches = await _context.BranchSettings
+                    .Where(ms => dto.Branches.Contains(ms.Id))
+                    .ToListAsync();
+            }
+
             _context.MedicalServices.Add(med);
             await _context.SaveChangesAsync();
 
@@ -76,6 +87,20 @@ namespace Clinic_CRM.Services.MedicalServices
             await _context.SaveChangesAsync();
 
             return med;
+        }
+
+        public async Task<List<MedicalService>> GetMedicalServicesForAppointment(int? serviceId, int? branchId,  int? docId)
+        {
+            var service = await _context.MedicalServices
+                .Include(x => x.Branches)
+                .Include(x => x.MedicalProfessionals)
+                .Where(x => (serviceId == null || x.Id == serviceId) &&
+                        (branchId == null || x.Id == branchId) &&
+                        (docId == null || x.Id == docId)
+                )
+                .ToListAsync();
+
+            return service;
         }
     }
 }

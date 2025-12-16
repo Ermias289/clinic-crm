@@ -20,7 +20,6 @@ namespace Clinic_CRM.DTOs.MedicalProfessionalDTOs
         public string ProfilePicture { get; set; } = string.Empty;
         public bool RequiresUserAccount { get; set; }
         public ICollection<int>? MedicalServicesId { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
+        public ICollection<int>? Branches { get; set; }
     }
 }

@@ -35,6 +35,13 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
                     .ToListAsync();
             }
 
+            if (dto.Branches.Any())
+            {
+                doc.Branches = await _context.BranchSettings
+                    .Where(ms => dto.Branches.Contains(ms.Id))
+                    .ToListAsync();
+            }
+
 
             if (doc.RequiresUserAccount && role !=null)
             {

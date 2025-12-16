@@ -22,8 +22,8 @@ namespace Clinic_CRM.Controllers
             _userService = userService;
         }
 
-        [HttpPost("paymentRequest")]
-        public async Task<ActionResult> CreateCardPayment(CreatePaymentDTO dto)
+        [HttpPut("paymentRequest")]
+        public async Task<ActionResult> CreateCardPaymentRequest(CreatePaymentDTO dto)
         {
             try
             {

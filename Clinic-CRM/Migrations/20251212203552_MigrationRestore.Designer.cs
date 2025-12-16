@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251212203552_MigrationRestore")]
+    partial class MigrationRestore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -327,36 +330,6 @@ namespace Clinic_CRM.Migrations
                     b.ToTable("MedicalServices");
                 });
 
-            modelBuilder.Entity("Clinic_CRM.Models.OTP", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsUsed")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("OtpHash")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("OTPs");
-                });
-
             modelBuilder.Entity("Clinic_CRM.Models.Patient", b =>
                 {
                     b.Property<int>("Id")
@@ -528,7 +501,7 @@ namespace Clinic_CRM.Migrations
                     b.Property<DateTime>("RequestedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("RequestedById")
+                    b.Property<int>("RequestedById")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -556,53 +529,6 @@ namespace Clinic_CRM.Migrations
                     b.HasIndex("RequestedById");
 
                     b.ToTable("Payments");
-                });
-
-            modelBuilder.Entity("Clinic_CRM.Models.Settings.Bank", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Logo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Banks");
-                });
-
-            modelBuilder.Entity("Clinic_CRM.Models.Settings.BankAccount", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AccountNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("BankId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BankId");
-
-                    b.ToTable("BankAccounts");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.BranchSetting", b =>
@@ -827,9 +753,6 @@ namespace Clinic_CRM.Migrations
                     b.Property<string>("FName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsEmailConfirmed")
-                        .HasColumnType("bit");
 
                     b.Property<string>("LName")
                         .IsRequired()
@@ -1228,7 +1151,8 @@ namespace Clinic_CRM.Migrations
                     b.HasOne("Clinic_CRM.Models.User", "RequestedBy")
                         .WithMany()
                         .HasForeignKey("RequestedById")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("ApprovedBy");
 
@@ -1241,17 +1165,6 @@ namespace Clinic_CRM.Migrations
                     b.Navigation("RejectedBy");
 
                     b.Navigation("RequestedBy");
-                });
-
-            modelBuilder.Entity("Clinic_CRM.Models.Settings.BankAccount", b =>
-                {
-                    b.HasOne("Clinic_CRM.Models.Settings.Bank", "Bank")
-                        .WithMany()
-                        .HasForeignKey("BankId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Bank");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.BranchSetting", b =>

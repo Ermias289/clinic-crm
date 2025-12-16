@@ -42,26 +42,26 @@ namespace Clinic_CRM.Controllers
             }
         }
 
-        [HttpPost("import")]
-        public async Task<ActionResult> ImportUser(List<CreateUserAccountDTO> dto)
-        {
-            try
-            {
-                var currentUser = _userService.GetCurrentUser();
+        //[HttpPost("import")]
+        //public async Task<ActionResult> ImportUser(List<CreateUserAccountDTO> dto)
+        //{
+        //    try
+        //    {
+        //        var currentUser = _userService.GetCurrentUser();
 
-                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUser))
-                    throw new UnauthorizedAccessException();
+        //        if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUser))
+        //            throw new UnauthorizedAccessException();
 
-                if (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !_userService.UserRole.CanAddUser)
-                    throw new UnauthorizedAccessException();
+        //        if (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !_userService.UserRole.CanAddUser)
+        //            throw new UnauthorizedAccessException();
 
-                return Ok(await _userService.ImportUserAsync(dto));
-            }
-            catch (Exception ex)
-            {
-                return this.ParseException(ex);
-            }
-        }
+        //        return Ok(await _userService.ImportUserAsync(dto));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return this.ParseException(ex);
+        //    }
+        //}
 
         [HttpGet]
         public async Task<ActionResult> GetAllUsers()
@@ -134,6 +134,25 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _userService.DeleteUserAsync(id));
+
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+        [HttpPut("confirmAccount")]
+        public async Task<IActionResult> ConfirmAccount(string OTP)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUser))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _userService.ConfirmEmailAccount(OTP));
 
             }
             catch (Exception ex)

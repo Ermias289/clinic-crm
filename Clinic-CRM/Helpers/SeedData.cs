@@ -242,7 +242,7 @@ namespace Clinic_CRM.Helpers
                 {
                     CardTypeId = regularType.Id,
                     Price = 500,
-                    ExpirationDuration = 365 // 1 Year
+                    ExpirationDuration = 1// 1 Year
                 });
             }
 

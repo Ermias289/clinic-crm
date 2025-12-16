@@ -1,5 +1,7 @@
-﻿using AutoMapper;
+﻿using System.Threading.Tasks;
+using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
+using Clinic_CRM.DTOs;
 using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.Models;
 using Clinic_CRM.Services.UserServices;
@@ -26,30 +28,47 @@ namespace Clinic_CRM.Services.PaymentServices
 
         public async Task<Payment> AutoPrepare(AutoPaymentPrepareDTO dto)
         {
+            //mapping the dto to the model
             var payment = _mapper.Map<Payment>(dto);
 
             payment.Status = PAYMENT_STATUS.AUTOPREPARED;
 
+            //checks if the card is prepared
             var card = await _context.Cards.FindAsync(payment.CardId);
 
             if (card == null)
                 throw new KeyNotFoundException("Card Not Found");
 
+            //checks if the card type exists
             var cardType = await _context.CardTypes.FindAsync(card.CardTypeId);
 
             if (cardType == null)
                 throw new KeyNotFoundException("Card Type Does not exist.");
 
+            //gets card price by card type from card setting
             var cardPrice = await _context.CardSettings.FirstOrDefaultAsync(x => x.CardTypeId == cardType.Id);
 
+            var existingPayment = await _context.Payments.Where(x => x.CardId == card.Id && (x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status != PAYMENT_STATUS.REJECTED)).FirstOrDefaultAsync();
+
+            if (existingPayment != null)
+                throw new KeyNotFoundException("You have a pending payment. Auto Payment Preparation Terminated.");
+
+
+            //prepares prefix for the card
+            var prefix = await _context.CompanySetting
+                .AsNoTracking()
+                .Select(x => x.Prefix)
+                .FirstOrDefaultAsync() ?? "";
             card.RequestedById = _userService.GetCurrentUser().Id;
 
             if (cardPrice == null)
                 throw new KeyNotFoundException("Card Price with the specified Card type does not exist.");
 
             payment.ExpectedAmount = cardPrice.Price;
-
+            payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
+           
             _context.Payments.Add(payment);
+
             await _context.SaveChangesAsync();
 
             return payment;
@@ -78,26 +97,27 @@ namespace Clinic_CRM.Services.PaymentServices
             payment.UnPaidAmount = payment.ExpectedAmount;
             payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
 
-            var existPayment = await _context.Payments.Where(x => x.CardId == dto.CardId)
-                .OrderBy(x => x.UnPaidAmount)
-                .ToListAsync();
+            //var existPayment = await _context.Payments.Where(x => x.CardId == payment.CardId && x.Status == PAYMENT_STATUS.AUTOPREPARED)
+            //    .OrderBy(x => x.UnPaidAmount)
+            //    .FirstOrDefaultAsync();
 
-            if (existPayment.Any(x => x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status == PAYMENT_STATUS.REJECTED))
-                throw new KeyNotFoundException("There is incomplete payment process, please complete that first.");
 
-            if(existPayment.Any())
-            {
-                var existingPayment = existPayment.Where( x => x.Status == PAYMENT_STATUS.PARTIALLYPAID).FirstOrDefault();
-                var paid = existPayment.Sum(x => x.PaidAmount);
+            //if (existPayment.Any(x => x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status == PAYMENT_STATUS.REJECTED && x.Reference != payment.Reference))
+            //    throw new KeyNotFoundException("There is incomplete payment process, please complete that first.");
 
-                if(existingPayment != null)
-                {
-                    payment.ExpectedAmount = existingPayment.UnPaidAmount;
-                    payment.UnPaidAmount = existingPayment.UnPaidAmount;
-                    payment.PaidAmount = paid;
-                    payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
-                }
-            }
+            //if (existPayment.Any())
+            //{
+            //    var existingPayment = existPayment.Where( x => x.Status == PAYMENT_STATUS.PARTIALLYPAID).FirstOrDefault();
+            //    var paid = existPayment.Sum(x => x.PaidAmount);
+
+            //    if(existingPayment != null)
+            //    {
+            //        payment.ExpectedAmount = existingPayment.UnPaidAmount;
+            //        payment.UnPaidAmount = existingPayment.UnPaidAmount;
+            //        payment.PaidAmount = paid;
+            //        payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
+            //    }
+            //}
 
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
@@ -107,7 +127,7 @@ namespace Clinic_CRM.Services.PaymentServices
                 .Select(x => x.Prefix)
                 .FirstOrDefaultAsync() ?? "";
 
-            payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
+            //payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
             await _context.SaveChangesAsync();
             return payment;
         }

@@ -21,6 +21,8 @@ namespace Clinic_CRM.Models
         public int UserRoleId { get; set; }
         public UserRole UserRole { get; set; }
 
+        public bool IsEmailConfirmed { get; set; } 
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }
