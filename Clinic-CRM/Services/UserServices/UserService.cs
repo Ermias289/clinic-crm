@@ -13,6 +13,7 @@ using static Clinic_CRM.Helpers.Constants;
 using System.IO;
 using Clinic_CRM.Services.EmailService;
 using Clinic_CRM.Services.OTPGenerator;
+using MimeKit.Tnef;
 
 namespace Clinic_CRM.Services.UserServices
 {
@@ -120,12 +121,13 @@ namespace Clinic_CRM.Services.UserServices
                 if (superAdminExists)
                     throw new InvalidOperationException("There can only be one Super Admin.");
             }
-
-            
+            user.Email = user.Email.ToLower();
+;            
             var userE = await _context.Users.AnyAsync(u => u.PhoneNumber == dto.PhoneNumber || u.Email == dto.Email);
 
             if (userE)
                 throw new KeyNotFoundException("Phone Numebr or Email Is Already In Use.");
+
 
             //// Path to your OTP.html file
             //string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "OTP.html");
@@ -188,9 +190,9 @@ namespace Clinic_CRM.Services.UserServices
         //    return true;
         //}
 
-        public async Task<string> ConfirmEmailAccount(string OTP)
+        public async Task<string> ConfirmEmailAccount(string OTP, string email)
         {
-            bool validOtp = await _oTPGeneratorService.VerifyOtpAsync(GetCurrentUser().Email, OTP);
+            bool validOtp = await _oTPGeneratorService.VerifyOtpAsync(email, OTP);
            
             if(validOtp)
                 GetCurrentUser().IsEmailConfirmed = true;
@@ -249,7 +251,6 @@ namespace Clinic_CRM.Services.UserServices
              .Where(u => u.Id == GetCurrentUser().Id)
              .FirstOrDefaultAsync();
 
-
             if (currentUser.UserRole.Name == USER_ROLES.PATIENT)
             {
                 if (dto.Id != currentUser.Id)
@@ -261,12 +262,14 @@ namespace Clinic_CRM.Services.UserServices
                 ??
                 throw new KeyNotFoundException("User Not Found.");
 
-            
+
+            if (!user.IsEmailConfirmed)
+                throw new KeyNotFoundException("Confirm your email before you try to update user data.");
 
             user.FName = dto.FName;
             user.LName = dto.LName;
             user.MName = dto.MName;
-            user.Email = dto.Email;
+            user.Email = dto.Email.ToLower();
             user.UserRoleId = dto.UserRoleId;
 
             await _context.SaveChangesAsync();
@@ -373,6 +376,9 @@ namespace Clinic_CRM.Services.UserServices
                 ??
                 throw new KeyNotFoundException("User Not Found.");
 
+
+            if (!user.IsEmailConfirmed)
+                throw new KeyNotFoundException("Confirm your email before you try to login.");
 
             if (!VerifyPasswordHash(dto.Password, user.PasswordHash, user.PasswordSalt))
             {

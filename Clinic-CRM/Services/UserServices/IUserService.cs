@@ -18,7 +18,7 @@ namespace Clinic_CRM.Services.UserServices
         Task<GetUserDTO> UpdateUserAsync(UpdateUserAccountDTO dto);
         Task<bool> DeleteUserAsync(int id);
 
-        Task<string> ConfirmEmailAccount(string OTP);
+        Task<string> ConfirmEmailAccount(string OTP, string email);
         // AUTH RELATED
 
         Task<LogInReturnDTO> CreateToken(User user);

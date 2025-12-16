@@ -69,8 +69,10 @@ namespace Clinic_CRM.Services.OTPGenerator
         {
             using var hmac = new HMACSHA512();
 
+            
+
             var otpRecord = await _context.Set<OTP>()
-                .Where(x => x.Email == email)
+                .Where(x => x.Email == email.ToLower())
                 .OrderByDescending(x => x.Id)
                 .FirstOrDefaultAsync();
 

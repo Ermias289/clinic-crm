@@ -143,7 +143,7 @@ namespace Clinic_CRM.Controllers
         }
 
         [HttpPut("confirmAccount")]
-        public async Task<IActionResult> ConfirmAccount(string OTP)
+        public async Task<IActionResult> ConfirmAccount(string OTP, string email)
         {
             try
             {
@@ -152,7 +152,7 @@ namespace Clinic_CRM.Controllers
                 if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUser))
                     throw new UnauthorizedAccessException();
 
-                return Ok(await _userService.ConfirmEmailAccount(OTP));
+                return Ok(await _userService.ConfirmEmailAccount(OTP, email));
 
             }
             catch (Exception ex)
