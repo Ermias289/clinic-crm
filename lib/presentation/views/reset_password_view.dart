@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../controllers/register_controller.dart';
+import '../controllers/reset_password_controller.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
-class RegisterView extends GetView<RegisterController> {
-  const RegisterView({super.key});
+class ResetPasswordView extends GetView<ResetPasswordController> {
+  const ResetPasswordView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +71,7 @@ class RegisterView extends GetView<RegisterController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                         IconButton(
+                          IconButton(
                             onPressed: () => Get.back(),
                             icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
                             padding: EdgeInsets.zero,
@@ -79,14 +79,14 @@ class RegisterView extends GetView<RegisterController> {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            "Create Account",
+                            "Reset Password",
                             style: AppTextStyles.h1.copyWith(
                               color: Colors.white,
                               fontSize: 24,
                             ),
                           ),
                           Text(
-                            "Join our dental clinic family",
+                            "Enter the verification code and new password",
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 14,
@@ -106,82 +106,119 @@ class RegisterView extends GetView<RegisterController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Username
-                  CustomTextField(
-                    controller: controller.usernameController,
-                    labelText: 'Username',
-                    prefixIcon: Icons.person_outline_rounded,
-                  ),
+                  const SizedBox(height: 20),
 
-                  const SizedBox(height: 12),
-
-                  // Name Row
-                  Row(
-                    children: [
-                      Expanded(
-                        child: CustomTextField(
-                          controller: controller.fNameController,
-                          labelText: 'First Name',
-                          prefixIcon: Icons.badge_outlined,
+                  // Email display
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.email, color: AppColors.primaryBlue, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          controller.email,
+                          style: TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: CustomTextField(
-                          controller: controller.lNameController,
-                          labelText: 'Last Name',
-                          prefixIcon: Icons.badge_outlined,
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Success Message
+                  Obx(() => controller.successMessage.isNotEmpty
+                    ? Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Contact Info
-                  CustomTextField(
-                    controller: controller.emailController,
-                    labelText: 'Email',
-                    prefixIcon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  CustomTextField(
-                    controller: controller.phoneController,
-                    labelText: 'Phone Number',
-                    prefixIcon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                controller.successMessage.value,
+                                style: const TextStyle(color: Colors.green, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
                   ),
 
-                  const SizedBox(height: 12),
+                  // Error Message
+                  Obx(() => controller.errorMessage.isNotEmpty
+                    ? Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error, color: Colors.red, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                controller.errorMessage.value,
+                                style: const TextStyle(color: Colors.red, fontSize: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+                  ),
 
-                  // Password
+                  // Verification Code Field
                   CustomTextField(
-                    controller: controller.passwordController,
-                    labelText: 'Password',
+                    controller: controller.otpController,
+                    labelText: 'Verification Code',
+                    prefixIcon: Icons.security_rounded,
+                    keyboardType: TextInputType.number,
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // New Password Field
+                  CustomTextField(
+                    controller: controller.newPasswordController,
+                    labelText: 'New Password',
                     prefixIcon: Icons.lock_outline_rounded,
                     obscureText: true,
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // Confirm Password
+                  // Confirm Password Field
                   CustomTextField(
                     controller: controller.confirmPasswordController,
-                    labelText: 'Confirm Password',
+                    labelText: 'Confirm New Password',
                     prefixIcon: Icons.lock_outline_rounded,
                     obscureText: true,
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Register Button
+                  // Reset Password Button
                   Obx(() => SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: controller.isLoading.value ? null : controller.register,
+                      onPressed: controller.isLoading.value ? null : controller.resetPassword,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
@@ -191,26 +228,33 @@ class RegisterView extends GetView<RegisterController> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      child: controller.isLoading.value 
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text("Create Account", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: controller.isLoading.value
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text(
+                            "Reset Password",
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                     ),
                   )),
 
                   const SizedBox(height: 16),
 
-                  // Login Link
+                  // Back to Forgot Password
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Already have an account? ",
+                        "Didn’t receive a code? ",
                         style: AppTextStyles.bodyMedium,
                       ),
                       TextButton(
-                        onPressed: controller.goToLogin,
+                        onPressed: controller.goBack,
                         child: Text(
-                          "Login",
+                          "Go Back",
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.bold,

@@ -12,6 +12,12 @@ import '../presentation/bindings/card_binding.dart';
 import '../presentation/views/services_list_view.dart';
 import '../presentation/views/appointment_booking_view.dart';
 import '../presentation/bindings/medical_service_binding.dart';
+import '../presentation/views/otp_verification_view.dart';
+import '../presentation/bindings/otp_verification_binding.dart';
+import '../presentation/views/forgot_password_view.dart';
+import '../presentation/bindings/forgot_password_binding.dart';
+import '../presentation/views/reset_password_view.dart';
+import '../presentation/bindings/reset_password_binding.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -33,6 +39,16 @@ class AppPages {
       binding: AuthBinding(),
     ),
     GetPage(
+      name: Routes.FORGOT_PASSWORD,
+      page: () => const ForgotPasswordView(),
+      binding: ForgotPasswordBinding(),
+    ),
+    GetPage(
+      name: Routes.RESET_PASSWORD,
+      page: () => const ResetPasswordView(),
+      binding: ResetPasswordBinding(),
+    ),
+    GetPage(
       name: Routes.DASHBOARD,
       page: () => const MainNavigationView(),
       binding: MainNavigationBinding(),
@@ -51,6 +67,11 @@ class AppPages {
       name: Routes.BOOK_APPOINTMENT,
       page: () => const AppointmentBookingView(),
       binding: MedicalServiceBinding(),
+    ),
+    GetPage(
+      name: Routes.OTP_VERIFICATION,
+      page: () => const OTPVerificationView(),
+      binding: OTPVerificationBinding(),
     ),
   ];
 }

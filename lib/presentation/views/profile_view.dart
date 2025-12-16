@@ -144,187 +144,208 @@ class ProfileView extends GetView<ProfileController> {
                 ),
               ),
 
-              // Scrollable Content
+              // Content
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      // Profile Avatar with Edit Button
-                      Stack(
-                        clipBehavior: Clip.none,
+                child: Obx(() {
+                  // EDIT MODE
+                  if (controller.isEditing.value) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.primaryBlue,
-                                width: 3,
+                          // User Role Badge (Visible in Edit Mode too? Maybe not needed, but keeping for context)
+                           if (controller.currentUser.value?.roleName != null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 24),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                            ),
-                            child: CircleAvatar(
-                              radius: 60,
-                              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
-                              child: Icon(
-                                Icons.person,
-                                size: 60,
-                                color: AppColors.primaryBlue,
-                              ),
-                            ),
-                          ),
-                          // Edit Profile Icon Button
-                          Obx(() => !controller.isEditing.value
-                              ? Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: controller.toggleEdit,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primaryBlue,
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: AppColors.backgroundLight,
-                                          width: 3,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primaryBlue.withOpacity(0.3),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.edit,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink()),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // User Role Badge
-                      if (controller.currentUser.value?.roleName != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            controller.currentUser.value!.roleName!,
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-
-                      const SizedBox(height: 32),
-
-                      // Form Fields
-                      CustomTextField(
-                        controller: controller.usernameController,
-                        labelText: 'Username',
-                        prefixIcon: Icons.person_outline,
-                        keyboardType: TextInputType.text,
-                        enabled: controller.isEditing.value,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      CustomTextField(
-                        controller: controller.fNameController,
-                        labelText: 'First Name',
-                        prefixIcon: Icons.badge_outlined,
-                        enabled: controller.isEditing.value,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      CustomTextField(
-                        controller: controller.mNameController,
-                        labelText: 'Middle Name',
-                        prefixIcon: Icons.badge_outlined,
-                        enabled: controller.isEditing.value,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      CustomTextField(
-                        controller: controller.lNameController,
-                        labelText: 'Last Name',
-                        prefixIcon: Icons.badge_outlined,
-                        enabled: controller.isEditing.value,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      CustomTextField(
-                        controller: controller.emailController,
-                        labelText: 'Email',
-                        prefixIcon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        enabled: controller.isEditing.value,
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      CustomTextField(
-                        controller: controller.phoneController,
-                        labelText: 'Phone Number',
-                        prefixIcon: Icons.phone_outlined,
-                        keyboardType: TextInputType.phone,
-                        enabled: controller.isEditing.value,
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      // Action Buttons
-                      Obx(() {
-                        if (controller.isEditing.value) {
-                          return Column(
-                            children: [
-                              CustomButton(
-                                text: 'Save Changes',
-                                onPressed: controller.updateProfile,
-                                isLoading: controller.isLoading.value,
-                                type: ButtonType.primary,
-                              ),
-                              const SizedBox(height: 16),
-                              CustomButton(
-                                text: 'Cancel',
-                                onPressed: () {
-                                  controller.isEditing.value = false;
-                                  controller.loadUserProfile(); // Reload to reset fields
-                                },
-                                type: ButtonType.secondary,
-                              ),
-                            ],
-                          );
-                        } else {
-                          return Column(
-                            children: [
-                              TextButton.icon(
-                                onPressed: controller.showChangePasswordDialog,
-                                icon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textSecondary),
-                                label: Text(
-                                  'Change Password',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              child: Text(
+                                controller.currentUser.value!.roleName!,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                            ),
+
+                          CustomTextField(
+                            controller: controller.usernameController,
+                            labelText: 'Username',
+                            prefixIcon: Icons.person_outline,
+                            keyboardType: TextInputType.text,
+                            enabled: true,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: controller.fNameController,
+                            labelText: 'First Name',
+                            prefixIcon: Icons.badge_outlined,
+                            enabled: true,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: controller.mNameController,
+                            labelText: 'Middle Name',
+                            prefixIcon: Icons.badge_outlined,
+                            enabled: true,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: controller.lNameController,
+                            labelText: 'Last Name',
+                            prefixIcon: Icons.badge_outlined,
+                            enabled: true,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: controller.emailController,
+                            labelText: 'Email',
+                            prefixIcon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                            enabled: true,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomTextField(
+                            controller: controller.phoneController,
+                            labelText: 'Phone Number',
+                            prefixIcon: Icons.phone_outlined,
+                            keyboardType: TextInputType.phone,
+                            enabled: true,
+                          ),
+                          const SizedBox(height: 32),
+                          CustomButton(
+                            text: 'Save Changes',
+                            onPressed: controller.updateProfile,
+                            isLoading: controller.isLoading.value,
+                            type: ButtonType.primary,
+                          ),
+                          const SizedBox(height: 16),
+                          CustomButton(
+                            text: 'Cancel',
+                            onPressed: () {
+                              controller.isEditing.value = false;
+                              controller.loadUserProfile();
+                            },
+                            type: ButtonType.secondary,
+                          ),
+                          const SizedBox(height: 50), // Bottom padding for scrolling
+                        ],
+                      ),
+                    );
+                  } 
+                  
+                  // VIEW MODE (Non-scrollable as requested, or minimal scroll)
+                  else {
+                    final user = controller.currentUser.value;
+                    final fullName = '${user?.fName ?? ''} ${user?.mName ?? ''} ${user?.lName ?? ''}'.trim();
+                    final displayName = fullName.isNotEmpty ? fullName : (user?.fullname ?? 'User');
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                           // Role Badge
+                          if (user?.roleName != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                user!.roleName!,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(height: 24),
+
+                          // Name (Combined)
+                          Text(
+                            displayName,
+                            style: AppTextStyles.h2.copyWith(
+                              fontSize: 28,
+                              color: AppColors.textPrimary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          
+                          // Username
+                          Text(
+                            '@${user?.username ?? ''}',
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+
+                          const SizedBox(height: 40),
+
+                          // Info Rows
+                          _buildInfoRow(Icons.email_outlined, user?.email ?? 'No email'),
+                          const SizedBox(height: 16),
+                          _buildInfoRow(Icons.phone_outlined, user?.phoneNumber ?? 'No phone'),
+
+                          const SizedBox(height: 16),
+
+                          // Small Edit Profile Button
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: InkWell(
+                              onTap: controller.toggleEdit,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primaryBlue.withOpacity(0.05),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.edit, size: 16, color: AppColors.primaryBlue),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Edit Profile',
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.primaryBlue,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const Spacer(),
+
+                          // Actions
+                          TextButton.icon(
+                            onPressed: controller.showChangePasswordDialog,
+                            icon: const Icon(Icons.lock_outline, size: 18, color: AppColors.textSecondary),
+                            label: Text(
+                              'Change Password',
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                           const SizedBox(height: 16),
                               CustomButton(
                                 text: 'Logout',
                                 onPressed: () {
@@ -334,17 +355,46 @@ class ProfileView extends GetView<ProfileController> {
                                 type: ButtonType.primary,
                                 icon: Icons.logout,
                               ),
-                            ],
-                          );
-                        }
-                      }),
-                    ],
-                  ),
-                ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    );
+                  }
+                }),
               ),
             ],
           );
         }),
     )));
+  }
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryBlue.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primaryBlue),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

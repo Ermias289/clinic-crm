@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/register_request_model.dart';
 import '../../../domain/usecases/register_usecase.dart';
+import '../../config/app_routes.dart';
 
 class RegisterController extends GetxController {
   final RegisterUseCase registerUseCase;
@@ -11,7 +12,6 @@ class RegisterController extends GetxController {
   final usernameController = TextEditingController();
   final fullnameController = TextEditingController();
   final fNameController = TextEditingController();
-  final mNameController = TextEditingController();
   final lNameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
@@ -93,7 +93,7 @@ class RegisterController extends GetxController {
 
     isLoading.value = true;
     try {
-      final fullname = '${fNameController.text} ${mNameController.text.isNotEmpty ? mNameController.text + ' ' : ''}${lNameController.text}';
+      final fullname = '${fNameController.text} ${lNameController.text}';
       
       // Fetch Patient Role ID dynamically
       final int roleId = await registerUseCase.getPatientRoleId();
@@ -103,7 +103,7 @@ class RegisterController extends GetxController {
         username: usernameController.text.trim(),
         fullname: fullname.trim(),
         fName: fNameController.text.trim(),
-        mName: mNameController.text.trim(),
+        mName: "", // Empty for now as removed from UI
         lName: lNameController.text.trim(),
         email: emailController.text.trim(),
         phoneNumber: phoneController.text.trim(),
@@ -119,7 +119,7 @@ class RegisterController extends GetxController {
           response.message,
           snackPosition: SnackPosition.BOTTOM,
         );
-        Get.offNamed('/login');
+        Get.offNamed(Routes.OTP_VERIFICATION, arguments: emailController.text.trim());
       } else {
         Get.snackbar(
           'Registration Failed', 

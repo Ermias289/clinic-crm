@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import '../../config/app_routes.dart';
 import '../controllers/login_controller.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
@@ -157,11 +158,11 @@ class LoginView extends GetView<LoginController> {
                     obscureText: true,
                   ),
                   
-                  // Forgot Password (Optional UI element)
+                  // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () => Get.toNamed(Routes.FORGOT_PASSWORD),
                       child: Text(
                         "Forgot Password?",
                         style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryBlue),
