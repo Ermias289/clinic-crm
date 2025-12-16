@@ -8,6 +8,7 @@ abstract class CardRemoteDataSource {
   Future<List<CardSettingModel>> getCardSettings();
   Future<Map<String, dynamic>> requestCard(RequestCardModel request); // Changed to return Map (Card object)
   Future<bool> createPayment(int cardId, String proofPath);
+  Future<Map<String, dynamic>?> getMyCard();
 }
 
 class CardRemoteDataSourceImpl implements CardRemoteDataSource {
@@ -79,6 +80,27 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
 
     } catch (e) {
       throw Exception('Error creating payment: $e');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getMyCard() async {
+    try {
+      final response = await apiClient.get('/api/Card/my-card');
+
+      if (response.hasError) {
+        if (response.statusCode == 404) {
+          return null;
+        }
+         if (response.statusCode == 401) throw Exception("Unauthorized");
+         
+        throw Exception(response.statusText ?? 'Failed to get my card');
+      }
+
+      return response.body as Map<String, dynamic>;
+    } catch (e) {
+      if (e.toString().contains("404")) return null;
+      rethrow;
     }
   }
 }

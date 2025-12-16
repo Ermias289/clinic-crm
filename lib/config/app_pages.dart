@@ -9,6 +9,9 @@ import '../presentation/views/main_navigation_view.dart';
 import '../presentation/views/onboarding_view.dart';
 import '../presentation/views/card_selection_view.dart';
 import '../presentation/bindings/card_binding.dart';
+import '../presentation/views/services_list_view.dart';
+import '../presentation/views/appointment_booking_view.dart';
+import '../presentation/bindings/medical_service_binding.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -38,6 +41,16 @@ class AppPages {
       name: Routes.CARDS,
       page: () => const CardSelectionView(),
       binding: CardBinding(),
+    ),
+    GetPage(
+      name: Routes.SERVICES,
+      page: () => const ServicesListView(),
+      binding: MedicalServiceBinding(),
+    ),
+    GetPage(
+      name: Routes.BOOK_APPOINTMENT,
+      page: () => const AppointmentBookingView(),
+      binding: MedicalServiceBinding(),
     ),
   ];
 }

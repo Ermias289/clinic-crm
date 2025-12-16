@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../config/app_routes.dart';
 
 class AppointmentsView extends StatelessWidget {
   const AppointmentsView({super.key});
@@ -244,6 +245,12 @@ class AppointmentsView extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Get.toNamed(Routes.SERVICES),
+        backgroundColor: AppColors.primaryBlue,
+        icon: const Icon(Icons.add),
+        label: const Text('Book Appointment'),
       ),
     );
   }
