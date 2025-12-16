@@ -18,43 +18,38 @@ namespace Clinic_CRM.Services.OTPGenerator
         private readonly IEmailService _emailService;
         private readonly Context _context; // Replace with your actual DbContext
         private readonly IWebHostEnvironment _env;
-        public OTPGeneratorService(IEmailService emailService, Context context,IWebHostEnvironment env)
+        private readonly IConfiguration _config;
+        public OTPGeneratorService(IEmailService emailService, Context context,IWebHostEnvironment env, IConfiguration config)
         {
             _emailService = emailService;
             _context = context;
             _env = env;
+            _config = config;
         }
 
         public async Task<string> SendOtpEmailAsync(string recipientEmail)
         {
-            using var hmac = new HMACSHA512();
+            var secretKey = Encoding.UTF8.GetBytes(_config["OtpSecret"]);
+
+            using var hmac = new HMACSHA512(secretKey);
 
             string otp = OTPGenerator.GenerateAlphaNumericOtp();
 
             string templatePath = Path.Combine(_env.ContentRootPath, "OTP.html");
             string htmlBody = await File.ReadAllTextAsync(templatePath);
-
             htmlBody = htmlBody.Replace("{{OTP}}", otp);
-            //string htmlBody = "<h1>OTP Test</h1><p>Your OTP is <b>" + otp + "</b></p>";
 
-
-            try
-            {
-                await _emailService.SendEmailAsync(recipientEmail, "Verify Email - One Time Password", htmlBody, true);
-                Console.WriteLine("Email sent successfully");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to send email: {ex.Message}");
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.InnerException?.Message);
-            }
-
+            await _emailService.SendEmailAsync(
+                recipientEmail,
+                "Verify Email - One Time Password",
+                htmlBody,
+                true
+            );
 
             var otpEntity = new OTP
             {
-                Email = recipientEmail,
-                OtpHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(otp)),
+                Email = recipientEmail.ToLower(),
+                OtpHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(otp.Trim())),
                 ExpiresAt = DateTime.UtcNow.AddMinutes(5),
                 IsUsed = false,
                 CreatedAt = DateTime.UtcNow
@@ -62,39 +57,52 @@ namespace Clinic_CRM.Services.OTPGenerator
 
             _context.OTPs.Add(otpEntity);
             await _context.SaveChangesAsync();
+
             return "Email Sent.";
         }
 
         public async Task<bool> VerifyOtpAsync(string email, string submittedOtp)
         {
-            using var hmac = new HMACSHA512();
-
-            
-
-            var otpRecord = await _context.Set<OTP>()
+            var otpRecord = await _context.OTPs
                 .Where(x => x.Email == email.ToLower())
                 .OrderByDescending(x => x.Id)
                 .FirstOrDefaultAsync();
 
             if (otpRecord == null)
-                throw new KeyNotFoundException("Invalid OTP.");
+                throw new InvalidOperationException("OTP not found.");
 
             if (otpRecord.ExpiresAt < DateTime.UtcNow)
-                throw new KeyNotFoundException("OTP Has Expired.");
+                throw new InvalidOperationException("OTP expired.");
 
             if (otpRecord.IsUsed)
-                throw new KeyNotFoundException("OTP Has Been Used.");
+                throw new InvalidOperationException("OTP already used.");
 
-            byte[] otp = hmac.ComputeHash(Encoding.UTF8.GetBytes(submittedOtp));
+            var secretKey = Encoding.UTF8.GetBytes(_config["OtpSecret"]);
+            using var hmac = new HMACSHA512(secretKey);
 
-            if (!otpRecord.OtpHash.SequenceEqual(otp))
-                throw new KeyNotFoundException("Wrong OTP.");
+            var submittedHash = hmac.ComputeHash(
+                Encoding.UTF8.GetBytes(submittedOtp.Trim())
+            );
 
-            // Mark OTP as used
+            if (!CryptographicOperations.FixedTimeEquals(
+                    otpRecord.OtpHash,
+                    submittedHash))
+            {
+                throw new InvalidOperationException("Wrong OTP.");
+            }
+
+            var user = await _context.Users.Where(x => x.Email == otpRecord.Email).FirstOrDefaultAsync();
+
+            if (user == null)
+                throw new KeyNotFoundException("There is no User account with this email.");
+
+            user.IsEmailConfirmed = true;
+
             otpRecord.IsUsed = true;
             await _context.SaveChangesAsync();
 
             return true;
         }
+
     }
 }

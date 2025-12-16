@@ -333,8 +333,14 @@ namespace Clinic_CRM.Services.UserServices
                 new Claim(ClaimTypes.Role, user.UserRole.Name)
             };
 
+            if (!user.IsEmailConfirmed)
+                throw new KeyNotFoundException(
+                    "Please confirm your email before logging in."
+                );
+
             //var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             //var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
                 _configuration.GetSection("AppSettings:Token").Value));
@@ -369,7 +375,7 @@ namespace Clinic_CRM.Services.UserServices
 
         public Task<LogInReturnDTO> Login(LogInDTO dto)
         {
-            var user = _context.Users.Where(u => (u.Email == dto.PhoneOrEmail) || (u.PhoneNumber == dto.PhoneOrEmail))
+            var user = _context.Users.Where(u => (u.Email == dto.PhoneOrEmail.ToLower()) || (u.PhoneNumber == dto.PhoneOrEmail.ToLower()))
                 .AsNoTracking()
                 .Include(u => u.UserRole)
                 .FirstOrDefault()
@@ -377,8 +383,11 @@ namespace Clinic_CRM.Services.UserServices
                 throw new KeyNotFoundException("User Not Found.");
 
 
+
             if (!user.IsEmailConfirmed)
-                throw new KeyNotFoundException("Confirm your email before you try to login.");
+                throw new UnauthorizedAccessException(
+                    "Please confirm your email before logging in."
+                );
 
             if (!VerifyPasswordHash(dto.Password, user.PasswordHash, user.PasswordSalt))
             {
