@@ -9,6 +9,7 @@ using Clinic_CRM.Services.EmailService;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Macs;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Clinic_CRM.Services.OTPGenerator
 {
@@ -16,11 +17,12 @@ namespace Clinic_CRM.Services.OTPGenerator
     {
         private readonly IEmailService _emailService;
         private readonly Context _context; // Replace with your actual DbContext
-
-        public OTPGeneratorService(IEmailService emailService, Context context)
+        private readonly IWebHostEnvironment _env;
+        public OTPGeneratorService(IEmailService emailService, Context context,IWebHostEnvironment env)
         {
             _emailService = emailService;
             _context = context;
+            _env = env;
         }
 
         public async Task<string> SendOtpEmailAsync(string recipientEmail)
@@ -29,10 +31,12 @@ namespace Clinic_CRM.Services.OTPGenerator
 
             string otp = OTPGenerator.GenerateAlphaNumericOtp();
 
-            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "OTP.html");
+            string templatePath = Path.Combine(_env.ContentRootPath, "OTP.html");
             string htmlBody = await File.ReadAllTextAsync(templatePath);
 
             htmlBody = htmlBody.Replace("{{OTP}}", otp);
+            //string htmlBody = "<h1>OTP Test</h1><p>Your OTP is <b>" + otp + "</b></p>";
+
 
             try
             {
@@ -42,6 +46,8 @@ namespace Clinic_CRM.Services.OTPGenerator
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to send email: {ex.Message}");
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.InnerException?.Message);
             }
 
 
