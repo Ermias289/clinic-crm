@@ -1,4 +1,6 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+//using static Clinic_CRM.Services.OTPGenerator.OTPGenerator;
+using System.IO;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -6,14 +8,13 @@ using AutoMapper;
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using static Clinic_CRM.Helpers.Constants;
-//using static Clinic_CRM.Services.OTPGenerator.OTPGenerator;
-using System.IO;
 using Clinic_CRM.Services.EmailService;
 using Clinic_CRM.Services.OTPGenerator;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MimeKit.Tnef;
+using Org.BouncyCastle.Crypto.Macs;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Services.UserServices
 {
@@ -405,6 +406,8 @@ namespace Clinic_CRM.Services.UserServices
 
         public async Task<bool> SetPassword(ChangePasswordDTO dto)
         {
+            using var hmac = new HMACSHA512();
+
             var user = _context.Users.Where(u => (u.Email == dto.PhoneOrEmail) || (u.PhoneNumber == dto.PhoneOrEmail))
                 .Include(u => u.UserRole)
                 .FirstOrDefault()
@@ -420,10 +423,17 @@ namespace Clinic_CRM.Services.UserServices
                 }
             }
 
-            if (dto.Reset)
-            {
-                dto.NewPassword = "12345678";
-            }
+
+
+            //if (dto.Reset && dto.NewPassword != null)
+            //{
+            //    var user2 = _context.Users.First(u => (u.Email == dto.PhoneOrEmail) || (u.PhoneNumber == dto.PhoneOrEmail));
+
+            //    CreatePasswordHash(dto.NewPassword, out byte[] PasswordHash, out byte[] PasswordSalt);
+
+            //    user2.PasswordHash = PasswordHash;
+            //    user2.PasswordSalt = PasswordSalt;
+            //}
 
 
             if (dto.NewPassword.Length < 8)
@@ -436,7 +446,7 @@ namespace Clinic_CRM.Services.UserServices
             user1.PasswordHash = passwordHash;
             user1.PasswordSalt = passwordSalt;
 
-            _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return true;
         }
