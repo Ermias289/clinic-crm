@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../domain/models/medical_service_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../config/app_routes.dart';
 
 class AppointmentBookingView extends StatefulWidget {
   const AppointmentBookingView({super.key});
@@ -15,8 +16,13 @@ class AppointmentBookingView extends StatefulWidget {
 class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   final _formKey = GlobalKey<FormState>();
   late MedicalService service;
+
+  // Selected values must come from the doctor schedule picker (not free pickers)
+  String? selectedDoctorName;
+  int? selectedDoctorId;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
+  DateTime? selectedDateTime;
 
   @override
   void initState() {
@@ -24,60 +30,31 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
     service = Get.arguments as MedicalService;
   }
 
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryBlue,
-              onPrimary: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
+  Future<void> _openDoctorSchedulePicker() async {
+    final result = await Get.toNamed(
+      Routes.DOCTOR_SCHEDULE_PICKER,
+      arguments: service,
     );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
-    }
-  }
 
-  Future<void> _selectTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppColors.primaryBlue,
-              onPrimary: Colors.white,
-              onSurface: AppColors.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != selectedTime) {
+    if (result is Map) {
       setState(() {
-        selectedTime = picked;
+        selectedDoctorId = result['doctorId'] as int?;
+        selectedDoctorName = result['doctorName'] as String?;
+        selectedDate = result['date'] as DateTime?;
+        selectedTime = result['time'] as TimeOfDay?;
+        selectedDateTime = result['dateTime'] as DateTime?;
       });
     }
   }
 
   void _submitBooking() {
-    if (_formKey.currentState!.validate() && selectedDate != null && selectedTime != null) {
+    if (_formKey.currentState!.validate() &&
+        selectedDoctorId != null &&
+        selectedDate != null &&
+        selectedTime != null &&
+        selectedDateTime != null) {
       Get.snackbar(
-        'Success', 
+        'Success',
         'Appointment Request Sent',
         backgroundColor: AppColors.successGreen,
         colorText: Colors.white,
@@ -86,12 +63,12 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       );
       // Wait for snackbar then go back
       Future.delayed(const Duration(seconds: 2), () {
-         Get.offAllNamed('/dashboard'); // Go home after success
+        Get.offAllNamed('/dashboard'); // Go home after success
       });
     } else {
       Get.snackbar(
-        'Required', 
-        'Please select both date and time',
+        'Required',
+        'Please select doctor, date and time',
         backgroundColor: AppColors.warningOrange,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -156,7 +133,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                           ],
                         ),
                         const SizedBox(height: 20),
-                         Text(
+                        Text(
                           'Service',
                           style: AppTextStyles.caption.copyWith(color: Colors.white70),
                         ),
@@ -181,40 +158,26 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Date & Time', style: AppTextStyles.h3),
+                    Text('Doctor, Date & Time', style: AppTextStyles.h3),
                     const SizedBox(height: 8),
                     Text(
-                      'Select your preferred slot',
+                      'Choose from the doctor’s available schedule',
                       style: AppTextStyles.bodySmall,
                     ),
                     const SizedBox(height: 24),
-                    
-                    // Date Picker
+
                     _buildSelectionCard(
-                      title: 'Select Date',
-                      value: selectedDate == null 
-                          ? 'Choose Date' 
-                          : DateFormat('EEEE, d MMMM y').format(selectedDate!),
-                      icon: Icons.calendar_today_rounded,
-                      onTap: () => _selectDate(context),
-                      isSelected: selectedDate != null,
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Time Picker
-                    _buildSelectionCard(
-                      title: 'Select Time',
-                      value: selectedTime == null 
-                          ? 'Choose Time' 
-                          : selectedTime!.format(context),
-                      icon: Icons.access_time_rounded,
-                      onTap: () => _selectTime(context),
-                      isSelected: selectedTime != null,
+                      title: 'Select Doctor & Slot',
+                      value: (selectedDoctorName == null || selectedDateTime == null)
+                          ? 'Choose Doctor, Date & Time'
+                          : '${selectedDoctorName!} • ${DateFormat('EEE, d MMM').format(selectedDateTime!)} • ${DateFormat.jm().format(selectedDateTime!)}',
+                      icon: Icons.event_available_rounded,
+                      onTap: _openDoctorSchedulePicker,
+                      isSelected: selectedDoctorId != null && selectedDateTime != null,
                     ),
 
                     const SizedBox(height: 40),
-                    
+
                     // Button
                     SizedBox(
                       width: double.infinity,
@@ -273,9 +236,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected 
-                        ? AppColors.primaryBlue.withOpacity(0.1) 
-                        : AppColors.backgroundLight,
+                    color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : AppColors.backgroundLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -284,24 +245,27 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTextStyles.caption,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      value,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? AppColors.textPrimary : AppColors.textHint,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTextStyles.caption,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        value,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? AppColors.textPrimary : AppColors.textHint,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 12),
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,

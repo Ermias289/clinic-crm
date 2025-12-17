@@ -18,6 +18,8 @@ import '../presentation/views/forgot_password_view.dart';
 import '../presentation/bindings/forgot_password_binding.dart';
 import '../presentation/views/reset_password_view.dart';
 import '../presentation/bindings/reset_password_binding.dart';
+import '../presentation/views/doctor_schedule_picker_view.dart';
+import '../presentation/bindings/doctor_schedule_picker_binding.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -67,6 +69,11 @@ class AppPages {
       name: Routes.BOOK_APPOINTMENT,
       page: () => const AppointmentBookingView(),
       binding: MedicalServiceBinding(),
+    ),
+    GetPage(
+      name: Routes.DOCTOR_SCHEDULE_PICKER,
+      page: () => const DoctorSchedulePickerView(),
+      binding: DoctorSchedulePickerBinding(),
     ),
     GetPage(
       name: Routes.OTP_VERIFICATION,

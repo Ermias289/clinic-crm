@@ -35,32 +35,66 @@ class MedicalServiceController extends GetxController {
 
   Future<void> onServiceSelected(MedicalService service) async {
     try {
-      // Simple loading dialog
-      Get.dialog(Center(child: CircularProgressIndicator()), barrierDismissible: false);
-      
-      final card = await _cardRepository.getMyCard();
-      
-      Get.back(); // Close loading dialog
+      // Show loading indicator
+      Get.dialog(
+        Center(child: CircularProgressIndicator()),
+        barrierDismissible: false,
+      );
 
-      // Logic: If no card found (null), redirect to cards page.
-      // If card exists but not active? User said "active account". 
-      // Assuming existence of card implies account setup started. 
-      // If specific status check needed, I'd need to know the status enum strings.
-      // Be lenient: if card exists, assume good to go or let next screen handle it.
-      // But user said "dont have an active account" -> redirect to cards.
-      
-      if (card == null) {
-        Get.toNamed(Routes.CARDS);
-        Get.snackbar('Action Required', 'You need an active card to book appointments.');
-      } else {
-        // If card exists, verify status if possible. 
-        // card['status'] might be 'Active' or something.
-        // For now, assume if they have a card, they can book.
-        Get.toNamed(Routes.BOOK_APPOINTMENT, arguments: service);
+      try {
+        final card = await _cardRepository.getMyCard();
+        Get.back(); // Close loading dialog
+        
+        if (card == null) {
+          // No card found, redirect to card setup
+          Get.offNamed(Routes.CARDS);
+          Get.snackbar(
+            'Account Setup Required',
+            'Please set up your account card to book appointments.',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: Duration(seconds: 3),
+          );
+        } else if (card['status']?.toString().toLowerCase() != 'active') {
+          // Card exists but not active
+          Get.offNamed(Routes.CARDS);
+          Get.snackbar(
+            'Account Not Active',
+            'Your account card is not yet active. Please complete the setup process.',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: Duration(seconds: 4),
+          );
+        } else {
+          // Card is active, proceed to booking
+          Get.toNamed(Routes.BOOK_APPOINTMENT, arguments: service);
+        }
+      } catch (e) {
+        Get.back(); // Close loading dialog
+        if (e.toString().contains('401') || e.toString().contains('unauthorized')) {
+          // Session expired or unauthorized
+          Get.offAllNamed(Routes.LOGIN);
+          Get.snackbar(
+            'Session Expired',
+            'Please log in again to continue',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        } else {
+          // Other errors
+          Get.offNamed(Routes.CARDS);
+          Get.snackbar(
+            'Account Verification Needed',
+            'Please complete your account setup to continue',
+            snackPosition: SnackPosition.BOTTOM,
+            duration: Duration(seconds: 3),
+          );
+        }
       }
     } catch (e) {
-      Get.back(); // Close loading if error
-      Get.snackbar('Error', 'Failed to verify account status');
+      Get.back(); // Ensure dialog is closed in case of unexpected errors
+      Get.snackbar(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
     }
   }
 }

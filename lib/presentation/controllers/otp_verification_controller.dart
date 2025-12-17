@@ -6,11 +6,11 @@ import '../../config/app_routes.dart';
 
 class OTPVerificationController extends GetxController {
   final ApiClient apiClient = ApiClient();
-  
+
   final email = ''.obs;
   final otpController = TextEditingController();
   final isLoading = false.obs;
-  
+
   // Resend Timer logic
   final resendTimer = 30.obs;
   final canResend = false.obs;
@@ -24,15 +24,6 @@ class OTPVerificationController extends GetxController {
       email.value = Get.arguments;
     }
     startTimer();
-    // Send OTP immediately upon entering this screen (or assumption is registration already sent it)
-    // The instructions say "once user puts info... and click register... redirect... once we get successfully verified".
-    // Usually backend sends the first OTP on registration. If not, we might need to trigger it here.
-    // Assuming registration sends the first one.
-    if (email.value.isNotEmpty) {
-       // Ideally we just wait for user to input.
-       // However, we can also trigger a send if needed.
-       sendOtp();
-    }
   }
 
   void startTimer() {
@@ -63,7 +54,7 @@ class OTPVerificationController extends GetxController {
       startTimer();
       isLoading.value = true;
       final response = await apiClient.get('/OTP/resendOTP?recipientEmail=${email.value}');
-      
+
       if (response.status.hasError) {
         Get.snackbar('Error', 'Failed to resend code');
       } else {
@@ -84,7 +75,7 @@ class OTPVerificationController extends GetxController {
 
     try {
       isLoading.value = true;
-      
+
       final response = await apiClient.post(
         '/OTP/verifyOTP?email=${email.value}&submittedOtp=${otpController.text}',
         null, // No body needed as params are in query string based on controller signature
