@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/main_navigation_controller.dart';
 import '../views/appointments_view.dart';
+import '../views/services_list_view.dart';
 import '../views/profile_view.dart';
 import '../views/contact_us_view.dart';
 import '../views/card_selection_view.dart';
@@ -14,7 +15,8 @@ class MainNavigationView extends GetView<MainNavigationController> {
   Widget build(BuildContext context) {
     final pages = [
       const AppointmentsView(),
-      const CardSelectionView(), // Added Card Page
+      ServicesListView(),
+      const CardSelectionView(), // Cards Page
       const ProfileView(),
       const ContactUsView(),
     ];
@@ -44,19 +46,24 @@ class MainNavigationView extends GetView<MainNavigationController> {
                       index: 0,
                     ),
                     _buildNavItem(
+                      icon: Icons.medical_services_outlined,
+                      label: 'Services',
+                      index: 1,
+                    ),
+                    _buildNavItem(
                       icon: Icons.credit_card,
                       label: 'Cards',
-                      index: 1,
+                      index: 2,
                     ),
                     _buildNavItem(
                       icon: Icons.settings,
                       label: 'Settings',
-                      index: 2,
+                      index: 3,
                     ),
                     _buildNavItem(
                       icon: Icons.contact_support,
                       label: 'Contact',
-                      index: 3,
+                      index: 4,
                     ),
                   ],
                 ),

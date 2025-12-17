@@ -1,11 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../data/datasources/medical_service_remote_datasource.dart';
+import '../../data/repositories/medical_service_repository_impl.dart';
+import '../../data/datasources/card_remote_datasource.dart';
+import '../../data/repositories/card_repository_impl.dart';
+import '../../core/api_client.dart';
 import '../controllers/medical_service_controller.dart';
+import '../controllers/main_navigation_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
-class ServicesListView extends GetView<MedicalServiceController> {
-  const ServicesListView({super.key});
+class ServicesView extends StatefulWidget {
+  const ServicesView({super.key});
+
+  @override
+  State<ServicesView> createState() => _ServicesViewState();
+}
+
+class _ServicesViewState extends State<ServicesView> {
+  late final MedicalServiceController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controller
+    final apiClient = Get.find<ApiClient>();
+    final medicalRemote = MedicalServiceRemoteDataSourceImpl(apiClient: apiClient);
+    final medicalRepo = MedicalServiceRepositoryImpl(remoteDataSource: medicalRemote);
+    final cardRemote = CardRemoteDataSourceImpl(apiClient: apiClient);
+    final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
+    controller = Get.put(MedicalServiceController(medicalRepo, cardRepo));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<MedicalServiceController>(
+      builder: (_) => _ServicesListView(controller: controller),
+    );
+  }
+}
+
+class _ServicesListView extends StatelessWidget {
+  final MedicalServiceController controller;
+
+  const _ServicesListView({required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +115,10 @@ class ServicesListView extends GetView<MedicalServiceController> {
                         Row(
                           children: [
                             IconButton(
-                              onPressed: () => Get.back(),
+                              onPressed: () {
+                                // Navigate back to the first tab (Appointments)
+                                Get.back();
+                              },
                               icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
@@ -228,5 +269,15 @@ class ServicesListView extends GetView<MedicalServiceController> {
         ],
       ),
     );
+  }
+}
+
+// This is needed to maintain compatibility with existing code
+class ServicesListView extends GetView<MedicalServiceController> {
+  const ServicesListView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const ServicesView();
   }
 }

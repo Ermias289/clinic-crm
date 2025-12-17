@@ -331,19 +331,138 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
       final selected = _controller.selectedDate.value;
 
-      return Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: _controller.availableDates.map((d) {
-          final isSelected = selected != null && _isSameDate(d, selected);
-          return _Pill(
-            label: DateFormat('EEE, d MMM').format(d),
-            isSelected: isSelected,
-            onTap: () => _controller.selectDate(d),
-          );
-        }).toList(),
+      final label = selected != null
+          ? DateFormat('EEE, d MMM yyyy').format(selected)
+          : 'Choose Date';
+
+      return _SelectionCard(
+        title: 'Select Date',
+        value: label,
+        icon: Icons.calendar_today_rounded,
+        isSelected: selected != null,
+        onTap: () => _openDateBottomSheet(),
       );
     });
+  }
+
+  void _openDateBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 42,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.textHint.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text('Choose Date', style: AppTextStyles.h3),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: Obx(() {
+                  final dates = _controller.availableDates;
+                  final selected = _controller.selectedDate.value;
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: dates.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final d = dates[index];
+                      final isSelected =
+                          selected != null && _isSameDate(d, selected);
+
+                      return InkWell(
+                        onTap: () {
+                          _controller.selectDate(d);
+                          Get.back();
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primaryBlue.withOpacity(0.08)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primaryBlue
+                                  : AppColors.textHint.withOpacity(0.15),
+                              width: 1.2,
+                            ),
+                            boxShadow: AppColors.softShadow,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_rounded,
+                                color: isSelected
+                                    ? AppColors.primaryBlue
+                                    : AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  DateFormat('EEEE, d MMM yyyy').format(d),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                isSelected
+                                    ? Icons.check_circle_rounded
+                                    : Icons.radio_button_unchecked_rounded,
+                                color: isSelected
+                                    ? AppColors.primaryBlue
+                                    : AppColors.textHint,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 
   Widget _buildTimeSection() {
@@ -385,19 +504,135 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
       final selected = _controller.selectedTime.value;
 
-      return Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: _controller.availableTimes.map((t) {
-          final isSelected = selected != null && _isSameTime(t, selected);
-          return _Pill(
-            label: _formatTime(context, t),
-            isSelected: isSelected,
-            onTap: () => _controller.selectTime(t),
-          );
-        }).toList(),
+      final label =
+          selected != null ? _formatTime(context, selected) : 'Choose Time';
+
+      return _SelectionCard(
+        title: 'Select Time',
+        value: label,
+        icon: Icons.access_time_rounded,
+        isSelected: selected != null,
+        onTap: () => _openTimeBottomSheet(),
       );
     });
+  }
+
+  void _openTimeBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 42,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.textHint.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text('Choose Time', style: AppTextStyles.h3),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: Obx(() {
+                  final times = _controller.availableTimes;
+                  final selected = _controller.selectedTime.value;
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: times.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final t = times[index];
+                      final isSelected =
+                          selected != null && _isSameTime(t, selected);
+
+                      return InkWell(
+                        onTap: () {
+                          _controller.selectTime(t);
+                          Get.back();
+                        },
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primaryBlue.withOpacity(0.08)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primaryBlue
+                                  : AppColors.textHint.withOpacity(0.15),
+                              width: 1.2,
+                            ),
+                            boxShadow: AppColors.softShadow,
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.access_time_rounded,
+                                color: AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _formatTime(context, t),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                isSelected
+                                    ? Icons.check_circle_rounded
+                                    : Icons.radio_button_unchecked_rounded,
+                                color: isSelected
+                                    ? AppColors.primaryBlue
+                                    : AppColors.textHint,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 
   bool _isSameDate(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
@@ -447,39 +682,43 @@ class _Header extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () => Get.back(),
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        'Choose Doctor',
-                        style: AppTextStyles.h2.copyWith(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    'Service',
-                    style: AppTextStyles.caption.copyWith(color: Colors.white70),
-                  ),
-                  Text(
-                    serviceName,
-                    style: AppTextStyles.h3.copyWith(color: Colors.white),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Select doctor, date, and time from schedule',
-                    style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
-                  ),
-                ],
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => Get.back(),
+                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(
+                          'Choose Doctor',
+                          style: AppTextStyles.h2.copyWith(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'Service',
+                      style: AppTextStyles.caption.copyWith(color: Colors.white70),
+                    ),
+                    Text(
+                      serviceName,
+                      style: AppTextStyles.h3.copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Select doctor, date, and time from schedule',
+                      style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -562,45 +801,6 @@ class _SelectionCard extends StatelessWidget {
                   color: isSelected ? AppColors.primaryBlue : AppColors.textHint,
                 ),
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  const _Pill({required this.label, required this.isSelected, required this.onTap});
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: isSelected ? AppColors.primaryBlue : Colors.white,
-      borderRadius: BorderRadius.circular(999),
-      elevation: 0,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: isSelected ? AppColors.primaryBlue : AppColors.textHint.withOpacity(0.18),
-              width: 1.2,
-            ),
-            boxShadow: isSelected ? [] : AppColors.softShadow,
-          ),
-          child: Text(
-            label,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: isSelected ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ),

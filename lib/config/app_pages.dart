@@ -11,7 +11,6 @@ import '../presentation/views/card_selection_view.dart';
 import '../presentation/bindings/card_binding.dart';
 import '../presentation/views/services_list_view.dart';
 import '../presentation/views/appointment_booking_view.dart';
-import '../presentation/bindings/medical_service_binding.dart';
 import '../presentation/views/otp_verification_view.dart';
 import '../presentation/bindings/otp_verification_binding.dart';
 import '../presentation/views/forgot_password_view.dart';
@@ -62,13 +61,11 @@ class AppPages {
     ),
     GetPage(
       name: Routes.SERVICES,
-      page: () => const ServicesListView(),
-      binding: MedicalServiceBinding(),
+      page: () => ServicesListView(),
     ),
     GetPage(
       name: Routes.BOOK_APPOINTMENT,
       page: () => const AppointmentBookingView(),
-      binding: MedicalServiceBinding(),
     ),
     GetPage(
       name: Routes.DOCTOR_SCHEDULE_PICKER,

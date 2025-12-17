@@ -8,13 +8,27 @@ import 'core/theme/app_theme.dart';
 import 'core/api_client.dart';
 import 'presentation/views/request_card_details_view.dart';
 import 'presentation/views/request_card_payment_view.dart';
+import 'data/datasources/medical_service_remote_datasource.dart';
+import 'data/repositories/medical_service_repository_impl.dart';
+import 'data/datasources/card_remote_datasource.dart';
+import 'data/repositories/card_repository_impl.dart';
+import 'presentation/controllers/medical_service_controller.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
   await dotenv.load(fileName: ".env");
-  Get.put(ApiClient());
+  final apiClient = Get.put(ApiClient());
+
+  // Ensure medical services controller & its dependencies are available globally
+  final medicalRemote =
+      MedicalServiceRemoteDataSourceImpl(apiClient: apiClient);
+  final medicalRepo =
+      MedicalServiceRepositoryImpl(remoteDataSource: medicalRemote);
+  final cardRemote = CardRemoteDataSourceImpl(apiClient: apiClient);
+  final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
+  Get.put(MedicalServiceController(medicalRepo, cardRepo), permanent: true);
   
   
   // Debug logging
