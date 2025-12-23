@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/api_client.dart';
@@ -42,7 +43,8 @@ class OTPVerificationController extends GetxController {
   Future<void> sendOtp() async {
      try {
        // Trigger backend to send/resend OTP
-       await apiClient.get('/OTP/resendOTP?recipientEmail=${email.value}');
+       final encodedEmail = Uri.encodeQueryComponent(email.value.toLowerCase().trim());
+       await apiClient.get('/api/OTP/resendOTP?recipientEmail=$encodedEmail');
      } catch (e) {
        print("Failed to send initial OTP: $e");
        // Don't block UI, maybe it was sent by register logic
@@ -53,10 +55,14 @@ class OTPVerificationController extends GetxController {
     try {
       startTimer();
       isLoading.value = true;
-      final response = await apiClient.get('/OTP/resendOTP?recipientEmail=${email.value}');
+      final encodedEmail = Uri.encodeQueryComponent(email.value.toLowerCase().trim());
+      final response = await apiClient.get('/api/OTP/resendOTP?recipientEmail=$encodedEmail');
 
       if (response.status.hasError) {
-        Get.snackbar('Error', 'Failed to resend code');
+        final msg = _extractMessage(response.body) ??
+            response.bodyString ??
+            'Failed to resend code';
+        Get.snackbar('Error', msg);
       } else {
         Get.snackbar('Success', 'Code sent successfully');
       }
@@ -76,14 +82,19 @@ class OTPVerificationController extends GetxController {
     try {
       isLoading.value = true;
 
+      final encodedEmail = Uri.encodeQueryComponent(email.value.toLowerCase().trim());
+      final encodedOtp = Uri.encodeQueryComponent(otpController.text.trim());
+
       final response = await apiClient.post(
-        '/OTP/verifyOTP?email=${email.value}&submittedOtp=${otpController.text}',
+        '/api/OTP/verifyOTP?email=$encodedEmail&submittedOtp=$encodedOtp',
         null, // No body needed as params are in query string based on controller signature
       );
 
       if (response.status.hasError) {
          // Try to parse error message from body if available
-         final msg = response.bodyString ?? 'Invalid Code';
+         final msg = _extractMessage(response.body) ??
+             response.bodyString ??
+             'Invalid Code';
          Get.snackbar('Error', 'Verification failed: $msg');
       } else {
         Get.snackbar('Success', 'Email verified successfully!');
@@ -102,5 +113,36 @@ class OTPVerificationController extends GetxController {
     _timer?.cancel();
     otpController.dispose();
     super.onClose();
+  }
+
+  String? _extractMessage(dynamic body) {
+    try {
+      if (body == null) return null;
+
+      if (body is Map) {
+        final message = body['message'] ?? body['Message'];
+        if (message is String && message.trim().isNotEmpty) return message.trim();
+      }
+
+      if (body is String) {
+        final s = body.trim();
+        if (s.isEmpty) return null;
+
+        try {
+          final decoded = jsonDecode(s);
+          if (decoded is Map) {
+            final message = decoded['message'] ?? decoded['Message'];
+            if (message is String && message.trim().isNotEmpty) {
+              return message.trim();
+            }
+          }
+        } catch (_) {
+          return s;
+        }
+      }
+    } catch (_) {
+      // ignore parsing errors
+    }
+    return null;
   }
 }

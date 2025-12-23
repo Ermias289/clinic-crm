@@ -21,7 +21,7 @@ class MedicalServiceController extends GetxController {
     fetchServices();
   }
 
-  Future<void> fetchServices() async {
+  Future<void> fetchServices() async { 
     try {
       isLoading.value = true;
       services.value = await _medicalServiceRepository.getMedicalServices();

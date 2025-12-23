@@ -5,6 +5,7 @@ import '../../domain/models/medical_service_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../config/app_routes.dart';
+import 'request_card_payment_view.dart';
 
 class AppointmentBookingView extends StatefulWidget {
   const AppointmentBookingView({super.key});
@@ -53,17 +54,17 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         selectedDate != null &&
         selectedTime != null &&
         selectedDateTime != null) {
-      Get.snackbar(
-        'Success',
-        'Appointment Request Sent',
-        backgroundColor: AppColors.successGreen,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-      );
-      // Wait for snackbar then go back
-      Future.delayed(const Duration(seconds: 2), () {
-        Get.offAllNamed('/dashboard'); // Go home after success
+      // Navigate to payment page
+      Get.to(() => const RequestCardPaymentView(), arguments: {
+        'isAppointment': true,
+        'service': service,
+        'schedule': {
+          'doctorId': selectedDoctorId,
+          'doctorName': selectedDoctorName,
+          'date': selectedDate,
+          'time': selectedTime,
+          'dateTime': selectedDateTime,
+        },
       });
     } else {
       Get.snackbar(
@@ -193,7 +194,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text('Confirm Booking', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Text('Proceed to Payment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],

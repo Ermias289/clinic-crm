@@ -188,7 +188,13 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
                     controller: controller.otpController,
                     labelText: 'Verification Code',
                     prefixIcon: Icons.security_rounded,
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.text,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                      TextInputFormatter.withFunction((oldValue, newValue) {
+                        return newValue.copyWith(text: newValue.text.toUpperCase());
+                      }),
+                    ],
                   ),
 
                   const SizedBox(height: 16),

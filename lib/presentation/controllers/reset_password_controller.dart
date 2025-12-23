@@ -37,15 +37,11 @@ class ResetPasswordController extends GetxController {
     }
   }
 
-  /// Verifies the OTP (token) against the backend.
+  /// Resets the password using the backend's `POST /api/Auth/changePassword` endpoint.
   ///
-  /// Backend in this repo supports:
-  /// - `POST /api/OTP/verifyOTP?email=...&submittedOtp=...`
-  ///
-  /// If verification succeeds, it navigates back to login.
-  ///
-  /// Note: The backend in this repo does NOT implement a password reset endpoint,
-  /// so we cannot actually set a new password here without backend changes.
+  /// Important: Do NOT call `/api/OTP/verifyOTP` here.
+  /// The backend password reset flow verifies the OTP inside `changePassword`, and
+  /// `verifyOTP` would consume the OTP first (making the reset fail).
   Future<void> resetPassword() async {
     if (email.isEmpty) {
       errorMessage.value = 'Missing email. Please restart the reset flow.';
@@ -60,8 +56,8 @@ class ResetPasswordController extends GetxController {
 
     // Keep validation to avoid a misleading UX, even though backend reset isn't implemented yet.
     final newPassword = newPasswordController.text;
-    if (newPassword.length < 6) {
-      errorMessage.value = 'Password must be at least 6 characters long';
+    if (newPassword.length < 8) {
+      errorMessage.value = 'Password must be at least 8 characters long';
       return;
     }
     if (newPassword != confirmPasswordController.text) {
@@ -74,26 +70,24 @@ class ResetPasswordController extends GetxController {
     successMessage.value = '';
 
     try {
-      final encodedEmail = Uri.encodeQueryComponent(email.toLowerCase().trim());
-      final encodedOtp = Uri.encodeQueryComponent(otp);
-
-      final response = await _apiClient.post(
-        '/api/OTP/verifyOTP?email=$encodedEmail&submittedOtp=$encodedOtp',
-        null,
-      );
+      final response = await _apiClient.post('/api/Auth/changePassword', {
+        'phoneOrEmail': email.toLowerCase().trim(),
+        'password': '',
+        'newPassword': newPassword,
+        'otp': otp,
+        'reset': true,
+      });
 
       if (response.status.hasError) {
         final msg = _extractMessage(response.body) ??
             response.bodyString ??
-            'Invalid verification code';
+            'Failed to reset password';
         errorMessage.value = msg;
         return;
       }
 
-      // OTP verified successfully.
-      // Since backend reset-password endpoint isn't present, we only confirm verification.
       successMessage.value =
-          _extractMessage(response.body) ?? 'Verification successful';
+          _extractMessage(response.body) ?? 'Password reset successful';
 
       Get.offNamedUntil(
         Routes.LOGIN,
