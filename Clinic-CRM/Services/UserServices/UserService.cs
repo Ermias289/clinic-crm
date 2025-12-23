@@ -415,6 +415,7 @@ namespace Clinic_CRM.Services.UserServices
                 throw new KeyNotFoundException("User Not Found.");
 
 
+
             if (dto.Reset == false)
             {
                 if (!VerifyPasswordHash(dto.Password, user.PasswordHash, user.PasswordSalt))
@@ -424,6 +425,10 @@ namespace Clinic_CRM.Services.UserServices
             }
 
 
+            if (dto.OTP == null)
+                throw new KeyNotFoundException("OTP required to reset your password.");
+
+            await _oTPGeneratorService.VerifyOtpAsync(user.Email, dto.OTP);
 
             //if (dto.Reset && dto.NewPassword != null)
             //{

@@ -191,6 +191,7 @@ namespace Clinic_CRM.Helpers
                 if (existingUser == null)
                 {
                     var user = _mapper.Map<User>(u);
+                    user.IsEmailConfirmed = true;
                     using var hmac = new HMACSHA512();
 
                     user.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(u.Password));

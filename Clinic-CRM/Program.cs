@@ -91,6 +91,7 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 builder.Services.AddDbContext<Context>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
@@ -120,6 +121,10 @@ if (app.Environment.IsDevelopment())
         c.DefaultModelsExpandDepth(1); // hide schemas
         c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None); // collapse endpoints
     });
+}
+else
+{
+    app.UseExceptionHandler("/error"); // optional: production global error handler
 }
 
 //Build Migration database update
@@ -154,8 +159,10 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseSwaggerUI();
 }
+//app.UsePathBase("/clinic-crm");
+//app.UseRouting();
 
 app.UseHttpsRedirection();
 
