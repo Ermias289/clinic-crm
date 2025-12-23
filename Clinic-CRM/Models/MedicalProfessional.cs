@@ -5,6 +5,7 @@ namespace Clinic_CRM.Models
 {
     public class MedicalProfessional
     {
+        [Key]
         public int Id { get; set; }
         public string FName { get; set; } = string.Empty;
         public string MName { get; set; } = string.Empty;

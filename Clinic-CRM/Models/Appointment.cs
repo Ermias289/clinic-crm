@@ -1,9 +1,11 @@
-﻿using Clinic_CRM.Models.Settings;
+﻿using System.ComponentModel.DataAnnotations;
+using Clinic_CRM.Models.Settings;
 
 namespace Clinic_CRM.Models
 {
     public class Appointment
     {
+        [Key]
         public int Id { get; set; }
         public MedicalService DentistryService { get; set; }
         public int DentistryId { get; set; }

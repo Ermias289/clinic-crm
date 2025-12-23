@@ -22,7 +22,7 @@ namespace Clinic_CRM.Models
         public UserRole UserRole { get; set; }
 
         public bool IsEmailConfirmed { get; set; } 
-
+        public ICollection<UserNotification>? UserNotifications { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

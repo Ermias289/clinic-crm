@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    partial class ContextModelSnapshot : ModelSnapshot
+    [Migration("20251223113946_notification")]
+    partial class notification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1044,9 +1047,6 @@ namespace Clinic_CRM.Migrations
                     b.Property<bool>("CanMakeAppointment")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("CanReadNotification")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("CanRejectCardPayment")
                         .HasColumnType("bit");
 
@@ -1093,9 +1093,6 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewMedicalService")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CanViewNotification")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewPatient")

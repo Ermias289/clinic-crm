@@ -29,6 +29,8 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<Bank> Banks { get; set; }
         public DbSet<OTP> OTPs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<UserNotification> UserNotifications { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Patient>()
@@ -66,6 +68,23 @@ namespace Clinic_CRM.ApplicationDbContext
                .WithMany()
                .HasForeignKey(c => c.CheckedById)
                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<UserNotification>(entity =>
+            {
+                entity.HasIndex(un => new { un.UserId, un.NotificationId })
+                      .IsUnique();
+
+                entity.HasOne(un => un.User)
+                      .WithMany(u => u.UserNotifications)
+                      .HasForeignKey(un => un.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(un => un.Notification)
+                      .WithMany(n => n.UserNotifications)
+                      .HasForeignKey(un => un.NotificationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
 
             //modelBuilder.Entity<DoctorSchedule>()
             //   .HasOne(c => c.BranchSetting)

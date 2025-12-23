@@ -11,6 +11,7 @@ using Clinic_CRM.Services.EmailService;
 using Clinic_CRM.Services.FileUploadServices;
 using Clinic_CRM.Services.MedicalProfessionalServices;
 using Clinic_CRM.Services.MedicalServices;
+using Clinic_CRM.Services.NotificationServices;
 using Clinic_CRM.Services.OTPGenerator;
 using Clinic_CRM.Services.PatientServices;
 using Clinic_CRM.Services.PaymentServices;
@@ -85,6 +86,9 @@ namespace Clinic_CRM
 
             //Bank Account
             services.AddScoped<IBankAccountService, BankAccountService>();
+
+            //Notification
+            services.AddScoped<INotificationService, NotificationService>();
         }
     }
 }

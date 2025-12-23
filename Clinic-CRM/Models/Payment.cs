@@ -1,7 +1,10 @@
-﻿namespace Clinic_CRM.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Clinic_CRM.Models
 {
     public class Payment
     {
+        [Key]
         public int Id { get; set; }
         public string Reference { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;

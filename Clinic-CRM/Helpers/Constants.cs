@@ -60,5 +60,12 @@
             public const string CANCELED = "Canceled";
             public const string COMPLETED = "Completed";
         }
+
+        public static class NOTIFICATION_CONSTANTS
+        {
+            public const string USER = "User";
+            public const string SYSTEM = "System";
+            public const string NEWUSER = "New User";
+        }
     }
 }

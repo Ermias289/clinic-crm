@@ -1,7 +1,10 @@
-﻿namespace Clinic_CRM.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Clinic_CRM.Models
 {
     public class UserRole
     {
+        [Key]
         public int Id { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
@@ -103,6 +106,13 @@
         public bool CanAddBankAccount { get; set; } = false;
         public bool CanEditBankAccount { get; set; } = false;
         public bool CanViewBankAccount { get; set; } = false;
+
+        //Notification
+        public bool CanReadNotification { get; set; } = false;
+        public bool CanViewNotification { get; set; } = false;
+
+
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

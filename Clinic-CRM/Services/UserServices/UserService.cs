@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
 //using static Clinic_CRM.Services.OTPGenerator.OTPGenerator;
 using System.IO;
 using System.Security.Claims;
@@ -9,12 +10,16 @@ using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.Models;
 using Clinic_CRM.Services.EmailService;
+using Clinic_CRM.Services.NotificationServices;
 using Clinic_CRM.Services.OTPGenerator;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MimeKit.Tnef;
 using Org.BouncyCastle.Crypto.Macs;
+using Org.BouncyCastle.Pqc.Crypto.Lms;
 using static Clinic_CRM.Helpers.Constants;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Clinic_CRM.Services.UserServices
 {
@@ -26,12 +31,13 @@ namespace Clinic_CRM.Services.UserServices
         private readonly IConfiguration _configuration;
         //private readonly IEmailService _emailService;
         private readonly IOTPGeneratorService _oTPGeneratorService;
+        public readonly INotificationService _notify;
 
         public UserRole UserRole { get; }
         public User User { get; }
 
 
-        public UserService(Context context, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOTPGeneratorService oTP)
+        public UserService(INotificationService notify,Context context, IConfiguration configuration, IMapper mapper, IHttpContextAccessor httpContextAccessor, IOTPGeneratorService oTP)
         {
             _context = context;
             _configuration = configuration;
@@ -39,6 +45,7 @@ namespace Clinic_CRM.Services.UserServices
             _httpContextAccessor = httpContextAccessor;
             //_emailService = emailService;
             _oTPGeneratorService = oTP;
+            _notify = notify;
 
             var User = context.Users
                 .AsNoTracking()
@@ -101,6 +108,8 @@ namespace Clinic_CRM.Services.UserServices
         public async Task<GetUserDTO> CreateUserAsync(CreateUserAccountDTO dto)
         {
 
+            var company = await _context.CompanySetting.FirstOrDefaultAsync();
+
             using var hmac = new HMACSHA512();
 
             var user = _mapper.Map<User>(dto);
@@ -142,10 +151,18 @@ namespace Clinic_CRM.Services.UserServices
 
             //await _emailService.SendEmailAsync(user.Email, "Verify Your Email – OTP", htmlBody, true);
 
-            await _oTPGeneratorService.SendOtpEmailAsync(user.Email);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+            await _oTPGeneratorService.SendOtpEmailAsync(user.Email);
+
+            await _notify.SendUserAsync(
+                "Welcome",
+                $"Dear {user.FName}, welcome to {company?.Name}. Your account has been successfully created. You now have access to manage appointments and receive important updates.",
+                NOTIFICATION_CONSTANTS.NEWUSER,
+                new List<int> { user.Id}
+                );
+
 
             // Auto-create Patient record to ensure FK constraints are met for Card requests
             var patient = new Patient

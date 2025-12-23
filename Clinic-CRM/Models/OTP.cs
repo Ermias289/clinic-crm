@@ -1,9 +1,11 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace Clinic_CRM.Models
 {
     public class OTP
     {
+        [Key]
         public int Id { get; set; }
 
         public byte[] OtpHash { get; set; }  // Stores the hashed OTP
