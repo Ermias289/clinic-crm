@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Clinic_CRM.DTOs.AppointmentDTOs;
+using Clinic_CRM.DTOs.BankAccountDTOs;
+using Clinic_CRM.DTOs.BankDTOs;
 using Clinic_CRM.DTOs.BranchSettingDTOs;
 using Clinic_CRM.DTOs.CardDTOs;
 using Clinic_CRM.DTOs.CardSettingDTOs;
@@ -122,6 +124,19 @@ namespace Clinic_CRM.Profiles
                 .ForMember(dest => dest.MedicalProfessionals, opt => opt.Ignore());
             CreateMap<UpdateMedicalServiceDTO, MedicalService>();
             CreateMap<MedicalService, UpdateMedicalServiceDTO>();
+
+
+            //Bank
+            CreateMap<AddBankDTO, Bank>();
+            CreateMap<Bank, AddBankDTO>();
+            CreateMap<UpdateBankDTO, Bank>();
+            CreateMap<Bank, UpdateBankDTO>();
+
+            //Bank Account
+            CreateMap<BankAccount, AddBankAccountDTO>();
+            CreateMap<AddBankAccountDTO, BankAccount>();
+            CreateMap<UpdateBankAccountDTO, BankAccount>();
+            CreateMap<BankAccount, UpdateBankAccountDTO>();
         }
     }
 }

@@ -92,6 +92,17 @@
         public bool CanUpdateMedicalService { get; set; } = false;
         public bool CanViewMedicalService { get; set; } = false;
 
+
+
+        //Bank
+        public bool CanAddBank { get; set; } = false;
+        public bool CanEditBank { get; set; } = false;
+        public bool CanViewBank { get; set; } = false;  
+
+        //Bank Account
+        public bool CanAddBankAccount { get; set; } = false;
+        public bool CanEditBankAccount { get; set; } = false;
+        public bool CanViewBankAccount { get; set; } = false;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

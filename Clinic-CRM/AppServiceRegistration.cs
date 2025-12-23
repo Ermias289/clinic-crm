@@ -1,4 +1,6 @@
 ﻿using Clinic_CRM.Services.AppointmentServices;
+using Clinic_CRM.Services.BankAccountServices;
+using Clinic_CRM.Services.BankServices;
 using Clinic_CRM.Services.BranchServices;
 using Clinic_CRM.Services.CardServices;
 using Clinic_CRM.Services.CardSettingServices;
@@ -76,6 +78,13 @@ namespace Clinic_CRM
 
             //OTP
             services.AddScoped<IOTPGeneratorService, OTPGeneratorService>();
+
+
+            //Bank
+            services.AddScoped<IBankService, BankService>();
+
+            //Bank Account
+            services.AddScoped<IBankAccountService, BankAccountService>();
         }
     }
 }
