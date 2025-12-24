@@ -12,26 +12,30 @@ class OnboardingController extends GetxController {
   final List<OnboardingPageModel> pages = [
     OnboardingPageModel(
       icon: Icons.medical_services_rounded,
-      title: 'Welcome to Dental Clinic',
-      description: 'Your complete dental practice management solution',
+      title: 'Welcome to Lucid Dental Clinic',
+      description:
+          'Experience exceptional dental care with our state-of-the-art facility and expert team',
       iconColor: AppColors.primaryBlue,
     ),
     OnboardingPageModel(
       icon: Icons.people_outline,
-      title: 'Manage Patients Easily',
-      description: 'Keep track of patient records, appointments, and treatment history in one place',
+      title: 'Personalized Patient Care',
+      description:
+          'At Lucid, we provide individualized treatment plans tailored to your unique dental needs',
       iconColor: AppColors.accentBlue,
     ),
     OnboardingPageModel(
       icon: Icons.calendar_today_outlined,
-      title: 'Smart Scheduling',
-      description: 'Schedule and manage appointments with ease. Never miss a patient visit',
+      title: 'Easy Appointment Booking',
+      description:
+          'Schedule your visits at Lucid Dental Clinic with our convenient online booking system',
       iconColor: AppColors.successGreen,
     ),
     OnboardingPageModel(
       icon: Icons.analytics_outlined,
-      title: 'Track Your Success',
-      description: 'Monitor your practice performance with detailed reports and insights',
+      title: 'Track Your Dental Health',
+      description:
+          'Monitor your treatment progress and maintain optimal oral health with Lucid\'s comprehensive care',
       iconColor: AppColors.warningOrange,
     ),
   ];
