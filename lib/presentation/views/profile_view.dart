@@ -30,12 +30,9 @@ class ProfileView extends GetView<ProfileController> {
       },
       child: Scaffold(
         backgroundColor: AppColors.backgroundLight,
-        body: Builder(builder: (context) {
-            if (controller.isLoading.value && controller.currentUser.value == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            return Column(
+        body: controller.isLoading.value && controller.currentUser.value == null
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
             children: [
               // Header - Fixed at top
               // Header Section - Top Banner Style
@@ -379,8 +376,7 @@ class ProfileView extends GetView<ProfileController> {
                 }),
               ),
             ],
-          );
-        }),
+          ),
       ),
     ));
   }
