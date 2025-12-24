@@ -184,6 +184,9 @@ class ProfileView extends GetView<ProfileController> {
                             labelText: 'First Name',
                             prefixIcon: Icons.badge_outlined,
                             enabled: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           CustomTextField(
@@ -191,6 +194,9 @@ class ProfileView extends GetView<ProfileController> {
                             labelText: 'Middle Name',
                             prefixIcon: Icons.badge_outlined,
                             enabled: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           CustomTextField(
@@ -198,6 +204,9 @@ class ProfileView extends GetView<ProfileController> {
                             labelText: 'Last Name',
                             prefixIcon: Icons.badge_outlined,
                             enabled: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.deny(RegExp(r'[0-9]')),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           CustomTextField(
@@ -248,90 +257,97 @@ class ProfileView extends GetView<ProfileController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                           // Role Badge
-                          if (user?.roleName != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryBlue.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                user!.roleName!,
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.primaryBlue,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 24),
-
-                          // Name (Combined)
-                          Text(
-                            displayName,
-                            style: AppTextStyles.h2.copyWith(
-                              fontSize: 28,
-                              color: AppColors.textPrimary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          
-                          // Username
-                          Text(
-                            '@${user?.username ?? ''}',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-
-                          const SizedBox(height: 40),
-
-                          // Info Rows
-                          _buildInfoRow(Icons.email_outlined, user?.email ?? 'No email'),
-                          const SizedBox(height: 16),
-                          _buildInfoRow(Icons.phone_outlined, user?.phoneNumber ?? 'No phone'),
-
-                          const SizedBox(height: 16),
-
-                          // Small Edit Profile Button
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: InkWell(
-                              onTap: controller.toggleEdit,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.primaryBlue.withOpacity(0.05),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.edit, size: 16, color: AppColors.primaryBlue),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Edit Profile',
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        color: AppColors.primaryBlue,
-                                        fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Role Badge
+                                  if (user?.roleName != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryBlue.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        user!.roleName!,
+                                        style: AppTextStyles.bodyMedium.copyWith(
+                                          color: AppColors.primaryBlue,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  const SizedBox(height: 24),
+
+                                  // Name (Combined)
+                                  Text(
+                                    displayName,
+                                    style: AppTextStyles.h2.copyWith(
+                                      fontSize: 28,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  
+                                  // Username
+                                  Text(
+                                    '@${user?.username ?? ''}',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 40),
+
+                                  // Info Rows
+                                  _buildInfoRow(Icons.email_outlined, user?.email ?? 'No email'),
+                                  const SizedBox(height: 16),
+                                  _buildInfoRow(Icons.phone_outlined, user?.phoneNumber ?? 'No phone'),
+
+                                  const SizedBox(height: 16),
+
+                                  // Small Edit Profile Button
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: InkWell(
+                                      onTap: controller.toggleEdit,
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.primaryBlue.withOpacity(0.05),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.edit, size: 16, color: AppColors.primaryBlue),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Edit Profile',
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                color: AppColors.primaryBlue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-
-                          const Spacer(),
 
                           // Actions
                           TextButton.icon(
@@ -345,16 +361,16 @@ class ProfileView extends GetView<ProfileController> {
                               ),
                             ),
                           ),
-                           const SizedBox(height: 16),
-                              CustomButton(
-                                text: 'Logout',
-                                onPressed: () {
-                                  final dashboardController = Get.find<DashboardController>();
-                                  dashboardController.logout();
-                                },
-                                type: ButtonType.primary,
-                                icon: Icons.logout,
-                              ),
+                          const SizedBox(height: 16),
+                          CustomButton(
+                            text: 'Logout',
+                            onPressed: () {
+                              final dashboardController = Get.find<DashboardController>();
+                              dashboardController.logout();
+                            },
+                            type: ButtonType.primary,
+                            icon: Icons.logout,
+                          ),
                           const SizedBox(height: 20),
                         ],
                       ),
@@ -365,8 +381,10 @@ class ProfileView extends GetView<ProfileController> {
             ],
           );
         }),
-    )));
+      ),
+    ));
   }
+
   Widget _buildInfoRow(IconData icon, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),

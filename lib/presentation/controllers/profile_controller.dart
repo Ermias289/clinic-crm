@@ -122,6 +122,7 @@ class ProfileController extends GetxController {
         'email': emailController.text,
         'phoneNumber': phoneController.text,
         'userRoleId': currentUser.value?.userRoleId ?? 2,
+        'password': 'Password@123', // TODO: Remove or handle properly
       };
 
       final updatedUser = await userDataSource.updateUser(userId, data);
