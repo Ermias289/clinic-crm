@@ -41,7 +41,10 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
     }
   }
 
-  Widget _buildAppointmentPaymentView(MedicalService service, Map<String, dynamic> schedule) {
+  Widget _buildAppointmentPaymentView(
+    MedicalService service,
+    Map<String, dynamic> schedule,
+  ) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
@@ -63,7 +66,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.arrow_back, color: Colors.white),
@@ -82,7 +85,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                         Text(
                           'Complete your booking',
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                           ),
                         ),
                       ],
@@ -94,7 +97,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
 
             // Content
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +110,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -121,7 +124,9 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                               Text('Service', style: AppTextStyles.bodySmall),
                               Text(
                                 service.name,
-                                style: AppTextStyles.h3.copyWith(color: AppColors.primaryBlue),
+                                style: AppTextStyles.h3.copyWith(
+                                  color: AppColors.primaryBlue,
+                                ),
                               ),
                             ],
                           ),
@@ -132,7 +137,9 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                               Text('Doctor', style: AppTextStyles.bodySmall),
                               Text(
                                 schedule['doctorName'] ?? 'N/A',
-                                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -140,10 +147,17 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Date & Time', style: AppTextStyles.bodySmall),
                               Text(
-                                DateFormat('EEE, d MMM yyyy • jm').format(schedule['dateTime']),
-                                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                'Date & Time',
+                                style: AppTextStyles.bodySmall,
+                              ),
+                              Text(
+                                DateFormat(
+                                  'EEE, d MMM yyyy • jm',
+                                ).format(schedule['dateTime']),
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -154,7 +168,9 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                               Text('Duration', style: AppTextStyles.bodySmall),
                               Text(
                                 '${service.durationInMinutes} minutes',
-                                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
@@ -162,10 +178,15 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Amount to Pay', style: AppTextStyles.bodySmall),
                               Text(
-                                '\$${service.durationInMinutes * 10}.00',
-                                style: AppTextStyles.h3.copyWith(color: Colors.green),
+                                'Amount to Pay',
+                                style: AppTextStyles.bodySmall,
+                              ),
+                              Text(
+                                '\${service.durationInMinutes * 10}.00',
+                                style: AppTextStyles.h3.copyWith(
+                                  color: Colors.green,
+                                ),
                               ),
                             ],
                           ),
@@ -176,7 +197,9 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                     const SizedBox(height: 24),
                     Text(
                       'Payment Proof',
-                      style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
+                      style: AppTextStyles.h3.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 12),
 
@@ -190,12 +213,12 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.primaryBlue.withOpacity(0.3),
+                            color: AppColors.primaryBlue.withValues(alpha: 0.3),
                             width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -229,7 +252,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                       ),
                     ),
 
-                    const Spacer(),
+                    const SizedBox(height: 24),
 
                     SizedBox(
                       width: double.infinity,
@@ -245,7 +268,11 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                         ),
                         child: const Text(
                           'Pay & Book Appointment',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -319,10 +346,13 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.arrow_back, color: Colors.white),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -332,13 +362,15 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                           children: [
                             Text(
                               'Payment',
-                              style: AppTextStyles.h2.copyWith(color: Colors.white),
+                              style: AppTextStyles.h2.copyWith(
+                                color: Colors.white,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Step 2: Bank Transfer & Proof',
+                              'Step 2: Complete Payment',
                               style: AppTextStyles.bodyMedium.copyWith(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -350,87 +382,12 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
 
                 // Content
                 Expanded(
-                  child: Padding(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Bank Details Card
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1E1E1E),
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 15,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                const Color(0xFF2C3E50),
-                                const Color(0xFF000000),
-                              ],
-                            ),
-                          ),
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Bank Transfer',
-                                    style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
-                                  ),
-                                  Icon(Icons.account_balance, color: Colors.white70),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                '1000 2345 6789 0000',
-                                style: AppTextStyles.h3.copyWith(
-                                  color: Colors.white,
-                                  letterSpacing: 2,
-                                  fontFamily: 'Courier',
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Account Name', style: AppTextStyles.bodySmall.copyWith(color: Colors.white70)),
-                                        const SizedBox(height: 4),
-                                        Text('Clinic CRM Ltd', style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Bank', style: AppTextStyles.bodySmall.copyWith(color: Colors.white70)),
-                                        const SizedBox(height: 4),
-                                        Text('CBE', style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Order Summary
+                        // Card Details Section (First)
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -438,44 +395,79 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withValues(alpha: 0.05),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              Text(
+                                'Order Summary',
+                                style: AppTextStyles.h3.copyWith(
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Card Type', style: AppTextStyles.bodySmall),
-                                  Obx(() => Text(
-                                    controller.selectedCard.value?.cardType?.name ?? 'N/A',
-                                    style: AppTextStyles.h3.copyWith(color: AppColors.primaryBlue),
-                                  )),
+                                  Text(
+                                    'Card Type',
+                                    style: AppTextStyles.bodySmall,
+                                  ),
+                                  Obx(
+                                    () => Text(
+                                      controller
+                                              .selectedCard
+                                              .value
+                                              ?.cardType
+                                              ?.name ??
+                                          'N/A',
+                                      style: AppTextStyles.h3.copyWith(
+                                        color: AppColors.primaryBlue,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                               const Divider(height: 24),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Patient', style: AppTextStyles.bodySmall),
+                                  Text(
+                                    'Patient',
+                                    style: AppTextStyles.bodySmall,
+                                  ),
                                   Text(
                                     '${controller.fNameController.text} ${controller.lNameController.text}',
-                                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 8),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Amount to Pay', style: AppTextStyles.bodySmall),
-                                  Obx(() => Text(
-                                    '\$${controller.selectedCard.value?.price?.toStringAsFixed(2) ?? "0.00"}',
-                                    style: AppTextStyles.h3.copyWith(color: Colors.green),
-                                  )),
+                                  Text(
+                                    'Amount to Pay',
+                                    style: AppTextStyles.bodySmall,
+                                  ),
+                                  Obx(
+                                    () => Text(
+                                      '\$${controller.selectedCard.value?.price.toStringAsFixed(2) ?? "0.00"}',
+                                      style: AppTextStyles.h3.copyWith(
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],
@@ -483,13 +475,15 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                         ),
 
                         const SizedBox(height: 24),
+
+                        // Payment Proof Section (Second)
                         Text(
                           'Payment Proof',
-                          style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
+                          style: AppTextStyles.h3.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                         const SizedBox(height: 12),
-
-                        // Image Upload Area
                         GestureDetector(
                           onTap: controller.pickPaymentProof,
                           child: Obx(() {
@@ -500,18 +494,21 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: AppColors.primaryBlue.withOpacity(0.3),
+                                  color: AppColors.primaryBlue.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   width: 2,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                              child: controller.selectedPaymentProof.value != null
+                              child:
+                                  controller.selectedPaymentProof.value != null
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(14),
                                       child: Image.file(
@@ -520,7 +517,8 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                       ),
                                     )
                                   : Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           Icons.image_outlined,
@@ -530,9 +528,10 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                         const SizedBox(height: 8),
                                         Text(
                                           'Click to attach receipt',
-                                          style: AppTextStyles.bodySmall.copyWith(
-                                            color: AppColors.textSecondary,
-                                          ),
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: AppColors.textSecondary,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -540,28 +539,135 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                           }),
                         ),
 
-                        const Spacer(),
+                        const SizedBox(height: 24),
 
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: Obx(() => ElevatedButton(
-                            onPressed: controller.isLoading.value ? null : controller.submitRequest,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryBlue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 4,
-                            ),
-                            child: controller.isLoading.value
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : Text(
-                                    'Submit Request',
-                                    style: AppTextStyles.h3.copyWith(color: Colors.white),
-                                  ),
-                          )),
+                        // Bank Details Section (Third)
+                        Text(
+                          'Available Payment Methods',
+                          style: AppTextStyles.h3.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
                         ),
+                        const SizedBox(height: 12),
+
+                        Obx(() {
+                          if (controller.isBankLoading.value) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+
+                          if (controller.bankAccounts.isEmpty) {
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Text(
+                                'No payment methods available',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            );
+                          }
+
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: controller.bankAccounts.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final bankAccount =
+                                  controller.bankAccounts[index];
+                              final bank = controller.banks.firstWhereOrNull(
+                                (b) => b.id == bankAccount.bankId,
+                              );
+
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1E1E1E),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Color(0xFF2C3E50),
+                                      Color(0xFF000000),
+                                    ],
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          bank?.name ?? 'Bank',
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(color: Colors.white70),
+                                        ),
+                                        Icon(
+                                          Icons.account_balance,
+                                          color: Colors.white70,
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      bankAccount.accountNumber,
+                                      style: AppTextStyles.h3.copyWith(
+                                        color: Colors.white,
+                                        letterSpacing: 2,
+                                        fontFamily: 'Courier',
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Account Name',
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: Colors.white70,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      bankAccount.name,
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        }),
+
+                        const SizedBox(
+                          height: 100,
+                        ), // Space for floating button
                       ],
                     ),
                   ),
@@ -569,6 +675,35 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
               ],
             ),
           ),
+          // Floating Action Button
+          floatingActionButton: Obx(
+            () => FloatingActionButton.extended(
+              onPressed: controller.isLoading.value
+                  ? null
+                  : controller.submitRequest,
+              backgroundColor: AppColors.primaryBlue,
+              elevation: 8,
+              icon: controller.isLoading.value
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.send, color: Colors.white),
+              label: Text(
+                controller.isLoading.value ? 'Submitting...' : 'Submit Request',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
         );
       },
     );

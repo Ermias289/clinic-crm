@@ -6,7 +6,6 @@ import '../../data/datasources/card_remote_datasource.dart';
 import '../../data/repositories/card_repository_impl.dart';
 import '../../core/api_client.dart';
 import '../controllers/medical_service_controller.dart';
-import '../controllers/main_navigation_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -25,8 +24,12 @@ class _ServicesViewState extends State<ServicesView> {
     super.initState();
     // Initialize controller
     final apiClient = Get.find<ApiClient>();
-    final medicalRemote = MedicalServiceRemoteDataSourceImpl(apiClient: apiClient);
-    final medicalRepo = MedicalServiceRepositoryImpl(remoteDataSource: medicalRemote);
+    final medicalRemote = MedicalServiceRemoteDataSourceImpl(
+      apiClient: apiClient,
+    );
+    final medicalRepo = MedicalServiceRepositoryImpl(
+      remoteDataSource: medicalRemote,
+    );
     final cardRemote = CardRemoteDataSourceImpl(apiClient: apiClient);
     final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
     controller = Get.put(MedicalServiceController(medicalRepo, cardRepo));
@@ -81,11 +84,11 @@ class _ServicesListView extends StatelessWidget {
                 children: [
                   // Decorative Circles
                   Positioned(
-                    right: -30,
-                    top: -30,
+                    top: -40,
+                    right: -20,
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 150,
+                      height: 150,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.1),
@@ -93,59 +96,67 @@ class _ServicesListView extends StatelessWidget {
                     ),
                   ),
                   Positioned(
-                    left: -20,
                     bottom: -20,
+                    left: -40,
                     child: Container(
                       width: 100,
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withOpacity(0.08),
                       ),
                     ),
                   ),
-                  
-                  // content
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Back Button & Title
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                // Navigate back to the first tab (Appointments)
-                                Get.back();
-                              },
-                              icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                            const SizedBox(width: 16),
-                            Text(
-                              'Our Services',
-                              style: AppTextStyles.h2.copyWith(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Choose a Service',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: Colors.white.withOpacity(0.8),
-                            letterSpacing: 1.2,
+
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Our Services',
+                                    style: AppTextStyles.h2.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 28,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Choose a medical service',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.medical_services,
+                                  color: Colors.white,
+                                  size: 32,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Select a medical service to proceed with booking',
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: Colors.white.withOpacity(0.6),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -157,7 +168,11 @@ class _ServicesListView extends StatelessWidget {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryBlue,
+                  ),
+                );
               }
 
               if (controller.services.isEmpty) {
@@ -165,7 +180,11 @@ class _ServicesListView extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.medical_services_outlined, size: 60, color: AppColors.textHint),
+                      Icon(
+                        Icons.medical_services_outlined,
+                        size: 60,
+                        color: AppColors.textHint,
+                      ),
                       const SizedBox(height: 16),
                       Text('No services found', style: AppTextStyles.bodyLarge),
                     ],
@@ -200,26 +219,35 @@ class _ServicesListView extends StatelessWidget {
                                 width: 60,
                                 height: 60,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue.withOpacity(0.05),
+                                  color: AppColors.primaryBlue.withOpacity(
+                                    0.05,
+                                  ),
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Center(
                                   child: service.servicePicture.isEmpty
-                                      ? const Icon(Icons.local_hospital_rounded, color: AppColors.primaryBlue, size: 28)
+                                      ? const Icon(
+                                          Icons.local_hospital_rounded,
+                                          color: AppColors.primaryBlue,
+                                          size: 28,
+                                        )
                                       : ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
                                           child: Image.network(
                                             service.servicePicture,
                                             width: 60,
                                             height: 60,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_,__,___) => const Icon(Icons.error),
+                                            errorBuilder: (_, __, ___) =>
+                                                const Icon(Icons.error),
                                           ),
                                         ),
                                 ),
                               ),
                               const SizedBox(width: 16),
-                              
+
                               // Text Content
                               Expanded(
                                 child: Column(
@@ -227,7 +255,9 @@ class _ServicesListView extends StatelessWidget {
                                   children: [
                                     Text(
                                       service.name,
-                                      style: AppTextStyles.h3.copyWith(fontSize: 16),
+                                      style: AppTextStyles.h3.copyWith(
+                                        fontSize: 16,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
@@ -239,7 +269,11 @@ class _ServicesListView extends StatelessWidget {
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
-                                        const Icon(Icons.access_time_rounded, size: 14, color: AppColors.accentBlue),
+                                        const Icon(
+                                          Icons.access_time_rounded,
+                                          size: 14,
+                                          color: AppColors.accentBlue,
+                                        ),
                                         const SizedBox(width: 4),
                                         Text(
                                           '${service.durationInMinutes} mins',
@@ -253,9 +287,13 @@ class _ServicesListView extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              
+
                               // Arrow
-                              const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textHint),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 16,
+                                color: AppColors.textHint,
+                              ),
                             ],
                           ),
                         ),

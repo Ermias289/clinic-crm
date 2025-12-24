@@ -21,44 +21,48 @@ class LoginController extends GetxController {
     }
 
     isLoading.value = true;
-    
+
     // TEMPORARY: Mock login for testing without backend
     // TODO: Remove this before production
     if (emailController.text == 'aaa' && passwordController.text == 'aaa') {
-      await Future.delayed(const Duration(milliseconds: 500)); // Simulate API call
-      
+      await Future.delayed(
+        const Duration(milliseconds: 500),
+      ); // Simulate API call
+
       // Mock user data
       await box.write('token', 'mock_token_12345');
       await box.write('user', 'Test User');
       await box.write('user', 'Test User');
       await box.write('userId', 3); // Matches SeedData.cs User ID
-      
+
       isLoading.value = false;
-      Get.offAllNamed('/dashboard');
+      // Redirect to dashboard and set services tab as active
+      Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
       return;
     }
     // END TEMPORARY
-    
+
     try {
       final request = LoginRequestModel(
         phoneOrEmail: emailController.text,
         password: passwordController.text,
       );
       final response = await loginUseCase(request);
-      
+
       // Save token, user info, and userId
       await box.write('token', response.token);
       await box.write('user', response.user.username);
       await box.write('userId', response.user.id);
-      
-      Get.offAllNamed('/dashboard');
+
+      // Redirect to dashboard and set services tab as active
+      Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
     } catch (e) {
       Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
     }
   }
-  
+
   void goToRegister() {
     Get.toNamed('/register');
   }

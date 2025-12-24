@@ -15,62 +15,64 @@ class MainNavigationView extends GetView<MainNavigationController> {
   Widget build(BuildContext context) {
     final pages = [
       const AppointmentsView(),
-      ServicesListView(),
       const CardSelectionView(), // Cards Page
+      ServicesListView(), // Services moved to middle
       const ProfileView(),
       const ContactUsView(),
     ];
 
-    return Obx(() => Scaffold(
-          body: pages[controller.currentIndex.value],
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(
-                      icon: Icons.calendar_today,
-                      label: 'Appointments',
-                      index: 0,
-                    ),
-                    _buildNavItem(
-                      icon: Icons.medical_services_outlined,
-                      label: 'Services',
-                      index: 1,
-                    ),
-                    _buildNavItem(
-                      icon: Icons.credit_card,
-                      label: 'Cards',
-                      index: 2,
-                    ),
-                    _buildNavItem(
-                      icon: Icons.settings,
-                      label: 'Settings',
-                      index: 3,
-                    ),
-                    _buildNavItem(
-                      icon: Icons.contact_support,
-                      label: 'Contact',
-                      index: 4,
-                    ),
-                  ],
-                ),
+    return Obx(
+      () => Scaffold(
+        body: pages[controller.currentIndex.value],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildNavItem(
+                    icon: Icons.calendar_today,
+                    label: 'Appointments',
+                    index: 0,
+                  ),
+                  _buildNavItem(
+                    icon: Icons.credit_card,
+                    label: 'Cards',
+                    index: 1,
+                  ),
+                  _buildNavItem(
+                    icon: Icons.medical_services_outlined,
+                    label: 'Services',
+                    index: 2,
+                  ),
+                  _buildNavItem(
+                    icon: Icons.settings,
+                    label: 'Settings',
+                    index: 3,
+                  ),
+                  _buildNavItem(
+                    icon: Icons.contact_support,
+                    label: 'Contact',
+                    index: 4,
+                  ),
+                ],
               ),
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget _buildNavItem({

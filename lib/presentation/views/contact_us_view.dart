@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../widgets/custom_button.dart';
+import '../../data/models/company_setting_model.dart';
+import '../controllers/contact_us_controller.dart';
 
-class ContactUsView extends StatelessWidget {
+class ContactUsView extends GetView<ContactUsController> {
   const ContactUsView({super.key});
 
   @override
@@ -23,207 +23,268 @@ class ContactUsView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: Column(
-          children: [
-            // Header Section - Top Banner Style
-            Container(
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF0D47A1),
-                    Color(0xFF1565C0),
-                    Color(0xFF1976D2),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryBlue.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
+        children: [
+          // Header Section - Top Banner Style
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF0D47A1),
+                  Color(0xFF1565C0),
+                  Color(0xFF1976D2),
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Stack(
-                children: [
-                   // Decorative Circles
-                  Positioned(
-                    top: -40,
-                    right: -20,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -20,
-                    left: -40,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.08),
-                      ),
-                    ),
-                  ),
-                  
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Contact Us',
-                                    style: AppTextStyles.h2.copyWith(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Get in touch with our clinic',
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.support_agent,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryBlue.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
+            child: Stack(
+              children: [
+                // Decorative Circles
+                Positioned(
+                  top: -40,
+                  right: -20,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: -20,
+                  left: -40,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.08),
+                    ),
+                  ),
+                ),
 
-            // Content
-            Expanded(
-              child: Padding(
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 16,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Contact Us',
+                                  style: AppTextStyles.h2.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Get in touch with our clinic',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.support_agent,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Content
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryBlue,
+                  ),
+                );
+              }
+
+              final setting = controller.companySetting.value;
+              if (setting == null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 60,
+                        color: AppColors.textHint,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load contact information',
+                        style: AppTextStyles.bodyLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: controller.refreshData,
+                        child: Text(
+                          'Retry',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
-                  // Phone Card
-                  _buildContactCard(
-                    icon: Icons.phone_in_talk_outlined,
-                    title: 'Phone',
-                    subtitle: '+1 (555) 123-4567',
-                    onTap: () async {
-                       final Uri launchUri = Uri(
-                        scheme: 'tel',
-                        path: '+15551234567',
-                      );
-                      if (await canLaunchUrl(launchUri)) {
-                        await launchUrl(launchUri);
-                      } else {
-                        Get.snackbar('Error', 'Could not launch phone dialer');
-                      }
-                    },
-                  ),
+                    // Phone Card
+                    if (setting.phoneNumber?.isNotEmpty == true)
+                      _buildContactCard(
+                        icon: Icons.phone_in_talk_outlined,
+                        title: 'Phone',
+                        subtitle: setting.phoneNumber!,
+                        onTap: () async {
+                          final Uri launchUri = Uri(
+                            scheme: 'tel',
+                            path: setting.phoneNumber!.replaceAll(
+                              RegExp(r'[^\d+]'),
+                              '',
+                            ),
+                          );
+                          if (await canLaunchUrl(launchUri)) {
+                            await launchUrl(launchUri);
+                          } else {
+                            Get.snackbar(
+                              'Error',
+                              'Could not launch phone dialer',
+                            );
+                          }
+                        },
+                      ),
 
-                  const SizedBox(height: 8),
+                    if (setting.phoneNumber?.isNotEmpty == true)
+                      const SizedBox(height: 8),
 
-                  // Email Card
-                  _buildContactCard(
-                    icon: Icons.email_outlined,
-                    title: 'Email',
-                    subtitle: 'info@dentalclinic.com',
-                    onTap: () async {
-                      final Uri launchUri = Uri(
-                        scheme: 'mailto',
-                        path: 'info@dentalclinic.com',
-                        query: 'subject=Inquiry&body=Hello,', 
-                      );
-                      if (await canLaunchUrl(launchUri)) {
-                        await launchUrl(launchUri);
-                      } else {
-                        Get.snackbar('Error', 'Could not open email app');
-                      }
-                    },
-                  ),
+                    // Email Card
+                    if (setting.email?.isNotEmpty == true)
+                      _buildContactCard(
+                        icon: Icons.email_outlined,
+                        title: 'Email',
+                        subtitle: setting.email!,
+                        onTap: () async {
+                          final Uri launchUri = Uri(
+                            scheme: 'mailto',
+                            path: setting.email!,
+                            query: 'subject=Inquiry&body=Hello,',
+                          );
+                          if (await canLaunchUrl(launchUri)) {
+                            await launchUrl(launchUri);
+                          } else {
+                            Get.snackbar('Error', 'Could not open email app');
+                          }
+                        },
+                      ),
 
-                  const SizedBox(height: 8),
+                    if (setting.email?.isNotEmpty == true)
+                      const SizedBox(height: 8),
 
-                  // Location Card
-                  _buildContactCard(
-                    icon: Icons.location_on_outlined,
-                    title: 'Address',
-                    subtitle: '123 Dental Street, City, Country',
-                    onTap: () {
-                      // Integration with Maps is typically done via 'geo:' or Google Maps URL scheme.
-                      // For now, keeping it simple as requested or maybe 'geo:0,0?q=address'
-                       Get.snackbar('Info', 'Maps integration coming soon');
-                    },
-                  ),
+                    // Address Card
+                    if (setting.address?.isNotEmpty == true)
+                      _buildContactCard(
+                        icon: Icons.location_on_outlined,
+                        title: 'Address',
+                        subtitle: _buildFullAddress(setting),
+                        onTap: () {
+                          Get.snackbar('Info', 'Maps integration coming soon');
+                        },
+                      ),
 
-                  const SizedBox(height: 8),
+                    if (setting.address?.isNotEmpty == true)
+                      const SizedBox(height: 8),
 
-                  // Working Hours Card
-                  _buildContactCard(
-                    icon: Icons.access_time_outlined,
-                    title: 'Working Hours',
-                    subtitle: 'Mon-Fri: 9:00 AM - 6:00 PM',
-                    onTap: null, // Static info
-                  ),
+                    // Working Hours Card - Now using real data from API
+                    _buildContactCard(
+                      icon: Icons.access_time_outlined,
+                      title: 'Working Hours',
+                      subtitle: _buildWorkingHours(setting),
+                      onTap: null, // Static info
+                    ),
 
-                  const Spacer(),
+                    const Spacer(),
 
-                  // Emergency Contact
-                  _buildContactCard(
-                    icon: Icons.emergency_outlined,
-                    title: 'Emergency Contact',
-                    subtitle: '+1 (555) 911-DENT',
-                    isEmergency: true,
-                    onTap: () async {
-                       final Uri launchUri = Uri(
-                        scheme: 'tel',
-                        path: '+15559113368', // Dummy emergency number
-                      );
-                      if (await canLaunchUrl(launchUri)) {
-                        await launchUrl(launchUri);
-                      } else {
-                        Get.snackbar('Error', 'Could not launch phone dialer');
-                      }
-                    },
-                  ),
-                  
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
+                    // Emergency Contact (using same phone number with different styling)
+                    if (setting.phoneNumber?.isNotEmpty == true)
+                      _buildContactCard(
+                        icon: Icons.emergency_outlined,
+                        title: 'Emergency Contact',
+                        subtitle: setting.phoneNumber!,
+                        isEmergency: true,
+                        onTap: () async {
+                          final Uri launchUri = Uri(
+                            scheme: 'tel',
+                            path: setting.phoneNumber!.replaceAll(
+                              RegExp(r'[^\d+]'),
+                              '',
+                            ),
+                          );
+                          if (await canLaunchUrl(launchUri)) {
+                            await launchUrl(launchUri);
+                          } else {
+                            Get.snackbar(
+                              'Error',
+                              'Could not launch phone dialer',
+                            );
+                          }
+                        },
+                      ),
+
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              );
+            }),
           ),
         ],
       ),
@@ -237,8 +298,12 @@ class ContactUsView extends StatelessWidget {
     VoidCallback? onTap,
     bool isEmergency = false,
   }) {
-    final primaryColor = isEmergency ? Colors.red.shade700 : AppColors.primaryBlue;
-    final iconBgColor = isEmergency ? Colors.red.shade50 : AppColors.primaryBlue.withOpacity(0.05);
+    final primaryColor = isEmergency
+        ? Colors.red.shade700
+        : AppColors.primaryBlue;
+    final iconBgColor = isEmergency
+        ? Colors.red.shade50
+        : AppColors.primaryBlue.withOpacity(0.05);
 
     return Container(
       decoration: BoxDecoration(
@@ -253,7 +318,10 @@ class ContactUsView extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0), // Match Service Card padding
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 12.0,
+            ), // Match Service Card padding
             child: Row(
               children: [
                 Container(
@@ -277,14 +345,19 @@ class ContactUsView extends StatelessWidget {
                       Text(
                         title,
                         style: AppTextStyles.bodyMedium.copyWith(
-                            color: isEmergency ? Colors.red.shade900 : AppColors.textSecondary
+                          color: isEmergency
+                              ? Colors.red.shade900
+                              : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         subtitle,
-                        style: isEmergency 
-                            ? AppTextStyles.h3.copyWith(fontSize: 15, color: Colors.red.shade700)
+                        style: isEmergency
+                            ? AppTextStyles.h3.copyWith(
+                                fontSize: 15,
+                                color: Colors.red.shade700,
+                              )
                             : AppTextStyles.h3.copyWith(fontSize: 15),
                       ),
                     ],
@@ -292,7 +365,8 @@ class ContactUsView extends StatelessWidget {
                 ),
                 if (onTap != null)
                   Icon(
-                    Icons.arrow_forward_ios_rounded, // Rounded arrow like Services
+                    Icons
+                        .arrow_forward_ios_rounded, // Rounded arrow like Services
                     size: 14,
                     color: AppColors.textHint,
                   ),
@@ -302,5 +376,146 @@ class ContactUsView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _buildFullAddress(CompanySettingModel setting) {
+    final addressParts = <String>[];
+
+    if (setting.address?.isNotEmpty == true) {
+      addressParts.add(setting.address!);
+    }
+    if (setting.subCity?.isNotEmpty == true) {
+      addressParts.add(setting.subCity!);
+    }
+    if (setting.city?.isNotEmpty == true) {
+      addressParts.add(setting.city!);
+    }
+    if (setting.country?.isNotEmpty == true) {
+      addressParts.add(setting.country!);
+    }
+
+    return addressParts.join(', ');
+  }
+
+  String _buildWorkingHours(CompanySettingModel setting) {
+    if (setting.workdays == null || setting.workdays!.isEmpty) {
+      return 'Mon-Fri: 9:00 AM - 6:00 PM'; // Fallback
+    }
+
+    final workingDays = setting.workdays!
+        .where((day) => day.isWorkingDay == true)
+        .toList();
+
+    if (workingDays.isEmpty) {
+      return 'Contact us for hours';
+    }
+
+    // Group consecutive days with same hours
+    final Map<String, List<String>> hourGroups = {};
+
+    for (final day in workingDays) {
+      final timeRange =
+          '${_formatTime(day.openingTime)} - ${_formatTime(day.closingTime)}';
+      if (hourGroups[timeRange] == null) {
+        hourGroups[timeRange] = [];
+      }
+      hourGroups[timeRange]!.add(day.day ?? '');
+    }
+
+    // Build display string
+    final List<String> hourStrings = [];
+    hourGroups.forEach((timeRange, days) {
+      if (days.isNotEmpty) {
+        final dayRange = _formatDayRange(days);
+        hourStrings.add('$dayRange: $timeRange');
+      }
+    });
+
+    return hourStrings.join('\n');
+  }
+
+  String _formatTime(String? timeString) {
+    if (timeString == null || timeString.isEmpty) return '';
+
+    try {
+      // Handle TimeOnly format from backend (e.g., "09:00:00")
+      final parts = timeString.split(':');
+      if (parts.length >= 2) {
+        final hour = int.parse(parts[0]);
+        final minute = int.parse(parts[1]);
+
+        final period = hour >= 12 ? 'PM' : 'AM';
+        final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+        final displayMinute = minute == 0
+            ? ''
+            : ':${minute.toString().padLeft(2, '0')}';
+
+        return '$displayHour$displayMinute $period';
+      }
+    } catch (e) {
+      // If parsing fails, return original string
+    }
+
+    return timeString;
+  }
+
+  String _formatDayRange(List<String> days) {
+    if (days.isEmpty) return '';
+    if (days.length == 1) return days.first;
+
+    // Sort days by weekday order
+    final dayOrder = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    days.sort((a, b) => dayOrder.indexOf(a).compareTo(dayOrder.indexOf(b)));
+
+    // Check for consecutive days
+    if (days.length > 2) {
+      final firstIndex = dayOrder.indexOf(days.first);
+      final lastIndex = dayOrder.indexOf(days.last);
+
+      // Check if all days in between are present
+      bool isConsecutive = true;
+      for (int i = firstIndex; i <= lastIndex; i++) {
+        if (!days.contains(dayOrder[i])) {
+          isConsecutive = false;
+          break;
+        }
+      }
+
+      if (isConsecutive) {
+        return '${_abbreviateDay(days.first)}-${_abbreviateDay(days.last)}';
+      }
+    }
+
+    // Not consecutive, list all days
+    return days.map(_abbreviateDay).join(', ');
+  }
+
+  String _abbreviateDay(String day) {
+    switch (day.toLowerCase()) {
+      case 'monday':
+        return 'Mon';
+      case 'tuesday':
+        return 'Tue';
+      case 'wednesday':
+        return 'Wed';
+      case 'thursday':
+        return 'Thu';
+      case 'friday':
+        return 'Fri';
+      case 'saturday':
+        return 'Sat';
+      case 'sunday':
+        return 'Sun';
+      default:
+        return day.substring(0, 3);
+    }
   }
 }

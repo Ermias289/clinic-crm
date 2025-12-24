@@ -1,3 +1,6 @@
+import 'branch_setting_model.dart';
+import 'working_day_setting_model.dart';
+
 class CompanySettingModel {
   final int? id;
   final String? name;
@@ -9,7 +12,10 @@ class CompanySettingModel {
   final String? city;
   final String? country;
   final String? subCity;
+  final String? createdAt;
   final String? updatedAt;
+  final List<BranchSettingModel>? branches;
+  final List<WorkingDaySettingModel>? workdays;
 
   CompanySettingModel({
     this.id,
@@ -22,7 +28,10 @@ class CompanySettingModel {
     this.city,
     this.country,
     this.subCity,
+    this.createdAt,
     this.updatedAt,
+    this.branches,
+    this.workdays,
   });
 
   factory CompanySettingModel.fromJson(Map<String, dynamic> json) {
@@ -37,7 +46,18 @@ class CompanySettingModel {
       city: json['city'],
       country: json['country'],
       subCity: json['subCity'],
+      createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
+      branches: json['branches'] != null
+          ? (json['branches'] as List)
+                .map((branch) => BranchSettingModel.fromJson(branch))
+                .toList()
+          : null,
+      workdays: json['workdays'] != null
+          ? (json['workdays'] as List)
+                .map((workday) => WorkingDaySettingModel.fromJson(workday))
+                .toList()
+          : null,
     );
   }
 
@@ -53,7 +73,10 @@ class CompanySettingModel {
       'city': city,
       'country': country,
       'subCity': subCity,
+      'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'branches': branches?.map((branch) => branch.toJson()).toList(),
+      'workdays': workdays?.map((workday) => workday.toJson()).toList(),
     };
   }
 }
