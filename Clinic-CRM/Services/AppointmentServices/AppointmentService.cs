@@ -366,5 +366,16 @@ namespace Clinic_CRM.Services.AppointmentServices
 
             return true;
         }
+
+        public async Task<List<Appointment>> GetAppointmentsByPatientId(int Id)
+        {
+            return await _context.Appointments
+                .Include(x => x.Patient)
+                .Include(x => x.MedicalProfessional)
+                .Include(x => x.DentistryService)
+                .Include(x => x.BranchSetting)
+                .Where(x => x.PatientId == Id)
+                .ToListAsync();
+        }
     }
 }

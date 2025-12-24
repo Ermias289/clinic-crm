@@ -55,6 +55,23 @@ namespace Clinic_CRM.Controllers
             }
         }
     
+        [HttpGet("bypatientId/{Id}")]
+        public async Task<ActionResult> GetAppointmentByPatientId(int Id)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewAppointment))
+                    throw new UnauthorizedAccessException();
+                return Ok(await _appointmentService.GetAppointmentsByPatientId(Id));
+
+            }catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+    
         [HttpDelete("{Id}")]
         public async Task<ActionResult> DeleteAppointmentById(int Id)
         {

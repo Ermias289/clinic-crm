@@ -11,6 +11,7 @@ namespace Clinic_CRM.Services.AppointmentServices
         Task<List<Appointment>> GetAllAppointment();
         Task<Appointment> DeleteAppointment(int Id);
         Task<Appointment> CancelAppointment(int Id, string Reason);
-        Task<bool> CompleteAppointment(List<int> Ids); 
+        Task<bool> CompleteAppointment(List<int> Ids);
+        Task<List<Appointment>> GetAppointmentsByPatientId(int Id)
     }
 }
