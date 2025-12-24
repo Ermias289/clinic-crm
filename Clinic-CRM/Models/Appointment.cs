@@ -7,9 +7,10 @@ namespace Clinic_CRM.Models
     {
         [Key]
         public int Id { get; set; }
+        public string Reference { get; set; } = string.Empty;
         public MedicalService DentistryService { get; set; }
         public int DentistryId { get; set; }
-        public MedicalProfessional MedicalProfessionals { get; set; }
+        public MedicalProfessional MedicalProfessional { get; set; }
         public int MedicalProfessionalId { get; set; }
         public Patient Patient { get; set; }
         public int? PatientId { get; set; }
@@ -28,5 +29,9 @@ namespace Clinic_CRM.Models
         public int? CanceledById { get; set; }
         public DateTime CanceledAt { get; set; }
         public string CancelReason { get; set; } = string.Empty;
+        
+
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdateAt { get; set; }
     }
 }

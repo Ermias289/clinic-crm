@@ -8,6 +8,7 @@ using Clinic_CRM.DTOs.CardDTOs;
 using Clinic_CRM.DTOs.PatientDTOs;
 using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Services.NotificationServices;
 using Clinic_CRM.Services.PatientServices;
 using Clinic_CRM.Services.PaymentServices;
 using Clinic_CRM.Services.UserServices;
@@ -24,14 +25,16 @@ namespace Clinic_CRM.Services.CardServices
         private readonly IUserService _userService;
         private readonly IPaymentService _paymentService;
         private readonly IPatientService _patientService;
+        private readonly INotificationService _notify;
 
-        public CardService(IMapper mapper, Context context, IUserService userService, IPaymentService paymentService, IPatientService patientService)
+        public CardService(IMapper mapper, Context context, IUserService userService, IPaymentService paymentService, IPatientService patientService, INotificationService notify)
         {
             _mapper = mapper;
             _context = context;
             _userService = userService;
             _paymentService = paymentService;
             _patientService = patientService;
+            _notify = notify;
         }
 
         public async Task<Card> RequestCard(RequestCardDTO dto)
@@ -193,9 +196,23 @@ namespace Clinic_CRM.Services.CardServices
                     card.ExpiredAt = DateTime.UtcNow;
                     expiredCount++;
                 }
+
+                var user = await _context.Users.FindAsync(card.Patient.UserId);
+
+                if(user != null)
+                {
+                   await _notify.SendSystemAsync(
+                   "Card Expired",
+                   $"Dear {card.Patient.FName},your card has expired. Please make a payment to renew it and enjoy unlimited appointments along with our full range of premium services.",
+                   NOTIFICATION_CONSTANTS.CARD,
+                   new List<int> { user.Id }
+                   );
+                }
+               
             }
 
             await _context.SaveChangesAsync();
+
 
             return $"{expiredCount} cards expired successfully.";
         }

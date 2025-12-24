@@ -65,10 +65,12 @@ namespace Clinic_CRM.Services.PaymentServices
                 throw new KeyNotFoundException("Card Price with the specified Card type does not exist.");
 
             payment.ExpectedAmount = cardPrice.Price;
-            payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
+            
            
             _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
 
+            payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
             await _context.SaveChangesAsync();
 
             return payment;
@@ -287,6 +289,33 @@ namespace Clinic_CRM.Services.PaymentServices
             return payment;
         }
 
+
+        public async Task<List<Payment>> GetAllPaymentsByCardId(int CardId)
+        {
+            return await _context.Payments
+                .Include(x => x.Card)
+                .Include(x => x.RequestedBy)
+                .Include(x => x.ApprovedBy)
+                .Include(x => x.CheckedBy)
+                .Include(x => x.CanceledBy)
+                .Include(x => x.RejectedBy)
+                .Where(x => x.CardId == CardId)
+                .ToListAsync();
+        }
+       
+        public async Task<List<Payment>> GetAllPaymentsByPatientId(int patientId)
+        {
+            return await _context.Payments
+                .Include(x => x.Card)
+                    .ThenInclude(x => x.Patient)
+                .Include(x => x.RequestedBy)
+                .Include(x => x.ApprovedBy)
+                .Include(x => x.CheckedBy)
+                .Include(x => x.CanceledBy)
+                .Include(x => x.RejectedBy)
+                .Where(x => x.Card.PatientId == patientId)
+                .ToListAsync();
+        }
        
 
     }

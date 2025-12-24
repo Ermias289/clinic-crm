@@ -14,5 +14,7 @@ namespace Clinic_CRM.Services.PaymentServices
         Task<List<Payment>> GetAllPayments();
         Task<Payment> GetPaymentById(int Id);
         Task<Payment> AutoPrepare(AutoPaymentPrepareDTO dto);
+        Task<List<Payment>> GetAllPaymentsByCardId(int CardId);
+        Task<List<Payment>> GetAllPaymentsByPatientId(int patientId);
     }
 }

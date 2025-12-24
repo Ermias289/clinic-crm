@@ -39,6 +39,7 @@
         {
             public const string CARD = "CARD";
             public const string CARD_PAYMENT = "CP";
+            public const string APPOINTMENT = "APP";
             public const int PADDING = 6;
         }
 
@@ -66,6 +67,8 @@
             public const string USER = "User";
             public const string SYSTEM = "System";
             public const string NEWUSER = "New User";
+            public const string CARD = "Card";
+            public const string APPOINTMENT = "Appointment";
         }
     }
 }

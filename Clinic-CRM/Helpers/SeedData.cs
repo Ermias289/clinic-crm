@@ -96,11 +96,11 @@ namespace Clinic_CRM.Helpers
             {
                 var companySetting = new CompanySetting
                 {
-                    Name = "Clinic CRM",
-                    Logo = "logo.png",
-                    Prefix = "CCR",
-                    Email = "companyemail@gmail.com",
-                    PhoneNumber = "+251984534724",
+                    Name = "Lucid Dental Clinic",
+                    Logo = "file_997207_2025_12_23_17_13_26.png",
+                    Prefix = "LDC",
+                    Email = "",
+                    PhoneNumber = "+2510909090909",
                     Address = "Bole Dembel",
                     City = "Addis Ababa",
                     Country = "Ethiopia",
@@ -145,7 +145,21 @@ namespace Clinic_CRM.Helpers
                     CanViewCardPayment = true,
                     CanCancelCardPayment = true,
                     CanViewCard = true,
-                    CanEditCard = true
+                    CanEditCard = true,
+                    CanViewUserOnBoardingSetting = true,
+                    CanViewCardType = true,
+                    CanViewBranchSetting = true,
+                    CanViewDoctorSchedule = true,
+                    CanMakeAppointment = true,
+                    CanCancelAppointment = true,
+                    CanViewAppointment = true,
+                    CanEditAppointment = true,
+                    CanViewMedicalProfessional = true,
+                    CanViewMedicalService = true,
+                    CanViewBank = true,
+                    CanViewBankAccount = true,
+                    CanReadNotification = true,
+                    CanViewNotification = true
                 }
             };
 
@@ -182,7 +196,7 @@ namespace Clinic_CRM.Helpers
                     Email = "example@gmail.com",
                     PhoneNumber = "+251984534724",
                     Password = "Nexa@12345",
-                    UserRoleId = superAdminRole.Id,
+                    UserRoleId = superAdminRole?.Id,
                 },
             };
 

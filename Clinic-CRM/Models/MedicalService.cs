@@ -7,6 +7,7 @@ namespace Clinic_CRM.Models
     {
         [Key]
         public int Id { get; set; }
+        public string ServiceReference { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public int DurationInMinutes { get; set; } = 0;

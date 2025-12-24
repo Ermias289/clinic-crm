@@ -165,6 +165,44 @@ namespace Clinic_CRM.Controllers
                 return this.ParseException(ex);
             }
         }
+      
 
+        [HttpGet("bypatientId/{Id}")]
+
+        public async Task<ActionResult> GetPaymentByPatientId(int patientId)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCardPayment))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _paymentService.GetAllPaymentsByPatientId(patientId));
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+        [HttpGet("bycardId/{Id}")]
+
+        public async Task<ActionResult> GetPaymentByCardId(int cardId)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCardPayment))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _paymentService.GetAllPaymentsByCardId(cardId));
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
     }
 }
