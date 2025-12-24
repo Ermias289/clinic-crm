@@ -6,6 +6,7 @@ import '../../data/models/card_setting_model.dart';
 import '../../data/models/request_card_model.dart';
 import '../../data/repositories/card_repository_impl.dart';
 import 'package:get_storage/get_storage.dart';
+import 'profile_controller.dart';
 
 class CardController extends GetxController {
   final CardRepositoryImpl repository;
@@ -63,6 +64,7 @@ class CardController extends GetxController {
   void startRequest(CardSettingModel cardSetting) {
     selectedCard.value = cardSetting;
     _clearForm();
+    _preFillFromProfile();
     Get.toNamed('/request-card-details');
   }
 
@@ -114,6 +116,20 @@ class CardController extends GetxController {
     cityController.clear();
     dobController.clear();
     selectedPaymentProof.value = null;
+  }
+
+  void _preFillFromProfile() {
+    try {
+      final profileController = Get.find<ProfileController>();
+      fNameController.text = profileController.fNameController.text;
+      mNameController.text = profileController.mNameController.text;
+      lNameController.text = profileController.lNameController.text;
+      emailController.text = profileController.emailController.text;
+      phoneController.text = profileController.phoneController.text;
+    } catch (e) {
+      // ProfileController not found or not initialized, skip pre-filling
+      print('ProfileController not available for pre-filling: $e');
+    }
   }
 
   Future<void> pickPaymentProof() async {
