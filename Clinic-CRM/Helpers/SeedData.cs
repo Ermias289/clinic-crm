@@ -133,7 +133,6 @@ namespace Clinic_CRM.Helpers
                 new UserRole
                 {
                     Name = USER_ROLES.PATIENT,
-                    CanViewCompanySettings = true,
                     CanAddUser = true,
                     CanEditUser = true,
                     CanViewUser = true,

@@ -28,10 +28,10 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                var currentUser = _userService.GetCurrentUser();
+                //var currentUser = _userService.GetCurrentUser();
 
-                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCompanySettings))
-                    throw new UnauthorizedAccessException();
+                //if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCompanySettings))
+                //    throw new UnauthorizedAccessException();
 
                 return Ok(await _companySettingServcies.GetCompanySetting());
 
