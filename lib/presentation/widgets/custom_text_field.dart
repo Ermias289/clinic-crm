@@ -29,12 +29,13 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       enabled: enabled,
+      validator: validator,
       style: AppTextStyles.bodyMedium,
       decoration: InputDecoration(
         labelText: labelText,

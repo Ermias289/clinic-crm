@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
         ...AppPages.routes,
         GetPage(
           name: '/request-card-details',
-          page: () => const RequestCardDetailsView(),
+          page: () => RequestCardDetailsView(),
         ),
         GetPage(
           name: '/request-card-payment',
