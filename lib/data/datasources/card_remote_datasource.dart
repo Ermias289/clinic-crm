@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:get/get.dart'; // Needed for FormData & MultipartFile
 import '../../core/api_client.dart';
 import '../models/card_setting_model.dart';
@@ -56,6 +57,16 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   @override
   Future<bool> createPayment(int cardId, String proofPath) async {
     try {
+      // Check file size: 2MB limit
+      final file = File(proofPath);
+      final int fileSize = await file.length();
+      const int maxSize = 2 * 1024 * 1024; // 2MB in bytes
+      if (fileSize > maxSize) {
+        throw Exception(
+          'Payment proof file size exceeds the maximum allowed limit of 2MB.',
+        );
+      }
+
       // 1. Upload the image first
       final form = FormData({
         'file': MultipartFile(proofPath, filename: 'payment_proof.jpg'),
