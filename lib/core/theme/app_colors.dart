@@ -1,46 +1,53 @@
 import 'package:flutter/material.dart';
 
-/// App color palette based on design reference
+/// App color palette aligned with Lucid Dental branding
 class AppColors {
-  // Primary Colors
-  static const Color primaryBlue = Color(0xFF0D47A1);
-  static const Color primaryBlueDark = Color(0xFF002171);
-  static const Color primaryBlueLight = Color(0xFF1565C0);
-  
-  // Accent Colors
-  static const Color accentBlue = Color(0xFF2196F3);
-  static const Color successGreen = Color(0xFF4CAF50);
-  static const Color warningOrange = Color(0xFFFF9800);
-  
+  // Primary Colors (kept names, adjusted values)
+  static const Color primaryBlue = Color.fromARGB(255, 81, 7, 113);
+  static const Color primaryBlueDark = Color.fromARGB(255, 50, 7, 84);
+  static const Color primaryBlueLight = Color.fromARGB(255, 110, 2, 143);
+
+  // Accent Colors (adjusted to not fight brand)
+  static const Color accentBlue = Color.fromARGB(
+    255,
+    135,
+    80,
+    170,
+  ); // soft purple accent
+  static const Color successGreen = Color(0xFF43A047); // softened green
+  static const Color warningOrange = Color(0xFFF9A825); // muted orange
+
   // Background Colors
-  static const Color backgroundLight = Color(0xFFF5F7FA);
-  static const Color backgroundWhite = Color(0xFFFAFBFC);
+  static const Color backgroundLight = Color(0xFFF5F6FA);
+  static const Color backgroundWhite = Color(
+    0xFFE6D9EF,
+  ); // soft lavender-gray (logo highlight)
   static const Color cardBackground = Color(0xFFFFFFFF);
-  
-  // Text Colors
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
-  static const Color textHint = Color(0xFFBDBDBD);
-  
-  // Gradient
+
+  // Text Colors (slight refinement for readability)
+  static const Color textPrimary = Color(0xFF1F1F1F);
+  static const Color textSecondary = Color(0xFF6B6B6B);
+  static const Color textHint = Color(0xFF9E9E9E);
+
+  // Gradient (unchanged structure)
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primaryBlue, primaryBlueLight],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-  
-  // Shadow
+
+  // Shadow (softened)
   static List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withOpacity(0.06),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
   ];
-  
+
   static List<BoxShadow> softShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withOpacity(0.04),
       blurRadius: 8,
       offset: const Offset(0, 2),
     ),

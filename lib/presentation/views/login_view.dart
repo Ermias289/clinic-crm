@@ -17,13 +17,15 @@ class LoginView extends GetView<LoginController> {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light, // Light icons for dark gradient
+        statusBarIconBrightness:
+            Brightness.light, // Light icons for dark gradient
       ),
     );
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      body: SingleChildScrollView( // Changed to ensure scrolling on small screens
+      body: SingleChildScrollView(
+        // Changed to ensure scrolling on small screens
         padding: EdgeInsets.zero,
         child: Column(
           children: [
@@ -34,9 +36,9 @@ class LoginView extends GetView<LoginController> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF0D47A1),
-                    Color(0xFF1565C0),
-                    Color(0xFF1976D2),
+                    AppColors.primaryBlue,
+                    AppColors.primaryBlueLight,
+                    AppColors.accentBlue,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -80,7 +82,7 @@ class LoginView extends GetView<LoginController> {
                       ),
                     ),
                   ),
-                  
+
                   // Header Content
                   SafeArea(
                     child: Center(
@@ -131,12 +133,16 @@ class LoginView extends GetView<LoginController> {
                   const SizedBox(height: 20),
                   Text(
                     "Login",
-                    style: AppTextStyles.h2.copyWith(color: AppColors.primaryBlue),
+                    style: AppTextStyles.h2.copyWith(
+                      color: AppColors.primaryBlue,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "Please sign in to continue",
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 32),
 
@@ -157,7 +163,7 @@ class LoginView extends GetView<LoginController> {
                     prefixIcon: Icons.lock_outline_rounded,
                     obscureText: true,
                   ),
-                  
+
                   // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
@@ -165,7 +171,9 @@ class LoginView extends GetView<LoginController> {
                       onPressed: () => Get.toNamed(Routes.FORGOT_PASSWORD),
                       child: Text(
                         "Forgot Password?",
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryBlue),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primaryBlue,
+                        ),
                       ),
                     ),
                   ),
@@ -173,25 +181,37 @@ class LoginView extends GetView<LoginController> {
                   const SizedBox(height: 24),
 
                   // Login Button
-                  Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton(
-                      onPressed: controller.isLoading.value ? null : controller.login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 8,
-                        shadowColor: AppColors.primaryBlue.withOpacity(0.4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  Obx(
+                    () => SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : controller.login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 8,
+                          shadowColor: AppColors.primaryBlue.withOpacity(0.4),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
                         ),
+                        child: controller.isLoading.value
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                "Login",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
-                      child: controller.isLoading.value 
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("Login", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
-                  )),
+                  ),
 
                   const SizedBox(height: 24),
 

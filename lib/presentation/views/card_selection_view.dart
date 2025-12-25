@@ -15,161 +15,167 @@ class CardSelectionView extends GetView<CardController> {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light, 
+        statusBarIconBrightness: Brightness.light,
       ),
     );
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: Column(
-          children: [
-            // Header Section - Top Banner Style
-            Container(
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF0D47A1),
-                    Color(0xFF1565C0),
-                    Color(0xFF1976D2),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryBlue.withOpacity(0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
+        children: [
+          // Header Section - Top Banner Style
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  AppColors.primaryBlue,
+                  AppColors.primaryBlueLight,
+                  AppColors.accentBlue,
                 ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              child: Stack(
-                children: [
-                   // Decorative Circles
-                  Positioned(
-                    top: -40,
-                    right: -20,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -20,
-                    left: -40,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.08),
-                      ),
-                    ),
-                  ),
-                  
-                  SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Select a Card',
-                                    style: AppTextStyles.h2.copyWith(
-                                      color: Colors.white,
-                                      fontSize: 28,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Choose a card to request',
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.credit_card,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryBlue.withOpacity(0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
+            child: Stack(
+              children: [
+                // Decorative Circles
+                Positioned(
+                  top: -40,
+                  right: -20,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: -20,
+                  left: -40,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.08),
+                    ),
+                  ),
+                ),
 
-            // Content
-            Expanded(
-              child: Obx(() {
-                if (controller.isLoading.value) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (controller.cardSettings.isEmpty) {
-                  return Center(
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 16,
+                    ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.credit_card_off,
-                          size: 64,
-                          color: AppColors.textSecondary.withOpacity(0.5),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No cards available at the moment.',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                             color: AppColors.textSecondary,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Select a Card',
+                                  style: AppTextStyles.h2.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Choose a card to request',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.credit_card,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  itemCount: controller.cardSettings.length,
-                  itemBuilder: (context, index) {
-                    final card = controller.cardSettings[index];
-                    return _buildCardItem(card);
-                  },
-                );
-              }),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+
+          // Content
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (controller.cardSettings.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.credit_card_off,
+                        size: 64,
+                        color: AppColors.textSecondary.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No cards available at the moment.',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
+                itemCount: controller.cardSettings.length,
+                itemBuilder: (context, index) {
+                  final card = controller.cardSettings[index];
+                  return _buildCardItem(card);
+                },
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 
@@ -202,18 +208,18 @@ class CardSelectionView extends GetView<CardController> {
             padding: const EdgeInsets.all(20),
             child: Stack(
               children: [
-                 Positioned(
-                    top: -20,
-                    right: -20,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
-                      ),
+                Positioned(
+                  top: -20,
+                  right: -20,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.1),
                     ),
                   ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -227,12 +233,15 @@ class CardSelectionView extends GetView<CardController> {
                         ),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                           child: Text(
+                          child: Text(
                             '${card.expirationDuration} Days',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: Colors.white,
@@ -242,7 +251,7 @@ class CardSelectionView extends GetView<CardController> {
                         ),
                       ],
                     ),
-                     Icon(
+                    Icon(
                       Icons.credit_card,
                       color: Colors.white.withOpacity(0.2),
                       size: 64,
@@ -252,7 +261,7 @@ class CardSelectionView extends GetView<CardController> {
               ],
             ),
           ),
-          
+
           // Card Details Body
           Padding(
             padding: const EdgeInsets.all(20),
@@ -262,12 +271,20 @@ class CardSelectionView extends GetView<CardController> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.info_outline_rounded, size: 20, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.info_outline_rounded,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        card.cardType?.description ?? 'No description available.',
-                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.4),
+                        card.cardType?.description ??
+                            'No description available.',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.4,
+                        ),
                       ),
                     ),
                   ],
@@ -278,19 +295,19 @@ class CardSelectionView extends GetView<CardController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                     Column(
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                       children: [
-                         Text('Price', style: AppTextStyles.caption),
-                         Text(
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Price', style: AppTextStyles.caption),
+                        Text(
                           '\$${card.price.toStringAsFixed(2)}',
                           style: AppTextStyles.h2.copyWith(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                       ],
-                     ),
+                      ],
+                    ),
                     ElevatedButton(
                       onPressed: () => controller.startRequest(card),
                       style: ElevatedButton.styleFrom(
@@ -301,9 +318,15 @@ class CardSelectionView extends GetView<CardController> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                       ),
-                      child: const Text('Request Card', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Request Card',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),

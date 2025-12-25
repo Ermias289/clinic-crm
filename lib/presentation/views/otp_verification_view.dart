@@ -24,9 +24,9 @@ class OTPVerificationView extends GetView<OTPVerificationController> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF0D47A1),
-                    Color(0xFF1565C0),
-                    Color(0xFF1976D2),
+                    AppColors.primaryBlue,
+                    AppColors.primaryBlueLight,
+                    AppColors.accentBlue,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -114,29 +114,40 @@ class OTPVerificationView extends GetView<OTPVerificationController> {
               child: Column(
                 children: [
                   const SizedBox(height: 32),
-                  
+
                   Text(
                     'Verification Code',
-                    style: AppTextStyles.h2.copyWith(color: AppColors.textPrimary),
+                    style: AppTextStyles.h2.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Obx(() => Text(
-                    'We sent a code to ${controller.email.value}',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-                  )),
+                  Obx(
+                    () => Text(
+                      'We sent a code to ${controller.email.value}',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
 
                   const SizedBox(height: 32),
 
                   // OTP Input Field
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: AppColors.softShadow,
-                      border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)),
+                      border: Border.all(
+                        color: AppColors.primaryBlue.withOpacity(0.1),
+                      ),
                     ),
                     child: TextField(
                       controller: controller.otpController,
@@ -151,7 +162,10 @@ class OTPVerificationView extends GetView<OTPVerificationController> {
                         border: InputBorder.none,
                         counterText: '',
                         hintText: 'ABCD12',
-                        hintStyle: TextStyle(letterSpacing: 2, color: Colors.black12),
+                        hintStyle: TextStyle(
+                          letterSpacing: 2,
+                          color: Colors.black12,
+                        ),
                       ),
                     ),
                   ),
@@ -159,30 +173,36 @@ class OTPVerificationView extends GetView<OTPVerificationController> {
                   const SizedBox(height: 48),
 
                   // Verify Button
-                  Obx(() => CustomButton(
-                    text: 'Verify Email',
-                    onPressed: controller.verifyOtp,
-                    isLoading: controller.isLoading.value,
-                    type: ButtonType.primary,
-                  )),
+                  Obx(
+                    () => CustomButton(
+                      text: 'Verify Email',
+                      onPressed: controller.verifyOtp,
+                      isLoading: controller.isLoading.value,
+                      type: ButtonType.primary,
+                    ),
+                  ),
 
                   const SizedBox(height: 24),
 
                   // Resend Link
-                  Obx(() => TextButton(
-                    onPressed: controller.canResend.value ? controller.resendOtp : null,
-                    child: Text(
-                      controller.canResend.value 
-                          ? 'Resend Code' 
-                          : 'Resend code in ${controller.resendTimer.value}s',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: controller.canResend.value 
-                            ? AppColors.primaryBlue 
-                            : AppColors.textHint,
-                        fontWeight: FontWeight.w600,
+                  Obx(
+                    () => TextButton(
+                      onPressed: controller.canResend.value
+                          ? controller.resendOtp
+                          : null,
+                      child: Text(
+                        controller.canResend.value
+                            ? 'Resend Code'
+                            : 'Resend code in ${controller.resendTimer.value}s',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: controller.canResend.value
+                              ? AppColors.primaryBlue
+                              : AppColors.textHint,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  )),
+                  ),
                 ],
               ),
             ),

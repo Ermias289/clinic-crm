@@ -2,8 +2,8 @@ import '../../core/api_client.dart';
 import '../../domain/models/medical_professional_model.dart';
 
 /// Remote datasource for:
-/// - Doctors (Medical Professionals): GET `/api/MedicalProfessional`
-/// - Doctor schedules: GET `/api/DoctorSchedule`
+/// - Doctors (Medical Professionals): GET `/MedicalProfessional`
+/// - Doctor schedules: GET `/DoctorSchedule`
 ///
 /// Notes:
 /// - This file assumes your app uses the existing `ApiClient` wrapper (GetX-style)
@@ -28,7 +28,7 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
   @override
   Future<List<MedicalProfessional>> getDoctors() async {
     try {
-      final response = await apiClient.get('/api/MedicalProfessional');
+      final response = await apiClient.get('/MedicalProfessional');
 
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to fetch doctors');
@@ -62,7 +62,7 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
   @override
   Future<List<DoctorSchedule>> getDoctorSchedules() async {
     try {
-      final response = await apiClient.get('/api/DoctorSchedule');
+      final response = await apiClient.get('/DoctorSchedule');
 
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to fetch doctor schedules');

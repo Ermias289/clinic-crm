@@ -224,7 +224,7 @@ class CardController extends GetxController {
 
       final request = RequestCardModel(
         patientId:
-            0, // 0 because we are creating a *new* patient via the 'patient' object
+            patientId, // Use the userId as patientId, assuming patient.Id == user.Id or existing patient
         cardTypeId: selectedCard.value?.cardTypeId ?? 0,
         requestRemark: 'Mobile App Request',
         patient: patientDetails,

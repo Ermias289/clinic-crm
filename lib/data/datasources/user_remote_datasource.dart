@@ -6,7 +6,7 @@ class UserRemoteDataSource {
   final ApiClient client = Get.find<ApiClient>();
 
   Future<List<UserModel>> getAllUsers() async {
-    final response = await client.get('/api/User');
+    final response = await client.get('/User');
 
     if (response.hasError) {
       throw Exception(response.statusText);
@@ -18,7 +18,7 @@ class UserRemoteDataSource {
   }
 
   Future<UserModel> getUserById(int id) async {
-    final response = await client.get('/api/User/$id');
+    final response = await client.get('/User/$id');
 
     if (response.hasError) {
       throw Exception(response.statusText);
@@ -29,7 +29,7 @@ class UserRemoteDataSource {
 
   Future<UserModel> updateUser(int id, Map<String, dynamic> data) async {
     print('🔄 Updating user $id with data: $data');
-    final response = await client.put('/api/User/$id', data);
+    final response = await client.put('/User/$id', data);
     
     print('📡 Update response status: ${response.statusCode}');
     print('📡 Update response hasError: ${response.hasError}');
@@ -44,7 +44,7 @@ class UserRemoteDataSource {
   }
 
   Future<void> changePassword(String phoneOrEmail, String oldPassword, String newPassword) async {
-    final response = await client.post('/api/Auth/changePassword', {
+    final response = await client.post('/Auth/changePassword', {
       'phoneOrEmail': phoneOrEmail,
       'password': oldPassword,
       'newPassword': newPassword,

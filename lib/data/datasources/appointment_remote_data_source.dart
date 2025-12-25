@@ -12,7 +12,7 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
 
   @override
   Future<AppointmentModel> bookAppointment(AppointmentModel appointment) async {
-    final response = await apiClient.post('/api/Appointment', appointment.toJson());
+    final response = await apiClient.post('/Appointment', appointment.toJson());
     if (response.hasError) {
       throw Exception(response.statusText ?? 'Failed to book appointment');
     }

@@ -32,9 +32,9 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF0D47A1),
-                    Color(0xFF1565C0),
-                    Color(0xFF1976D2),
+                    AppColors.primaryBlue,
+                    AppColors.primaryBlueLight,
+                    AppColors.accentBlue,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -67,13 +67,19 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
                   ),
                   SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 5,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           IconButton(
                             onPressed: () => Get.back(),
-                            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                            icon: const Icon(
+                              Icons.arrow_back_ios,
+                              color: Colors.white,
+                            ),
                             padding: EdgeInsets.zero,
                             alignment: Alignment.centerLeft,
                           ),
@@ -117,7 +123,11 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.email, color: AppColors.primaryBlue, size: 20),
+                        Icon(
+                          Icons.email,
+                          color: AppColors.primaryBlue,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           controller.email,
@@ -133,54 +143,74 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
                   const SizedBox(height: 20),
 
                   // Success Message
-                  Obx(() => controller.successMessage.isNotEmpty
-                    ? Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.green.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                controller.successMessage.value,
-                                style: const TextStyle(color: Colors.green, fontSize: 14),
+                  Obx(
+                    () => controller.successMessage.isNotEmpty
+                        ? Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.green.withOpacity(0.3),
                               ),
                             ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    controller.successMessage.value,
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox.shrink(),
                   ),
 
                   // Error Message
-                  Obx(() => controller.errorMessage.isNotEmpty
-                    ? Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red.withOpacity(0.3)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.error, color: Colors.red, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                controller.errorMessage.value,
-                                style: const TextStyle(color: Colors.red, fontSize: 14),
+                  Obx(
+                    () => controller.errorMessage.isNotEmpty
+                        ? Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Colors.red.withOpacity(0.3),
                               ),
                             ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.error,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    controller.errorMessage.value,
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : const SizedBox.shrink(),
                   ),
 
                   // Verification Code Field
@@ -192,7 +222,9 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
                       TextInputFormatter.withFunction((oldValue, newValue) {
-                        return newValue.copyWith(text: newValue.text.toUpperCase());
+                        return newValue.copyWith(
+                          text: newValue.text.toUpperCase(),
+                        );
                       }),
                     ],
                   ),
@@ -220,32 +252,42 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
                   const SizedBox(height: 24),
 
                   // Reset Password Button
-                  Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: controller.isLoading.value ? null : controller.resetPassword,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 8,
-                        shadowColor: AppColors.primaryBlue.withOpacity(0.4),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: controller.isLoading.value
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text(
-                            "Reset Password",
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Obx(
+                    () => SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: controller.isLoading.value
+                            ? null
+                            : controller.resetPassword,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 8,
+                          shadowColor: AppColors.primaryBlue.withOpacity(0.4),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
                           ),
+                        ),
+                        child: controller.isLoading.value
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                "Reset Password",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
                     ),
-                  )),
+                  ),
 
                   const SizedBox(height: 16),
 

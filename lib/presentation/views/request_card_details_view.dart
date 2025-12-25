@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter/services.dart'; // For TextInputFormatter
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/date_input_formatter.dart';
 import '../controllers/card_controller.dart';
 
 class RequestCardDetailsView extends GetView<CardController> {
@@ -12,26 +13,200 @@ class RequestCardDetailsView extends GetView<CardController> {
 
   // List of all countries
   static const List<String> countries = [
-    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria',
-    'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan',
-    'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia',
-    'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica',
-    'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador',
-    'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France',
-    'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau',
-    'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland',
-    'Israel', 'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Kuwait',
-    'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg',
-    'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico',
-    'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru',
-    'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea', 'North Macedonia', 'Norway', 'Oman',
-    'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar',
-    'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia',
-    'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa',
-    'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan',
-    'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu',
-    'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela',
-    'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+    'Afghanistan',
+    'Albania',
+    'Algeria',
+    'Andorra',
+    'Angola',
+    'Antigua and Barbuda',
+    'Argentina',
+    'Armenia',
+    'Australia',
+    'Austria',
+    'Azerbaijan',
+    'Bahamas',
+    'Bahrain',
+    'Bangladesh',
+    'Barbados',
+    'Belarus',
+    'Belgium',
+    'Belize',
+    'Benin',
+    'Bhutan',
+    'Bolivia',
+    'Bosnia and Herzegovina',
+    'Botswana',
+    'Brazil',
+    'Brunei',
+    'Bulgaria',
+    'Burkina Faso',
+    'Burundi',
+    'Cabo Verde',
+    'Cambodia',
+    'Cameroon',
+    'Canada',
+    'Central African Republic',
+    'Chad',
+    'Chile',
+    'China',
+    'Colombia',
+    'Comoros',
+    'Congo',
+    'Costa Rica',
+    'Croatia',
+    'Cuba',
+    'Cyprus',
+    'Czech Republic',
+    'Denmark',
+    'Djibouti',
+    'Dominica',
+    'Dominican Republic',
+    'East Timor',
+    'Ecuador',
+    'Egypt',
+    'El Salvador',
+    'Equatorial Guinea',
+    'Eritrea',
+    'Estonia',
+    'Eswatini',
+    'Ethiopia',
+    'Fiji',
+    'Finland',
+    'France',
+    'Gabon',
+    'Gambia',
+    'Georgia',
+    'Germany',
+    'Ghana',
+    'Greece',
+    'Grenada',
+    'Guatemala',
+    'Guinea',
+    'Guinea-Bissau',
+    'Guyana',
+    'Haiti',
+    'Honduras',
+    'Hungary',
+    'Iceland',
+    'India',
+    'Indonesia',
+    'Iran',
+    'Iraq',
+    'Ireland',
+    'Israel',
+    'Italy',
+    'Ivory Coast',
+    'Jamaica',
+    'Japan',
+    'Jordan',
+    'Kazakhstan',
+    'Kenya',
+    'Kiribati',
+    'Kuwait',
+    'Kyrgyzstan',
+    'Laos',
+    'Latvia',
+    'Lebanon',
+    'Lesotho',
+    'Liberia',
+    'Libya',
+    'Liechtenstein',
+    'Lithuania',
+    'Luxembourg',
+    'Madagascar',
+    'Malawi',
+    'Malaysia',
+    'Maldives',
+    'Mali',
+    'Malta',
+    'Marshall Islands',
+    'Mauritania',
+    'Mauritius',
+    'Mexico',
+    'Micronesia',
+    'Moldova',
+    'Monaco',
+    'Mongolia',
+    'Montenegro',
+    'Morocco',
+    'Mozambique',
+    'Myanmar',
+    'Namibia',
+    'Nauru',
+    'Nepal',
+    'Netherlands',
+    'New Zealand',
+    'Nicaragua',
+    'Niger',
+    'Nigeria',
+    'North Korea',
+    'North Macedonia',
+    'Norway',
+    'Oman',
+    'Pakistan',
+    'Palau',
+    'Panama',
+    'Papua New Guinea',
+    'Paraguay',
+    'Peru',
+    'Philippines',
+    'Poland',
+    'Portugal',
+    'Qatar',
+    'Romania',
+    'Russia',
+    'Rwanda',
+    'Saint Kitts and Nevis',
+    'Saint Lucia',
+    'Saint Vincent and the Grenadines',
+    'Samoa',
+    'San Marino',
+    'Sao Tome and Principe',
+    'Saudi Arabia',
+    'Senegal',
+    'Serbia',
+    'Seychelles',
+    'Sierra Leone',
+    'Singapore',
+    'Slovakia',
+    'Slovenia',
+    'Solomon Islands',
+    'Somalia',
+    'South Africa',
+    'South Korea',
+    'South Sudan',
+    'Spain',
+    'Sri Lanka',
+    'Sudan',
+    'Suriname',
+    'Sweden',
+    'Switzerland',
+    'Syria',
+    'Taiwan',
+    'Tajikistan',
+    'Tanzania',
+    'Thailand',
+    'Togo',
+    'Tonga',
+    'Trinidad and Tobago',
+    'Tunisia',
+    'Turkey',
+    'Turkmenistan',
+    'Tuvalu',
+    'Uganda',
+    'Ukraine',
+    'United Arab Emirates',
+    'United Kingdom',
+    'United States',
+    'Uruguay',
+    'Uzbekistan',
+    'Vanuatu',
+    'Vatican City',
+    'Venezuela',
+    'Vietnam',
+    'Yemen',
+    'Zambia',
+    'Zimbabwe',
   ];
 
   // Validation functions
@@ -42,14 +217,16 @@ class RequestCardDetailsView extends GetView<CardController> {
 
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) return 'This field is required';
-    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'Only letters and spaces allowed';
+    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value))
+      return 'Only letters and spaces allowed';
     if (value.length < 2) return 'At least 2 characters';
     return null;
   }
 
   String? _validateOptionalName(String? value) {
     if (value != null && value.isNotEmpty) {
-      if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'Only letters and spaces allowed';
+      if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value))
+        return 'Only letters and spaces allowed';
       if (value.length < 2) return 'At least 2 characters';
     }
     return null;
@@ -57,24 +234,30 @@ class RequestCardDetailsView extends GetView<CardController> {
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) return 'Email is required';
-    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) return 'Enter a valid email';
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value))
+      return 'Enter a valid email';
     return null;
   }
 
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) return 'Phone number is required';
-    if (!RegExp(r'^\d{10}$').hasMatch(value)) return 'Enter a 10 digit phone number';
+    if (!RegExp(r'^\d{10}$').hasMatch(value))
+      return 'Enter a 10 digit phone number';
     return null;
   }
 
-  String? _validateAge(String? value) {
-    if (value == null || value.isEmpty) return 'Age is required';
-    int? age = int.tryParse(value);
-    if (age == null) return 'Enter a valid number';
-    if (age < 1 || age > 100) return 'Age must be between 1 and 100';
+  String? _validateDateOfBirth(String? value) {
+    if (value == null || value.isEmpty) return 'Date of Birth is required';
+    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(value))
+      return 'Enter date in YYYY-MM-DD format';
+    // Basic date validation
+    try {
+      DateTime.parse(value);
+    } catch (e) {
+      return 'Enter a valid date';
+    }
     return null;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -83,10 +266,10 @@ class RequestCardDetailsView extends GetView<CardController> {
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark, // For Android (dark icons)
-        statusBarBrightness: Brightness.light,     // For iOS (dark text)
+        statusBarBrightness: Brightness.light, // For iOS (dark text)
       ),
     );
-    
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.transparent,
@@ -115,7 +298,10 @@ class RequestCardDetailsView extends GetView<CardController> {
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.arrow_back, color: Colors.white),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -150,19 +336,53 @@ class RequestCardDetailsView extends GetView<CardController> {
                       children: [
                         _buildSectionTitle('Personal Details'),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'First Name', hint: 'Enter first name', icon: Icons.person, controller: controller.fNameController, validator: _validateName, inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))]),
-                        const SizedBox(height: 16),
-                        _buildTextField(label: 'Middle Name', hint: 'Enter middle name', icon: Icons.person_outline, controller: controller.mNameController, validator: _validateOptionalName, inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))]),
-                        const SizedBox(height: 16),
-                        _buildTextField(label: 'Last Name', hint: 'Enter last name', icon: Icons.person, controller: controller.lNameController, validator: _validateName, inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))]),
+                        _buildTextField(
+                          label: 'First Name',
+                          hint: 'Enter first name',
+                          icon: Icons.person,
+                          controller: controller.fNameController,
+                          validator: _validateName,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 16),
                         _buildTextField(
-                          label: 'Age',
-                          hint: 'Enter age',
+                          label: 'Middle Name',
+                          hint: 'Enter middle name',
+                          icon: Icons.person_outline,
+                          controller: controller.mNameController,
+                          validator: _validateOptionalName,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          label: 'Last Name',
+                          hint: 'Enter last name',
+                          icon: Icons.person,
+                          controller: controller.lNameController,
+                          validator: _validateName,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          label: 'Date of Birth',
+                          hint: 'YYYY-MM-DD',
                           icon: Icons.calendar_today,
                           controller: controller.dobController,
                           keyboardType: TextInputType.number,
-                          validator: _validateAge,
+                          validator: _validateDateOfBirth,
+                          inputFormatters: [DateInputFormatter()],
                         ),
                         const SizedBox(height: 16),
                         Container(
@@ -178,19 +398,32 @@ class RequestCardDetailsView extends GetView<CardController> {
                             ],
                           ),
                           child: DropdownButtonFormField<String>(
-                            value: controller.genderController.text.isEmpty ? null : controller.genderController.text,
+                            value: controller.genderController.text.isEmpty
+                                ? null
+                                : controller.genderController.text,
                             items: const [
-                              DropdownMenuItem(value: 'Male', child: Text('Male')),
-                              DropdownMenuItem(value: 'Female', child: Text('Female')),
+                              DropdownMenuItem(
+                                value: 'Male',
+                                child: Text('Male'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'Female',
+                                child: Text('Female'),
+                              ),
                             ],
                             onChanged: (value) {
                               controller.genderController.text = value ?? '';
                             },
-                            validator: (value) => value == null || value.isEmpty ? 'Gender is required' : null,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Gender is required'
+                                : null,
                             decoration: InputDecoration(
                               labelText: 'Gender',
                               hintText: 'Select gender',
-                              prefixIcon: const Icon(Icons.wc, color: AppColors.primaryBlue),
+                              prefixIcon: const Icon(
+                                Icons.wc,
+                                color: AppColors.primaryBlue,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
@@ -201,7 +434,10 @@ class RequestCardDetailsView extends GetView<CardController> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primaryBlue,
+                                  width: 1,
+                                ),
                               ),
                             ),
                           ),
@@ -210,9 +446,23 @@ class RequestCardDetailsView extends GetView<CardController> {
                         const SizedBox(height: 32),
                         _buildSectionTitle('Contact Information'),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'Email', hint: 'email@example.com', icon: Icons.email, controller: controller.emailController, keyboardType: TextInputType.emailAddress, validator: _validateEmail),
+                        _buildTextField(
+                          label: 'Email',
+                          hint: 'email@example.com',
+                          icon: Icons.email,
+                          controller: controller.emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: _validateEmail,
+                        ),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'Phone Number', hint: '+251...', icon: Icons.phone, controller: controller.phoneController, keyboardType: TextInputType.phone, validator: _validatePhone),
+                        _buildTextField(
+                          label: 'Phone Number',
+                          hint: '+251...',
+                          icon: Icons.phone,
+                          controller: controller.phoneController,
+                          keyboardType: TextInputType.phone,
+                          validator: _validatePhone,
+                        ),
 
                         const SizedBox(height: 32),
                         _buildSectionTitle('Address'),
@@ -230,16 +480,30 @@ class RequestCardDetailsView extends GetView<CardController> {
                             ],
                           ),
                           child: DropdownButtonFormField<String>(
-                            value: controller.countryController.text.isEmpty ? 'Ethiopia' : controller.countryController.text,
-                            items: countries.map((country) => DropdownMenuItem(value: country, child: Text(country))).toList(),
+                            value: controller.countryController.text.isEmpty
+                                ? 'Ethiopia'
+                                : controller.countryController.text,
+                            items: countries
+                                .map(
+                                  (country) => DropdownMenuItem(
+                                    value: country,
+                                    child: Text(country),
+                                  ),
+                                )
+                                .toList(),
                             onChanged: (value) {
                               controller.countryController.text = value ?? '';
                             },
-                            validator: (value) => value == null || value.isEmpty ? 'Country is required' : null,
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'Country is required'
+                                : null,
                             decoration: InputDecoration(
                               labelText: 'Country',
                               hintText: 'Select country',
-                              prefixIcon: const Icon(Icons.public, color: AppColors.primaryBlue),
+                              prefixIcon: const Icon(
+                                Icons.public,
+                                color: AppColors.primaryBlue,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
@@ -250,29 +514,73 @@ class RequestCardDetailsView extends GetView<CardController> {
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primaryBlue,
+                                  width: 1,
+                                ),
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'City', hint: 'Enter city', icon: Icons.location_city, controller: controller.cityController, validator: _validateRequired),
+                        _buildTextField(
+                          label: 'City',
+                          hint: 'Enter city',
+                          icon: Icons.location_city,
+                          controller: controller.cityController,
+                          validator: _validateRequired,
+                        ),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'SubCity', hint: 'Enter sub-city', icon: Icons.map, controller: controller.subCityController, validator: _validateRequired),
+                        _buildTextField(
+                          label: 'SubCity',
+                          hint: 'Enter sub-city',
+                          icon: Icons.map,
+                          controller: controller.subCityController,
+                          validator: _validateRequired,
+                        ),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'Address/House No.', hint: 'specific address', icon: Icons.home, controller: controller.addressController, validator: _validateRequired),
+                        _buildTextField(
+                          label: 'Address/House No.',
+                          hint: 'specific address',
+                          icon: Icons.home,
+                          controller: controller.addressController,
+                          validator: _validateRequired,
+                        ),
 
                         const SizedBox(height: 32),
                         _buildSectionTitle('Emergency Contact'),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'Contact Name', hint: 'Emergency contact name', icon: Icons.person_add, controller: controller.emergencyNameController, validator: _validateName, inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))]),
+                        _buildTextField(
+                          label: 'Contact Name',
+                          hint: 'Emergency contact name',
+                          icon: Icons.person_add,
+                          controller: controller.emergencyNameController,
+                          validator: _validateName,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'Contact Phone', hint: 'Emergency contact phone', icon: Icons.phone_callback, controller: controller.emergencyPhoneController, keyboardType: TextInputType.phone, validator: _validatePhone),
+                        _buildTextField(
+                          label: 'Contact Phone',
+                          hint: 'Emergency contact phone',
+                          icon: Icons.phone_callback,
+                          controller: controller.emergencyPhoneController,
+                          keyboardType: TextInputType.phone,
+                          validator: _validatePhone,
+                        ),
 
                         const SizedBox(height: 32),
                         _buildSectionTitle('Medical Information'),
                         const SizedBox(height: 16),
-                        _buildTextField(label: 'Allergies', hint: 'List any allergies', icon: Icons.warning_amber, controller: controller.allergiesController),
+                        _buildTextField(
+                          label: 'Allergies',
+                          hint: 'List any allergies',
+                          icon: Icons.warning_amber,
+                          controller: controller.allergiesController,
+                        ),
                         const SizedBox(height: 16),
                         Container(
                           decoration: BoxDecoration(
@@ -293,13 +601,19 @@ class RequestCardDetailsView extends GetView<CardController> {
                             decoration: InputDecoration(
                               labelText: 'Chronic Conditions',
                               hintText: 'List any chronic conditions',
-                              prefixIcon: const Icon(Icons.medical_services, color: AppColors.primaryBlue),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                              prefixIcon: const Icon(
+                                Icons.medical_services,
+                                color: AppColors.primaryBlue,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
                               contentPadding: const EdgeInsets.all(16),
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 32),
                         SizedBox(
                           width: double.infinity,
@@ -319,7 +633,9 @@ class RequestCardDetailsView extends GetView<CardController> {
                             ),
                             child: Text(
                               'Next Step',
-                              style: AppTextStyles.h3.copyWith(color: Colors.white),
+                              style: AppTextStyles.h3.copyWith(
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -383,7 +699,10 @@ class RequestCardDetailsView extends GetView<CardController> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1),
+            borderSide: const BorderSide(
+              color: AppColors.primaryBlue,
+              width: 1,
+            ),
           ),
         ),
       ),

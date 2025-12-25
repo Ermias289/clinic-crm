@@ -14,7 +14,7 @@ class CompanySettingRemoteDataSourceImpl
   @override
   Future<CompanySettingModel> getCompanySetting() async {
     try {
-      final response = await apiClient.get('/api/CompanySetting');
+      final response = await apiClient.get('/CompanySetting');
 
       if (response.hasError) {
         throw Exception(

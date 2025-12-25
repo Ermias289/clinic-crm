@@ -60,9 +60,9 @@ class _ServicesListView extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
-                  Color(0xFF0D47A1),
-                  Color(0xFF1565C0),
-                  Color(0xFF1976D2),
+                  AppColors.primaryBlue,
+                  AppColors.primaryBlueLight,
+                  AppColors.accentBlue,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

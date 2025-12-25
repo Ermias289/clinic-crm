@@ -20,7 +20,8 @@ class RegisterView extends GetView<RegisterController> {
 
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) return 'This field is required';
-    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value)) return 'Only letters and spaces allowed';
+    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value))
+      return 'Only letters and spaces allowed';
     if (value.length < 2) return 'At least 2 characters';
     return null;
   }
@@ -28,19 +29,22 @@ class RegisterView extends GetView<RegisterController> {
   String? _validateUsername(String? value) {
     if (value == null || value.isEmpty) return 'Username is required';
     if (value.length < 3) return 'Username must be at least 3 characters';
-    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) return 'Username can only contain letters, numbers, and underscores';
+    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value))
+      return 'Username can only contain letters, numbers, and underscores';
     return null;
   }
 
   String? _validateEmail(String? value) {
     if (value == null || value.isEmpty) return 'Email is required';
-    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) return 'Enter a valid email';
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value))
+      return 'Enter a valid email';
     return null;
   }
 
   String? _validatePhone(String? value) {
     if (value == null || value.isEmpty) return 'Phone number is required';
-    if (!RegExp(r'^\d{10}$').hasMatch(value)) return 'Enter a 10 digit phone number';
+    if (!RegExp(r'^\d{10}$').hasMatch(value))
+      return 'Enter a 10 digit phone number';
     return null;
   }
 
@@ -52,7 +56,8 @@ class RegisterView extends GetView<RegisterController> {
 
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) return 'Confirm password is required';
-    if (value != controller.passwordController.text) return 'Passwords do not match';
+    if (value != controller.passwordController.text)
+      return 'Passwords do not match';
     return null;
   }
 
@@ -78,9 +83,9 @@ class RegisterView extends GetView<RegisterController> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [
-                    Color(0xFF0D47A1),
-                    Color(0xFF1565C0),
-                    Color(0xFF1976D2),
+                    AppColors.primaryBlue,
+                    AppColors.primaryBlueLight,
+                    AppColors.accentBlue,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -113,13 +118,19 @@ class RegisterView extends GetView<RegisterController> {
                   ),
                   SafeArea(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 5,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                         IconButton(
+                          IconButton(
                             onPressed: () => Get.back(),
-                            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                            icon: const Icon(
+                              Icons.arrow_back_ios,
+                              color: Colors.white,
+                            ),
                             padding: EdgeInsets.zero,
                             alignment: Alignment.centerLeft,
                           ),
@@ -150,7 +161,10 @@ class RegisterView extends GetView<RegisterController> {
             Form(
               key: _formKey,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -160,7 +174,11 @@ class RegisterView extends GetView<RegisterController> {
                       labelText: 'Username',
                       prefixIcon: Icons.person_outline_rounded,
                       validator: _validateUsername,
-                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_]'))],
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[a-zA-Z0-9_]'),
+                        ),
+                      ],
                     ),
 
                     const SizedBox(height: 12),
@@ -174,7 +192,11 @@ class RegisterView extends GetView<RegisterController> {
                             labelText: 'First Name',
                             prefixIcon: Icons.badge_outlined,
                             validator: _validateName,
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z\s]'),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -184,7 +206,11 @@ class RegisterView extends GetView<RegisterController> {
                             labelText: 'Last Name',
                             prefixIcon: Icons.badge_outlined,
                             validator: _validateName,
-                            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'[a-zA-Z\s]'),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -236,29 +262,46 @@ class RegisterView extends GetView<RegisterController> {
                     const SizedBox(height: 24),
 
                     // Register Button
-                    Obx(() => SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: controller.isLoading.value ? null : () {
-                          if (_formKey.currentState!.validate()) {
-                            controller.register();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryBlue,
-                          foregroundColor: Colors.white,
-                          elevation: 8,
-                          shadowColor: AppColors.primaryBlue.withOpacity(0.4),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                    Obx(
+                      () => SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: controller.isLoading.value
+                              ? null
+                              : () {
+                                  if (_formKey.currentState!.validate()) {
+                                    controller.register();
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            elevation: 8,
+                            shadowColor: AppColors.primaryBlue.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
+                          child: controller.isLoading.value
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  "Create Account",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
-                        child: controller.isLoading.value
-                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("Create Account", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
-                    )),
+                    ),
 
                     const SizedBox(height: 16),
 

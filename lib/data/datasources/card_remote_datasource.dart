@@ -3,10 +3,11 @@ import '../../core/api_client.dart';
 import '../models/card_setting_model.dart';
 import '../models/request_card_model.dart';
 
-
 abstract class CardRemoteDataSource {
   Future<List<CardSettingModel>> getCardSettings();
-  Future<Map<String, dynamic>> requestCard(RequestCardModel request); // Changed to return Map (Card object)
+  Future<Map<String, dynamic>> requestCard(
+    RequestCardModel request,
+  ); // Changed to return Map (Card object)
   Future<bool> createPayment(int cardId, String proofPath);
   Future<Map<String, dynamic>?> getMyCard();
 }
@@ -19,8 +20,8 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   @override
   Future<List<CardSettingModel>> getCardSettings() async {
     try {
-      final response = await apiClient.get('/api/CardSetting');
-      
+      final response = await apiClient.get('/CardSetting');
+
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to fetch card settings');
       }
@@ -36,13 +37,17 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   Future<Map<String, dynamic>> requestCard(RequestCardModel request) async {
     try {
       print('DEBUG BODY: ${request.toJson()}'); // Debug log
-      final response = await apiClient.post('/api/Card', request.toJson());
-      
+      final response = await apiClient.post('/Card', request.toJson());
+
+      print('DEBUG RESPONSE STATUS: ${response.statusCode}');
+      print('DEBUG RESPONSE BODY: ${response.body}');
+
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to request card');
       }
 
-      return response.body as Map<String, dynamic>; // Return the created Card object
+      return response.body
+          as Map<String, dynamic>; // Return the created Card object
     } catch (e) {
       throw Exception('Error requesting card: $e');
     }
@@ -56,10 +61,12 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
         'file': MultipartFile(proofPath, filename: 'payment_proof.jpg'),
       });
 
-      final uploadResponse = await apiClient.post('/api/FileUpload/upload', form);
+      final uploadResponse = await apiClient.post('/FileUpload/upload', form);
 
       if (uploadResponse.hasError) {
-        throw Exception(uploadResponse.statusText ?? 'Failed to upload payment proof');
+        throw Exception(
+          uploadResponse.statusText ?? 'Failed to upload payment proof',
+        );
       }
 
       final String uploadedFileName = uploadResponse.body['fileName'];
@@ -67,17 +74,16 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       // 2. Create Payment Request with the uploaded file name
       final body = {
         'cardId': cardId,
-        'requestedAmount': 0, 
-        'paymentProof': uploadedFileName, 
+        'requestedAmount': 0,
+        'paymentProof': uploadedFileName,
       };
 
-      final response = await apiClient.post('/api/Payment/paymentRequest', body);
+      final response = await apiClient.post('/Payment/paymentRequest', body);
 
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to create payment');
       }
       return true;
-
     } catch (e) {
       throw Exception('Error creating payment: $e');
     }
@@ -86,14 +92,14 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   @override
   Future<Map<String, dynamic>?> getMyCard() async {
     try {
-      final response = await apiClient.get('/api/Card/my-card');
+      final response = await apiClient.get('/Card/my-card');
 
       if (response.hasError) {
         if (response.statusCode == 404) {
           return null;
         }
-         if (response.statusCode == 401) throw Exception("Unauthorized");
-         
+        if (response.statusCode == 401) throw Exception("Unauthorized");
+
         throw Exception(response.statusText ?? 'Failed to get my card');
       }
 

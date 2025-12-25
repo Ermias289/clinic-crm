@@ -13,7 +13,7 @@ class MedicalServiceRemoteDataSourceImpl implements MedicalServiceRemoteDataSour
   @override
   Future<List<MedicalService>> getMedicalServices() async {
     try {
-      final response = await apiClient.get('/api/MedicalService');
+      final response = await apiClient.get('/MedicalService');
       
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to fetch medical services');
