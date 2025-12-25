@@ -48,7 +48,7 @@ class ResetPasswordController extends GetxController {
       return;
     }
 
-    final otp = otpController.text.trim();
+    final otp = otpController.text.trim().toUpperCase();
     if (otp.isEmpty) {
       errorMessage.value = 'Please enter the verification code';
       return;
@@ -70,7 +70,7 @@ class ResetPasswordController extends GetxController {
     successMessage.value = '';
 
     try {
-      final response = await _apiClient.post('/api/Auth/changePassword', {
+      final response = await _apiClient.post('/Auth/changePassword', {
         'phoneOrEmail': email.toLowerCase().trim(),
         'password': '',
         'newPassword': newPassword,
@@ -79,16 +79,18 @@ class ResetPasswordController extends GetxController {
       });
 
       if (response.status.hasError) {
-        final msg = _extractMessage(response.body) ??
+        final msg =
+            _extractMessage(response.body) ??
             response.bodyString ??
             'Failed to reset password';
         errorMessage.value = msg;
         return;
       }
 
-      final message = _extractMessage(response.body) ?? 'Password reset successfully';
+      final message =
+          _extractMessage(response.body) ?? 'Password reset successfully';
       successMessage.value = message;
-      
+
       // Show success message
       Get.snackbar(
         'Success',
@@ -103,7 +105,7 @@ class ResetPasswordController extends GetxController {
 
       // Wait for 2 seconds before navigating to login
       await Future.delayed(const Duration(seconds: 2));
-      
+
       // Navigate to login page
       Get.offNamedUntil(
         Routes.LOGIN,
@@ -128,7 +130,8 @@ class ResetPasswordController extends GetxController {
 
       if (body is Map) {
         final message = body['message'] ?? body['Message'];
-        if (message is String && message.trim().isNotEmpty) return message.trim();
+        if (message is String && message.trim().isNotEmpty)
+          return message.trim();
       }
 
       if (body is String) {

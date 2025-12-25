@@ -158,6 +158,16 @@ class OTPVerificationView extends GetView<OTPVerificationController> {
                         color: AppColors.primaryBlue,
                       ),
                       maxLength: 6,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[a-zA-Z0-9]'),
+                        ),
+                        TextInputFormatter.withFunction((oldValue, newValue) {
+                          return newValue.copyWith(
+                            text: newValue.text.toUpperCase(),
+                          );
+                        }),
+                      ],
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         counterText: '',

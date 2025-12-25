@@ -8,7 +8,10 @@ import '../../../config/app_routes.dart';
 
 class ForgotPasswordController extends GetxController {
   /// Uses the same GetConnect-based client as the rest of the app (respects `.env` API_BASE_URL)
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
+
+  ForgotPasswordController({required ApiClient apiClient})
+    : _apiClient = apiClient;
 
   final emailController = TextEditingController();
 
@@ -40,19 +43,19 @@ class ForgotPasswordController extends GetxController {
       final encodedEmail = Uri.encodeQueryComponent(rawEmail.toLowerCase());
 
       final response = await _apiClient.get(
-        '/api/OTP/resendOTP?recipientEmail=$encodedEmail',
+        '/OTP/resendOTP?recipientEmail=$encodedEmail',
       );
 
       if (response.status.hasError) {
-        final msg = _extractMessage(response.body) ??
+        final msg =
+            _extractMessage(response.body) ??
             response.bodyString ??
             'Failed to send reset email';
         errorMessage.value = msg;
-        return;
+      } else {
+        successMessage.value =
+            _extractMessage(response.body) ?? 'Reset code sent successfully';
       }
-
-      successMessage.value =
-          _extractMessage(response.body) ?? 'Reset code sent successfully';
 
       // Navigate to reset password screen and pass the email along
       Get.toNamed(
@@ -62,6 +65,11 @@ class ForgotPasswordController extends GetxController {
     } catch (e) {
       errorMessage.value =
           'Network error. Please check your connection and try again.';
+      // Still navigate to allow user to try
+      Get.toNamed(
+        Routes.RESET_PASSWORD,
+        arguments: {'email': rawEmail.toLowerCase()},
+      );
     } finally {
       isLoading.value = false;
     }
@@ -78,7 +86,8 @@ class ForgotPasswordController extends GetxController {
 
       if (body is Map) {
         final message = body['message'] ?? body['Message'];
-        if (message is String && message.trim().isNotEmpty) return message.trim();
+        if (message is String && message.trim().isNotEmpty)
+          return message.trim();
       }
 
       if (body is String) {

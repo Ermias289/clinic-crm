@@ -72,7 +72,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return response.body['id'];
     } catch (e) {
       print('Error fetching role: $e');
-      return 4; // Fallback
+      return 5; // Fallback
     }
   }
 }

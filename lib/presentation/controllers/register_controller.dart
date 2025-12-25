@@ -30,7 +30,7 @@ class RegisterController extends GetxController {
 
   /// Validates phone number format
   bool _isValidPhone(String phone) {
-    return RegExp(r'^\+?[1-9]\d{1,14}$').hasMatch(phone);
+    return RegExp(r'^\+?[0-9]\d{1,14}$').hasMatch(phone);
   }
 
   /// Register a new patient account
