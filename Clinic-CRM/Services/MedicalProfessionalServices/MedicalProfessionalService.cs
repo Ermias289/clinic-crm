@@ -100,7 +100,10 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
         public async Task<MedicalProfessional> GetMedicalProfessionalById(int Id)
         {
-            var doc = await _context.MedicalProfessionals.Include(x => x.MedicalServices).FirstOrDefaultAsync(x => x.Id == Id);
+            var doc = await _context.MedicalProfessionals
+                .Include(x => x.Branches)
+                .Include(x => x.MedicalServices)
+                .FirstOrDefaultAsync(x => x.Id == Id);
 
             if (doc == null)
                 throw new KeyNotFoundException("Medical Professional Not Found");
@@ -121,7 +124,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
         public async Task<List<MedicalProfessional>> GetAllMedicalProfessionals()
         {
-            return await _context.MedicalProfessionals.Include(x => x.MedicalServices).ToListAsync();
+            return await _context.MedicalProfessionals.Include(x => x.MedicalServices).Include(x => x.Branches).ToListAsync();
         }
     }
 }

@@ -30,62 +30,62 @@ namespace Clinic_CRM.Helpers
             await SeedRoles();
             await SeedUser();
             await SeedCardType();
-            await SeedPatients();
+            //await SeedPatients();
 
 
         }
 
-        async Task SeedPatients()
-        {
-            // 1. Ensure Nexa (Super Admin) has a Patient record
-            var nexaUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == "Nexa");
-            if (nexaUser != null)
-            {
-                await CreatePatientForUser(nexaUser);
-            }
+        //async Task SeedPatients()
+        //{
+        //    // 1. Ensure Nexa (Super Admin) has a Patient record
+        //    var nexaUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == "Nexa");
+        //    if (nexaUser != null)
+        //    {
+        //        await CreatePatientForUser(nexaUser);
+        //    }
 
-            // 2. Repair any other users (like 'mamaruyirga...') who are missing Patient records
-            // Get all User IDs
-            var allUserIds = await _context.Users.Select(u => u.Id).ToListAsync();
-            // Get all Patient IDs
-            var allPatientIds = await _context.Patients.Select(p => p.Id).ToListAsync();
+        //    // 2. Repair any other users (like 'mamaruyirga...') who are missing Patient records
+        //    // Get all User IDs
+        //    var allUserIds = await _context.Users.Select(u => u.Id).ToListAsync();
+        //    // Get all Patient IDs
+        //    var allPatientIds = await _context.Patients.Select(p => p.Id).ToListAsync();
             
-            // Find users who don't have a patient record
-            var missingPatientUserIds = allUserIds.Except(allPatientIds).ToList();
+        //    // Find users who don't have a patient record
+        //    var missingPatientUserIds = allUserIds.Except(allPatientIds).ToList();
 
-            foreach (var userId in missingPatientUserIds)
-            {
-                var user = await _context.Users.FindAsync(userId);
-                if (user != null)
-                {
-                    await CreatePatientForUser(user);
-                }
-            }
-        }
+        //    foreach (var userId in missingPatientUserIds)
+        //    {
+        //        var user = await _context.Users.FindAsync(userId);
+        //        if (user != null)
+        //        {
+        //            await CreatePatientForUser(user);
+        //        }
+        //    }
+        //}
 
-        async Task CreatePatientForUser(User user)
-        {
-            var existingPatient = await _context.Patients.AsNoTracking().FirstOrDefaultAsync(p => p.Id == user.Id);
-            if (existingPatient == null)
-            {
-                // Use raw SQL to force insert with specific ID (matching User ID)
-                var query = @"
-                    SET IDENTITY_INSERT Patients ON;
-                    INSERT INTO Patients (Id, FName, MName, LName, Email, PhoneNumber, Gender, Alergies, ChronicConditions, EmergencyContactName, EmergencyContactPhone, Address, SubCity, City, Country, CreatedAt, UpdatedAt, DateOfBirth, RequiresUserAccount, UserId)
-                    VALUES ({0}, {1}, '', {2}, {3}, {4}, 'Male', '', '', '', '', 'Addis Ababa', 'Bole', 'Addis Ababa', 'Ethiopia', GETDATE(), GETDATE(), '1990-01-01', 0, {0});
-                    SET IDENTITY_INSERT Patients OFF;";
+        //async Task CreatePatientForUser(User user)
+        //{
+        //    var existingPatient = await _context.Patients.AsNoTracking().FirstOrDefaultAsync(p => p.Id == user.Id);
+        //    if (existingPatient == null)
+        //    {
+        //        // Use raw SQL to force insert with specific ID (matching User ID)
+        //        var query = @"
+        //            SET IDENTITY_INSERT Patients ON;
+        //            INSERT INTO Patients (Id, FName, MName, LName, Email, PhoneNumber, Gender, Alergies, ChronicConditions, EmergencyContactName, EmergencyContactPhone, Address, SubCity, City, Country, CreatedAt, UpdatedAt, DateOfBirth, RequiresUserAccount, UserId)
+        //            VALUES ({0}, {1}, '', {2}, {3}, {4}, 'Male', '', '', '', '', 'Addis Ababa', 'Bole', 'Addis Ababa', 'Ethiopia', GETDATE(), GETDATE(), '1990-01-01', 0, {0});
+        //            SET IDENTITY_INSERT Patients OFF;";
                 
-                try
-                {
-                    await _context.Database.ExecuteSqlRawAsync(query, user.Id, user.FName ?? "Unknown", user.LName ?? "Unknown", user.Email ?? "noemail@test.com", user.PhoneNumber ?? "0000000000");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error creating patient for user {user.Username} (ID: {user.Id}): {ex.Message}");
-                    // Continue to next user
-                }
-            }
-        }
+        //        try
+        //        {
+        //            await _context.Database.ExecuteSqlRawAsync(query, user.Id, user.FName ?? "Unknown", user.LName ?? "Unknown", user.Email ?? "noemail@test.com", user.PhoneNumber ?? "0000000000");
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine($"Error creating patient for user {user.Username} (ID: {user.Id}): {ex.Message}");
+        //            // Continue to next user
+        //        }
+        //    }
+        //}
 
 
         async Task SeedCompanySetting()

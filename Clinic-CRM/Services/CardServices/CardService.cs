@@ -66,8 +66,6 @@ namespace Clinic_CRM.Services.CardServices
             var price = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
             Console.WriteLine("Working...");
 
-
-
             _context.Cards.Add(card);
             await _context.SaveChangesAsync();
 
@@ -97,12 +95,21 @@ namespace Clinic_CRM.Services.CardServices
             }
             Console.WriteLine("Requesting");
 
+            var users = await _context.Users.Where(x => x.Id == card.Patient.UserId || x.UserRole.Name == USER_ROLES.RECEPTIONIST).Select(x => x.Id).ToListAsync();
+
             card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
             card.RequestRemark = "Requested By Patient.";
             card.Status = CARD_STATUS.PENDING;
       
             await _context.SaveChangesAsync();
             Console.WriteLine("Working...");
+
+            await _notify.SendUserAsync(
+                "Card Request",
+                $"Card Request has successfully been made by {_userService.GetCurrentUserNoInclude().FName}",
+                NOTIFICATION_CONSTANTS.CARD,
+                users
+                );
 
             return card;
         }
@@ -165,6 +172,15 @@ namespace Clinic_CRM.Services.CardServices
                 CardId = card.Id,
             };
             await _paymentService.AutoPrepare(payCard);
+
+            var users = await _context.Users.Where(x => x.Id == card.Patient.UserId || x.UserRole.Name == USER_ROLES.RECEPTIONIST).Select(x => x.Id).ToListAsync();
+
+            await _notify.SendUserAsync(
+                "Card Reactivation",
+                $"Card has been successfully reactivated by {_userService.GetCurrentUserNoInclude().FName}",
+                NOTIFICATION_CONSTANTS.CARD,
+                users
+                );
 
             return card;
         }
