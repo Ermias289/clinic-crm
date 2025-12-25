@@ -4,6 +4,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs;
 using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Services.NotificationServices;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client.AppConfig;
@@ -16,14 +17,16 @@ namespace Clinic_CRM.Services.PaymentServices
         private readonly IMapper _mapper;
         private readonly Context _context;
         private readonly IUserService _userService;
+        private readonly INotificationService _notify;
 
 
 
-        public PaymentService(IMapper mapper, Context context, IUserService userService)
+        public PaymentService(INotificationService notify,IMapper mapper, Context context, IUserService userService)
         {
             _mapper = mapper;
             _context = context;
             _userService = userService;
+            _notify = notify;
         }
 
         public async Task<Payment> AutoPrepare(AutoPaymentPrepareDTO dto)
@@ -59,7 +62,7 @@ namespace Clinic_CRM.Services.PaymentServices
                 .AsNoTracking()
                 .Select(x => x.Prefix)
                 .FirstOrDefaultAsync() ?? "";
-            card.RequestedById = _userService.GetCurrentUser().Id;
+            //card.RequestedById = _userService.GetCurrentUser().Id;
 
             if (cardPrice == null)
                 throw new KeyNotFoundException("Card Price with the specified Card type does not exist.");
@@ -72,6 +75,17 @@ namespace Clinic_CRM.Services.PaymentServices
 
             payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
             await _context.SaveChangesAsync();
+
+            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            if (receptions.Count > 0)
+                await _notify.SendUserAsync(
+                    $"Auto payment created",
+                    $"The payment with reference number {payment.Reference} has been auto created.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    receptions
+                    );
+
 
             return payment;
         }
@@ -131,6 +145,24 @@ namespace Clinic_CRM.Services.PaymentServices
 
             //payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
             await _context.SaveChangesAsync();
+
+            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            if (receptions.Count > 0)
+                await _notify.SendUserAsync(
+                    $"Payment Request",
+                    $"Payment has been requested with reference number {payment.Reference}.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    receptions
+                    );
+
+            await _notify.SendUserAsync(
+                    $"Payment Request",
+                    $"Payment has been requested with reference number {payment.Reference}.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    new List<int> { payment.Card.PatientId }
+                    );
+
             return payment;
         }
 
@@ -156,6 +188,24 @@ namespace Clinic_CRM.Services.PaymentServices
             _mapper.Map(dto, payment);
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
+
+            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            if (receptions.Count > 0)
+                await _notify.SendUserAsync(
+                    $"Payment Checked",
+                    $"Payment request with reference number {payment.Reference} has been checked.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    receptions
+                    );
+
+            await _notify.SendUserAsync(
+                    $"Payment Ckecked",
+                    $"Your Payment has request with reference number {payment.Reference} has been checked.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    new List<int> { payment.Card.PatientId }
+                    );
+
 
             return payment;
         }
@@ -197,7 +247,25 @@ namespace Clinic_CRM.Services.PaymentServices
 
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
-           
+
+
+            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            if (receptions.Count > 0)
+                await _notify.SendUserAsync(
+                    $"Payment Approved",
+                    $"Payment request with reference number {payment.Reference} has been Approved.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    receptions
+                    );
+
+            await _notify.SendUserAsync(
+                    $"Payment Approved",
+                    $"Your Payment has request with reference number {payment.Reference} has been Approved.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    new List<int> { payment.Card.PatientId }
+                    );
+
             return payment;
         }
 
@@ -220,6 +288,24 @@ namespace Clinic_CRM.Services.PaymentServices
             _mapper.Map(dto, payment);
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
+
+            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            if (receptions.Count > 0)
+                await _notify.SendUserAsync(
+                    $"Payment Canceled",
+                    $"Payment request with reference number {payment.Reference} has been canceled.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    receptions
+                    );
+
+            await _notify.SendUserAsync(
+                    $"Payment Canceled",
+                    $"Your Payment has request with reference number {payment.Reference} has been canceled.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    new List<int> { payment.Card.PatientId }
+                    );
+
 
             return payment;
         }
@@ -245,6 +331,24 @@ namespace Clinic_CRM.Services.PaymentServices
             _mapper.Map(dto, payment);
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
+
+            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            if (receptions.Count > 0)
+                await _notify.SendUserAsync(
+                    $"Payment Rejection",
+                    $"Payment request with reference number {payment.Reference} has been rejected.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    receptions
+                    );
+
+            await _notify.SendUserAsync(
+                    $"Payment Rejection",
+                    $"Your Payment has request with reference number {payment.Reference} has been Approved.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    new List<int> { payment.Card.PatientId }
+                    );
+
 
             return payment;
         }

@@ -266,6 +266,36 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (app == null)
                 throw new KeyNotFoundException("Appointment Not Found");
 
+            if (app.Patient.User != null)
+            {
+                await _notify.SendUserAsync(
+                  $"Appointment Deleted",
+                  $"Dear {app.Patient.FName}, Your appointment for {app.Day} at {app.ReservationTime} was deleted successfully .",
+                  NOTIFICATION_CONSTANTS.APPOINTMENT,
+                  new List<int> { app.Patient.User.Id }
+                  );
+            }
+
+            if (app.MedicalProfessional.User != null)
+            {
+                await _notify.SendUserAsync(
+                  $"Appointment Deleted",
+                  $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, your appointment with appointment number {app.Reference} with patient {app.Patient.FName} has been Deleted.",
+                  NOTIFICATION_CONSTANTS.APPOINTMENT,
+                  new List<int> { app.MedicalProfessional.Id }
+                  );
+            }
+
+            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            if (receptions.Count > 0)
+                await _notify.SendUserAsync(
+                    $"Appointment Canceled",
+                    $"The appointment with reference number {app.Reference} has been deleted by {_userService.GetCurrentUserNoInclude().FName}.",
+                    NOTIFICATION_CONSTANTS.APPOINTMENT,
+                    receptions
+                    );
+
             _context.Appointments.Remove(app);
             await _context.SaveChangesAsync();
             return app;

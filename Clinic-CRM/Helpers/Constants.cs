@@ -69,6 +69,9 @@
             public const string NEWUSER = "New User";
             public const string CARD = "Card";
             public const string APPOINTMENT = "Appointment";
+            public const string PAYMENT = "Payment";
+            public const string DOCTORSCHEDULE = "Doctor Schedule";
+            public const string SERVICE = "Service";
         }
     }
 }

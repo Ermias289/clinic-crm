@@ -53,7 +53,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
                     PhoneNumber = doc.PhoneNumber,
                     UserRoleId = role.Id,
                     Email = doc.Email,
-                    Password = doc.PhoneNumber + doc.FName
+                    Password = doc.PhoneNumber
                 };
 
                 await _userService.CreateUserAsync(user);
@@ -86,7 +86,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
                     PhoneNumber = doc.PhoneNumber,
                     UserRoleId = role.Id,
                     Email = doc.Email,
-                    Password = doc.PhoneNumber + doc.FName
+                    Password = doc.PhoneNumber
                 };
 
                 await _userService.CreateUserAsync(user);

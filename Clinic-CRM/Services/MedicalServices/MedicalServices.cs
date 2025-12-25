@@ -5,7 +5,10 @@ using Clinic_CRM.DTOs.AppointmentDTOs;
 using Clinic_CRM.DTOs.MedicalServiceDTOs;
 using Clinic_CRM.Models;
 using Clinic_CRM.Models.Settings;
+using Clinic_CRM.Services.NotificationServices;
+using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Services.MedicalServices
 {
@@ -13,11 +16,14 @@ namespace Clinic_CRM.Services.MedicalServices
     {
         private readonly IMapper _mapper;
         private readonly Context _context;
-
-        public MedicalServices(IMapper mapper, Context context)
+        private readonly INotificationService _notify;
+        private readonly IUserService _userService;
+        public MedicalServices(IUserService userService,INotificationService notify,IMapper mapper, Context context)
         {
             _mapper = mapper;
             _context = context;
+            _notify = notify;
+            _userService = userService;
         }
 
         public async Task<MedicalService> GetMedicalServiceAsync(int Id)
@@ -56,6 +62,22 @@ namespace Clinic_CRM.Services.MedicalServices
 
             _context.MedicalServices.Add(med);
             await _context.SaveChangesAsync();
+
+            var patient = await _context.Patients.Select(x => x.Id).ToListAsync();
+
+            await _notify.SendUserAsync(
+                      $"New Service Available",
+                      $"Dear Customer we have a new {med.Name} service onboard, be the first to get this service. We are always dedicated to give you the best experience at our clinic.",
+                      NOTIFICATION_CONSTANTS.SERVICE,
+                      patient
+                      );
+
+            await _notify.SendUserAsync(
+                      $"New Service Available",
+                      $" A new {med.Name} service has been successfully added.",
+                      NOTIFICATION_CONSTANTS.SERVICE,
+                      new List<int> { _userService.GetCurrentUserNoInclude().Id}
+                      );
 
             return med;
         }

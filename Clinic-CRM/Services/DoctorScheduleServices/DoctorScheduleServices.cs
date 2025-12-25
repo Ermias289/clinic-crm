@@ -2,8 +2,11 @@
 using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.DoctorScheduleDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Services.NotificationServices;
+using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Services.DoctorScheduleServices
 {
@@ -11,11 +14,15 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
     {
         private readonly IMapper _mapper;
         private readonly Context _context;
+        private readonly INotificationService _notify;
+        private readonly IUserService _userService;
 
-        public DoctorScheduleServices(IMapper mapper, Context context)
+        public DoctorScheduleServices(IUserService userService,INotificationService notify,IMapper mapper, Context context)
         {
             _mapper = mapper;
             _context = context;
+            _notify = notify;
+            _userService = userService;
         }
 
         public async Task<DoctorSchedule> AddDoctorSchedule(AddDoctorScheduleDTO dto)
@@ -24,6 +31,14 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
 
             _context.DoctorSchedules.Add(doc);
             await _context.SaveChangesAsync();
+
+            await _notify.SendUserAsync(
+                       $"New Doctor Schedule Added",
+                       $"Medical Professional schedule has been successfully added.",
+                       NOTIFICATION_CONSTANTS.DOCTORSCHEDULE,
+                       new List<int> { _userService.GetCurrentUserNoInclude().Id, doc.Id  }
+                       );
+
             return doc;
         }
 
@@ -37,7 +52,16 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
 
             _mapper.Map(dto, doc);
             _context.DoctorSchedules.Update(doc);
+
             await _context.SaveChangesAsync();
+
+            await _notify.SendUserAsync(
+                       $"New Doctor Schedule Update",
+                       $"Medical Professional schedule has been successfully updated.",
+                       NOTIFICATION_CONSTANTS.DOCTORSCHEDULE,
+                       new List<int> { _userService.GetCurrentUserNoInclude().Id, doc.Id }
+                       );
+
             return doc;
         }
 
@@ -63,8 +87,17 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
             if (doc == null)
                 throw new KeyNotFoundException("Doctor Schedule Not Found.");
 
+
             _context.DoctorSchedules.Remove(doc);
             await _context.SaveChangesAsync();
+
+            await _notify.SendUserAsync(
+                      $"New Doctor Schedule Deeleted",
+                      $"Medical Professional schedule has been successfully deleted.",
+                      NOTIFICATION_CONSTANTS.DOCTORSCHEDULE,
+                      new List<int> { _userService.GetCurrentUserNoInclude().Id, doc.Id }
+                      );
+
             return doc;
         }
     }
