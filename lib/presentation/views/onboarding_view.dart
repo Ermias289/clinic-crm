@@ -52,11 +52,18 @@ class OnboardingView extends GetView<OnboardingController> {
                                 .withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
-                            page.icon,
-                            size: 100,
-                            color: page.iconColor ?? AppColors.primaryBlue,
-                          ),
+                          child: index == 0
+                              ? Image.asset(
+                                  'assets/icon/app_icon.png',
+                                  width: 100,
+                                  height: 100,
+                                )
+                              : Icon(
+                                  page.icon,
+                                  size: 100,
+                                  color:
+                                      page.iconColor ?? AppColors.primaryBlue,
+                                ),
                         ),
 
                         const SizedBox(height: 48),
@@ -88,54 +95,56 @@ class OnboardingView extends GetView<OnboardingController> {
             ),
 
             // Page Indicator
-            Obx(() => Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    controller.pages.length,
-                    (index) => AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      height: 8,
-                      width: controller.currentPage.value == index ? 24 : 8,
-                      decoration: BoxDecoration(
-                        color: controller.currentPage.value == index
-                            ? AppColors.primaryBlue
-                            : AppColors.textHint,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+            Obx(
+              () => Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  controller.pages.length,
+                  (index) => AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    height: 8,
+                    width: controller.currentPage.value == index ? 24 : 8,
+                    decoration: BoxDecoration(
+                      color: controller.currentPage.value == index
+                          ? AppColors.primaryBlue
+                          : AppColors.textHint,
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                )),
+                ),
+              ),
+            ),
 
             const SizedBox(height: 32),
 
             // Next/Get Started Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: controller.nextPage,
-                      child: Text(
-                        controller.currentPage.value ==
-                                controller.pages.length - 1
-                            ? 'Get Started'
-                            : 'Next',
-                        style: AppTextStyles.button.copyWith(
-                          color: Colors.white,
-                        ),
+              child: Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                  )),
+                    onPressed: controller.nextPage,
+                    child: Text(
+                      controller.currentPage.value ==
+                              controller.pages.length - 1
+                          ? 'Get Started'
+                          : 'Next',
+                      style: AppTextStyles.button.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
             ),
 
             const SizedBox(height: 32),
