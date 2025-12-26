@@ -98,10 +98,10 @@ class CardController extends GetxController {
     }
   }
 
-  void startRequest(CardSettingModel cardSetting) {
+  Future<void> startRequest(CardSettingModel cardSetting) async {
     selectedCard.value = cardSetting;
     _clearForm();
-    _preFillFromProfile();
+    await _preFillFromProfile();
     Get.toNamed('/request-card-details');
   }
 
@@ -156,9 +156,17 @@ class CardController extends GetxController {
     selectedPaymentProof.value = null;
   }
 
-  void _preFillFromProfile() {
+  Future<void> _preFillFromProfile() async {
     try {
       final profileController = Get.find<ProfileController>();
+
+      // Ensure profile is loaded
+      if (profileController.currentUser.value == null) {
+        isLoading.value = true;
+        await profileController.loadUserProfile();
+        isLoading.value = false;
+      }
+
       fNameController.text = profileController.fNameController.text;
       mNameController.text = profileController.mNameController.text;
       lNameController.text = profileController.lNameController.text;
@@ -248,7 +256,7 @@ class CardController extends GetxController {
       await repository.createPayment(cardId, selectedPaymentProof.value!.path);
 
       // Navigation & Success
-      Get.until((route) => Get.currentRoute == '/main-navigation');
+      Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
 
       Get.snackbar(
         'Success',

@@ -17,6 +17,11 @@ class BankRemoteDataSourceImpl implements BankRemoteDataSource {
   Future<List<Bank>> getAllBanks() async {
     try {
       final response = await apiClient.get('/bank');
+
+      if (response.hasError) {
+        throw Exception(response.statusText ?? 'Failed to fetch banks');
+      }
+
       final List<dynamic> banksJson = response.body;
       return banksJson.map((json) => Bank.fromJson(json)).toList();
     } catch (e) {
@@ -32,6 +37,11 @@ class BankRemoteDataSourceImpl implements BankRemoteDataSource {
         endpoint += '?Id=$bankId';
       }
       final response = await apiClient.get(endpoint);
+
+      if (response.hasError) {
+        throw Exception(response.statusText ?? 'Failed to fetch bank accounts');
+      }
+
       final List<dynamic> accountsJson = response.body;
       return accountsJson.map((json) => BankAccount.fromJson(json)).toList();
     } catch (e) {

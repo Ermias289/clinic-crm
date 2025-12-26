@@ -12,6 +12,9 @@ import '../../core/api_client.dart';
 import '../controllers/card_controller.dart';
 import '../../data/datasources/card_remote_datasource.dart';
 import '../../data/repositories/card_repository_impl.dart';
+import '../controllers/appointment_controller.dart';
+import '../../data/datasources/appointment_remote_data_source.dart';
+import '../../data/repositories/appointment_repository_impl.dart';
 
 class MainNavigationBinding extends Bindings {
   @override
@@ -63,6 +66,21 @@ class MainNavigationBinding extends Bindings {
     );
     Get.lazyPut<ContactUsController>(
       () => ContactUsController(Get.find<CompanySettingRepositoryImpl>()),
+    );
+
+    // Appointment Dependencies
+    Get.lazyPut<AppointmentRemoteDataSourceImpl>(
+      () => AppointmentRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+    );
+    Get.lazyPut<AppointmentRepositoryImpl>(
+      () => AppointmentRepositoryImpl(
+        remoteDataSource: Get.find<AppointmentRemoteDataSourceImpl>(),
+      ),
+    );
+    Get.lazyPut<AppointmentController>(
+      () => AppointmentController(
+        repository: Get.find<AppointmentRepositoryImpl>(),
+      ),
     );
   }
 }

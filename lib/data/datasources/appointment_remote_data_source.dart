@@ -3,6 +3,7 @@ import '../models/appointment_model.dart';
 
 abstract class AppointmentRemoteDataSource {
   Future<AppointmentModel> bookAppointment(AppointmentModel appointment);
+  Future<List<AppointmentModel>> getAppointmentsByPatientId(int id);
 }
 
 class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
@@ -25,5 +26,15 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       day: response.body['day'],
       paymentProof: response.body['paymentProof'],
     );
+  }
+
+  @override
+  Future<List<AppointmentModel>> getAppointmentsByPatientId(int id) async {
+    final response = await apiClient.get('/Appointment/bypatientId/$id');
+    if (response.hasError) {
+      throw Exception(response.statusText ?? 'Failed to fetch appointments');
+    }
+    final List<dynamic> body = response.body;
+    return body.map((e) => AppointmentModel.fromJson(e)).toList();
   }
 }
