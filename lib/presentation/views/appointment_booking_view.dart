@@ -5,7 +5,7 @@ import '../../domain/models/medical_service_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../config/app_routes.dart';
-import 'request_card_payment_view.dart';
+import '../../core/api_client.dart';
 
 class AppointmentBookingView extends StatefulWidget {
   const AppointmentBookingView({super.key});
@@ -48,24 +48,18 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
     }
   }
 
-  void _submitBooking() {
+  Future<void> _submitBooking() async {
     if (_formKey.currentState!.validate() &&
         selectedDoctorId != null &&
         selectedDate != null &&
         selectedTime != null &&
         selectedDateTime != null) {
-      // Navigate to payment page
-      Get.to(() => const RequestCardPaymentView(), arguments: {
-        'isAppointment': true,
-        'service': service,
-        'schedule': {
-          'doctorId': selectedDoctorId,
-          'doctorName': selectedDoctorName,
-          'date': selectedDate,
-          'time': selectedTime,
-          'dateTime': selectedDateTime,
-        },
-      });
+      // Show confirmation dialog
+      final confirmed = await _showConfirmationDialog();
+      
+      if (confirmed == true) {
+        await _bookAppointment();
+      }
     } else {
       Get.snackbar(
         'Required',
@@ -74,6 +68,192 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
         margin: const EdgeInsets.all(16),
+      );
+    }
+  }
+
+  Future<bool?> _showConfirmationDialog() {
+    return Get.dialog<bool>(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: AppColors.primaryBlue,
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Confirm Appointment',
+                style: AppTextStyles.h2.copyWith(fontSize: 22),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Please review your appointment details',
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildDetailRow(Icons.medical_services, 'Service', service.name),
+                    const Divider(height: 24),
+                    _buildDetailRow(Icons.person, 'Doctor', selectedDoctorName ?? 'N/A'),
+                    const Divider(height: 24),
+                    _buildDetailRow(
+                      Icons.calendar_today,
+                      'Date',
+                      DateFormat('EEEE, d MMM yyyy').format(selectedDate!),
+                    ),
+                    const Divider(height: 24),
+                    _buildDetailRow(
+                      Icons.access_time,
+                      'Time',
+                      DateFormat.jm().format(selectedDateTime!),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Get.back(result: false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: AppColors.textHint),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Get.back(result: true),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Proceed', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.primaryBlue),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: AppTextStyles.caption),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _bookAppointment() async {
+    try {
+      // Show loading
+      Get.dialog(
+        const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        ),
+        barrierDismissible: false,
+      );
+
+      final apiClient = Get.find<ApiClient>();
+      
+      // Format date and time for API
+      final dateOnly = DateFormat('yyyy-MM-dd').format(selectedDate!);
+      final timeOnly = DateFormat('H:mm').format(selectedDateTime!);
+      
+      final response = await apiClient.post('/Appointment', {
+        'dentistryId': service.id,
+        'medicalProfessionalId': selectedDoctorId,
+        'day': dateOnly,
+        'reservationTime': timeOnly,
+      });
+
+      // Close loading dialog
+      Get.back();
+
+      if (response.hasError) {
+        throw Exception(response.statusText ?? 'Failed to book appointment');
+      }
+
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Appointment booked successfully!',
+        backgroundColor: AppColors.successGreen,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 3),
+      );
+
+      // Navigate back to dashboard
+      Get.until((route) => route.isFirst);
+      
+    } catch (e) {
+      // Close loading dialog if still open
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      
+      Get.snackbar(
+        'Error',
+        'Failed to book appointment: ${e.toString()}',
+        backgroundColor: AppColors.warningOrange,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(seconds: 4),
       );
     }
   }
@@ -194,7 +374,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text('Proceed to Payment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Text('Book Appointment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ],

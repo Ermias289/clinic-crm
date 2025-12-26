@@ -84,12 +84,15 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
 
       // 2. Create Payment Request with the uploaded file name
       final body = {
-        'cardId': cardId,
+        'id': cardId,
         'requestedAmount': 0,
         'paymentProof': uploadedFileName,
       };
 
-      final response = await apiClient.post('/Payment/paymentRequest', body);
+      final response = await apiClient.put('/Payment/paymentRequest', body);
+
+      print('DEBUG PAYMENT RESPONSE STATUS: ${response.statusCode}');
+      print('DEBUG PAYMENT RESPONSE BODY: ${response.body}');
 
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to create payment');

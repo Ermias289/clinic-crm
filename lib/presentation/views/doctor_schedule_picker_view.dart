@@ -234,15 +234,20 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
               const Divider(height: 1),
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.55,
+                  maxHeight: MediaQuery.of(context).size.height * 0.65,
                 ),
                 child: Obx(() {
                   final list = _controller.doctors;
 
-                  return ListView.separated(
+                  return GridView.builder(
                     padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.85,
+                    ),
                     itemCount: list.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final doctor = list[index];
                       final selected = _controller.selectedDoctor.value?.id == doctor.id;
@@ -252,40 +257,130 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                           await _controller.selectDoctor(doctor);
                           Get.back();
                         },
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
                             color: selected ? AppColors.primaryBlue.withOpacity(0.08) : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: selected ? AppColors.primaryBlue : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
+                              width: 1.5,
                             ),
                             boxShadow: AppColors.softShadow,
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              CircleAvatar(
-                                radius: 18,
-                                backgroundColor: AppColors.primaryBlue.withOpacity(0.12),
-                                child: Icon(
-                                  Icons.person_rounded,
-                                  color: selected ? AppColors.primaryBlue : AppColors.textSecondary,
-                                ),
+                              const SizedBox(height: 16),
+                              // Profile Image
+                              Stack(
+                                children: [
+                                  Container(
+                                    width: 70,
+                                    height: 70,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: selected ? AppColors.primaryBlue : AppColors.textHint.withOpacity(0.2),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: ClipOval(
+                                      child: doctor.profilePictureUrl != null && doctor.profilePictureUrl!.isNotEmpty
+                                          ? Image.network(
+                                              doctor.profilePictureUrl!,
+                                              width: 70,
+                                              height: 70,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => Container(
+                                                color: AppColors.primaryBlue.withOpacity(0.1),
+                                                child: Icon(
+                                                  Icons.person_rounded,
+                                                  color: AppColors.primaryBlue,
+                                                  size: 35,
+                                                ),
+                                              ),
+                                            )
+                                          : Container(
+                                              color: AppColors.primaryBlue.withOpacity(0.1),
+                                              child: Icon(
+                                                Icons.person_rounded,
+                                                color: AppColors.primaryBlue,
+                                                size: 35,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                  if (selected)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primaryBlue,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(color: Colors.white, width: 2),
+                                        ),
+                                        child: const Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 12,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
+                              const SizedBox(height: 12),
+                              // Doctor Name
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
                                 child: Text(
                                   doctor.fullName,
-                                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-                                color: selected ? AppColors.primaryBlue : AppColors.textHint,
+                              const SizedBox(height: 4),
+                              // Specialization
+                              if (doctor.specialization != null && doctor.specialization!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Text(
+                                    doctor.specialization!,
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              const Spacer(),
+                              // Selection Indicator
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: selected 
+                                      ? AppColors.primaryBlue.withOpacity(0.1)
+                                      : Colors.transparent,
+                                  borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(16),
+                                    bottomRight: Radius.circular(16),
+                                  ),
+                                ),
+                                child: Icon(
+                                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                  color: selected ? AppColors.primaryBlue : AppColors.textHint,
+                                  size: 20,
+                                ),
                               ),
                             ],
                           ),
