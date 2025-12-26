@@ -54,6 +54,26 @@ namespace Clinic_CRM.Services.CardServices
               .FirstOrDefaultAsync() ?? "";
 
             card.CreatedAt = DateTime.UtcNow;
+            var price = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
+            card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
+            card.RequestRemark = "Requested By Patient.";
+            card.Status = CARD_STATUS.PENDING;
+
+
+            _context.Cards.Add(card);
+            await _context.SaveChangesAsync();
+
+            card.Patient.CardId = card.Id;
+
+            var payCard = new AutoPaymentPrepareDTO
+            {
+                RequestedAmount = price.Price,
+                CardId = card.Id,
+            };
+
+            await _paymentService.AutoPrepare(payCard);
+            card.CardNumber = $"{prefix}/{PREFIX.CARD}/{card.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{card.CreatedAt.Year}";
+
 
             if (user == null)
                 throw new KeyNotFoundException("User Not Found. Please try again later.");
@@ -63,47 +83,28 @@ namespace Clinic_CRM.Services.CardServices
             if (existingCard != null)
                 throw new KeyNotFoundException("You already have a card.");
 
-            var price = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
             Console.WriteLine("Working...");
-
-            _context.Cards.Add(card);
-            await _context.SaveChangesAsync();
-
-            card.CardNumber = $"{prefix}/{PREFIX.CARD}/{card.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{card.CreatedAt.Year}";
-
-
-            var payCard = new AutoPaymentPrepareDTO
-            {
-                RequestedAmount = price.Price,
-                CardId = card.Id,
-            };
-            await _paymentService.AutoPrepare(payCard);
+            
             Console.WriteLine("Requesting early");
 
 
-            if (user.UserRole.Name == USER_ROLES.PATIENT)
-            {
-                if (dto.PatientId == 0)
-                {
-                    var patient = _mapper.Map<AddPatientDTO>(dto.Patient);
+            //if (user.UserRole.Name == USER_ROLES.PATIENT)
+            //{
+            //    if (dto.PatientId == 0)
+            //    {
+            //        var patient = _mapper.Map<AddPatientDTO>(dto.Patient);
                     
-                    patient.CardId = card.Id;
+            //        patient.CardId = card.Id;
 
-                    await _patientService.AddPatient(patient);
+            //        await _patientService.AddPatient(patient);
 
-                }
-            }
+            //    }
+            //}
             Console.WriteLine("Requesting");
-
+       
             var users = await _context.Users.Where(x => x.Id == card.Patient.UserId || x.UserRole.Name == USER_ROLES.RECEPTIONIST).Select(x => x.Id).ToListAsync();
-
-            card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
-            card.RequestRemark = "Requested By Patient.";
-            card.Status = CARD_STATUS.PENDING;
-      
             await _context.SaveChangesAsync();
-            Console.WriteLine("Working...");
-
+           
             await _notify.SendUserAsync(
                 "Card Request",
                 $"Card Request has successfully been made by {_userService.GetCurrentUserNoInclude().FName}",

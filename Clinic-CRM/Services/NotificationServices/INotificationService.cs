@@ -20,6 +20,6 @@ namespace Clinic_CRM.Services.NotificationServices
 
         Task<UserNotification> MarkAsReadAsync(int userId, int notificationId);
 
-        Task MarkAllAsReadAsync(int userId);
+        Task<bool> MarkAllAsReadAsync(int userId);
     }
 }

@@ -47,11 +47,10 @@ namespace Clinic_CRM.Controllers
             {
                 var currentUser = _userService.GetCurrentUser();
 
-                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewNotification))
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanReadNotification))
                     throw new UnauthorizedAccessException();
 
-                await _notify.MarkAllAsReadAsync(userId);
-                return Ok();
+                return Ok(await _notify.MarkAllAsReadAsync(userId));
             }
             catch (Exception ex)
             {

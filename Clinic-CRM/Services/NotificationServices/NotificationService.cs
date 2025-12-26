@@ -75,22 +75,9 @@ namespace Clinic_CRM.Services.NotificationServices
         public async Task<List<UserNotification>> GetUserNotificationsAsync(int userId)
         {
             return await _context.UserNotifications
-                .Where(un => un.UserId == userId)
+                .Where(un => un.UserId == userId && !un.IsRead)
+                .Include(x => x.Notification)
                 .OrderByDescending(un => un.Notification.CreatedAt)
-                .Select(un => new UserNotification
-                {
-                    IsRead = un.IsRead,
-                    Notification = new Notification()
-                    {
-                        Category = un.Notification.Category,
-                        CreatedAt = un.Notification.CreatedAt,
-                        Message = un.Notification.Message,
-                        Type = un.Notification.Type,
-                        Title = un.Notification.Title,
-                    },
-                    ReadAt = un.ReadAt,
-                    User = un.User,
-                })
                 .ToListAsync();
         }
 
@@ -115,13 +102,17 @@ namespace Clinic_CRM.Services.NotificationServices
             return userNotification;
         }
 
-        public async Task MarkAllAsReadAsync(int userId)
+        public async Task<bool> MarkAllAsReadAsync(int userId)
         {
-           await _context.UserNotifications
-                .Where(un => un.UserId == userId && !un.IsRead)
-                .ExecuteUpdateAsync(s =>
-                    s.SetProperty(x => x.IsRead, true)
-                     .SetProperty(x => x.ReadAt, DateTime.UtcNow));
+            var notifications = await _context.UserNotifications.Where(x => x.UserId == userId).ToListAsync();
+            
+            foreach(var notify in notifications){
+                notify.IsRead = true;
+                _context.UserNotifications.Update(notify);
+            }
+            await _context.SaveChangesAsync();
+
+            return true;
         }
 
 
