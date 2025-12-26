@@ -10,25 +10,52 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
+  e.preventDefault();
+  setError("");
 
-    try {
-      const res = await loginApi({ phoneOrEmail, password });
-      const { token, user } = res.data;
-
-      if (user?.userRole === "patient") {
-        setError("Patients are not allowed to access the admin dashboard.");
-        return;
-      }
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
-    }
+  // MOCK LOGIN
+  const mockUser = {
+    fullName: "Admin User",
+    email: "admin@clinic.com",
+    userRole: "admin",
+    avatar: "https://via.placeholder.com/40",
   };
+
+  // block patients (just as in real logic)
+  if (mockUser.userRole === "patient") {
+    setError("Patients are not allowed to access the admin dashboard.");
+    return;
+  }
+
+  // save to localStorage as if logged in
+  localStorage.setItem("token", "mock-token");
+  localStorage.setItem("user", JSON.stringify(mockUser));
+
+  // navigate to dashboard
+  navigate("/dashboard");
+};
+
+
+  // const handleLogin = async (e) => {
+  //   e.preventDefault();
+  //   setError("");
+
+  //   try {
+  //     const res = await loginApi({ phoneOrEmail, password });
+  //     const { token, user } = res.data;
+
+  //     if (user?.userRole === "patient") {
+  //       setError("Patients are not allowed to access the admin dashboard.");
+  //       return;
+  //     }
+
+  //     localStorage.setItem("token", token);
+  //     localStorage.setItem("user", JSON.stringify(user));
+  //     navigate("/dashboard");
+  //   } catch (err) {
+  //     setError(err.response?.data?.message || "Login failed");
+  //   }
+  // };
 
   return (
     <div className="login-page">

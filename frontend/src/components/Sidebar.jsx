@@ -1,7 +1,11 @@
+// Sidebar.jsx
 import { NavLink, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import "./Sidebar.css";
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const [showSettings, setShowSettings] = useState(false);
 
   const logout = () => {
     localStorage.clear();
@@ -9,60 +13,51 @@ const Sidebar = () => {
   };
 
   return (
-    <aside style={styles.sidebar}>
-      <h2 style={styles.logo}>Clinic CRM</h2>
+    <aside className="sidebar">
+      <h2 className="logo">Clinic CRM</h2>
 
       <nav>
-        <NavLink to="/dashboard" style={styles.link}>
+        <NavLink to="/dashboard" className="nav-link">
           Dashboard
         </NavLink>
 
-        <NavLink to="/dashboard/card-types" style={styles.link}>
+        <NavLink to="/dashboard/card-types" className="nav-link">
           Card Types
         </NavLink>
 
-        <NavLink to="/dashboard/branches" style={styles.link}>
+        <NavLink to="/dashboard/branches" className="nav-link">
           Branches
         </NavLink>
+
+        {/* Settings with dropdown */}
+        <div className="settings-container">
+          <div
+            className="nav-link"
+            onClick={() => setShowSettings(!showSettings)}
+            >
+            Settings {showSettings ? "▾" : "▸"}
+        </div>
+          {showSettings && (
+            <div className="dropdown">
+              <NavLink to="/dashboard/settings/profile" className="dropdown-item">
+                Profile
+              </NavLink>
+              <NavLink to="/dashboard/settings/notifications" className="dropdown-item">
+                Notifications
+              </NavLink>
+              <NavLink to="/dashboard/settings/preferences" className="dropdown-item">
+                Preferences
+              </NavLink>
+            </div>
+          )}
+        </div>
       </nav>
 
-      <button onClick={logout} style={styles.logout}>
+      <button onClick={logout} className="logout-btn">
         Logout
       </button>
     </aside>
   );
-};
-
-const styles = {
-  sidebar: {
-    width: "230px",
-    background: "#1e293b",
-    color: "#fff",
-    padding: "20px",
-    display: "flex",
-    flexDirection: "column",
-  },
-  logo: {
-    textAlign: "center",
-    marginBottom: "30px",
-  },
-  link: {
-    display: "block",
-    padding: "10px",
-    color: "#cbd5e1",
-    textDecoration: "none",
-    borderRadius: "6px",
-    marginBottom: "8px",
-  },
-  logout: {
-    marginTop: "auto",
-    padding: "10px",
-    border: "none",
-    background: "#ef4444",
-    color: "#fff",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
 };
 
 export default Sidebar;
