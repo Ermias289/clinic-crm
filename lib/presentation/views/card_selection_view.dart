@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../controllers/card_controller.dart';
+import '../controllers/profile_controller.dart';
 import '../../data/models/card_setting_model.dart'; // Import for CardSettingModel type
 
 class CardSelectionView extends GetView<CardController> {
@@ -179,156 +181,184 @@ class CardSelectionView extends GetView<CardController> {
     );
   }
 
+  LinearGradient _getCardGradient(String? cardTypeName) {
+    final name = cardTypeName?.toLowerCase();
+    if (name == 'platinum') {
+      return const LinearGradient(
+        colors: [Color(0xFF1a1a1a), Color(0xFF333333), Color(0xFF4d4d4d)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (name == 'gold') {
+      return const LinearGradient(
+        colors: [Color(0xFFFFD700), Color(0xFFFFB347), Color(0xFFFFA500)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else {
+      return const LinearGradient(
+        colors: [Color(0xFFE8E8E8), Color(0xFFC0C0C0), Color(0xFFA8A8A8)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+  }
+
   Widget _buildCardItem(CardSettingModel card) {
+    // Get profile controller for user data
+    ProfileController? profileController;
+    try {
+      profileController = Get.find<ProfileController>();
+    } catch (e) {
+      // ProfileController not available
+    }
+
+    final userName = profileController?.currentUser.value?.fullname ?? 'John Doe';
+    final userEmail = profileController?.currentUser.value?.email ?? 'user@example.com';
+    final expiryDate = DateFormat('MM/yy').format(
+      DateTime.now().add(Duration(days: card.expirationDuration)),
+    );
+    final maskedCardNumber = '**** **** **** 1234';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20), // More rounded
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
       child: Column(
         children: [
-          // Card Visual Header (Gradient)
+          // Card Preview
           Container(
-            height: 120, // Taller for better visual
+            height: 240,
             decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
+              gradient: _getCardGradient(card.cardType?.name),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            padding: const EdgeInsets.all(20),
             child: Stack(
               children: [
+                // Decorative Circles
                 Positioned(
-                  top: -20,
-                  right: -20,
+                  top: -30,
+                  right: -30,
                   child: Container(
-                    width: 80,
-                    height: 80,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white.withOpacity(0.1),
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          card.cardType?.name ?? 'Unknown Card',
-                          style: AppTextStyles.h2.copyWith(color: Colors.white),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
+                Positioned(
+                  bottom: -20,
+                  left: -20,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.05),
+                    ),
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Top Row: Icon and Subscription Text
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Icon(
+                            Icons.medical_services,
+                            color: Colors.white,
+                            size: 32,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '${card.expirationDuration} Days',
+                          Text(
+                            '${card.cardType?.name ?? 'CLINIC'} SUBSCRIPTION',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
+                              fontSize: 12,
                             ),
                           ),
+                        ],
+                      ),
+                      const Spacer(),
+                      // Center: User Name and Card Number
+                      Text(
+                        userName,
+                        style: AppTextStyles.h3.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                    Icon(
-                      Icons.credit_card,
-                      color: Colors.white.withOpacity(0.2),
-                      size: 64,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Card Details Body
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.info_outline_rounded,
-                      size: 20,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        card.cardType?.description ??
-                            'No description available.',
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        maskedCardNumber,
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.4,
+                          color: Colors.white,
+                          letterSpacing: 2,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Divider(color: AppColors.textSecondary.withOpacity(0.1)),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Price', style: AppTextStyles.caption),
-                        Text(
-                          '\$${card.price.toStringAsFixed(2)}',
-                          style: AppTextStyles.h2.copyWith(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.bold,
+                      const Spacer(),
+                      // Bottom: Expiry, Email, and Request Button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'EXP $expiryDate',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                userEmail,
+                                style: AppTextStyles.caption.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    ElevatedButton(
-                      onPressed: () => controller.startRequest(card),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shadowColor: AppColors.primaryBlue.withOpacity(0.3),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
+                          // Request Button inside card
+                          ElevatedButton(
+                            onPressed: () => controller.startRequest(card),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryBlue,
+                              foregroundColor: Colors.white,
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                            ),
+                            child: const Text(
+                              'Request',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      child: const Text(
-                        'Request Card',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

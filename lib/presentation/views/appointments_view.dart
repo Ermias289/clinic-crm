@@ -96,7 +96,7 @@ class AppointmentsView extends GetView<AppointmentController> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Dental Clinic',
+                                    'Lucid Dental Clinic',
                                     style: AppTextStyles.bodySmall.copyWith(
                                       color: Colors.white.withOpacity(0.8),
                                       letterSpacing: 1.5,

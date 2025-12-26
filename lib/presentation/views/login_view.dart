@@ -103,7 +103,7 @@ class LoginView extends GetView<LoginController> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "Dental Clinic",
+                            "Lucid Dental Clinic",
                             style: AppTextStyles.h1.copyWith(
                               color: Colors.white,
                               fontSize: 32,
