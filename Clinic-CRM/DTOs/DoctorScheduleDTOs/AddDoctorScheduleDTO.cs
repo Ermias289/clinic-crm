@@ -8,5 +8,7 @@ namespace Clinic_CRM.DTOs.DoctorScheduleDTOs
         public string WeekDay { get; set; } = string.Empty;
         public TimeOnly StartTime { get; set; }
         public TimeOnly EndTime { get; set; }
+        public int BranchSettingId { get; set; }
+
     }
 }

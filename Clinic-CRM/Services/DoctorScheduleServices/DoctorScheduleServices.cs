@@ -29,6 +29,12 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
         {
             var doc = _mapper.Map<DoctorSchedule>(dto);
 
+            var doctor = await _context.MedicalProfessionals.FindAsync(doc.MedicalProfessionalId);
+
+
+            if (doctor != null && doctor.Branches.Any(x => x.Id == doc.BranchSettingId))
+                throw new KeyNotFoundException("The chosen medical professional does not work at this branch.");
+
             _context.DoctorSchedules.Add(doc);
             await _context.SaveChangesAsync();
 

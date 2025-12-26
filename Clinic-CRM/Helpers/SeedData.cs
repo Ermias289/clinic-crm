@@ -195,7 +195,7 @@ namespace Clinic_CRM.Helpers
                     Username = "Nexa",
                     Email = "example@gmail.com",
                     PhoneNumber = "+251984534724",
-                    Password = "Nexa@12345",
+                    Password = "12345",
                     UserRoleId = superAdminRole?.Id,
                 },
             };

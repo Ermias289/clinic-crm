@@ -196,7 +196,7 @@ namespace Clinic_CRM.Services.CardServices
 
             foreach (var card in cards)
             {
-                if (card.Status != CARD_STATUS.ACTIVE || card.ActivatedAt == null)
+                if (card.Status != CARD_STATUS.ACTIVE || card?.ActivatedAt == null)
                     continue;
 
                 var expiry = cardSettings
@@ -214,7 +214,10 @@ namespace Clinic_CRM.Services.CardServices
                     expiredCount++;
                 }
 
-                var user = await _context.Users.FindAsync(card.Patient.UserId);
+
+                var patient = await _context.Patients.FindAsync(card.PatientId);
+
+                var user = await _context.Users.FindAsync(patient?.UserId);
 
                 if(user != null)
                 {

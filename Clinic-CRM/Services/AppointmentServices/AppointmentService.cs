@@ -31,7 +31,7 @@ namespace Clinic_CRM.Services.AppointmentServices
             // Map DTO to entity
             var app = _mapper.Map<Appointment>(dto);
 
-            // Load the service
+            //Load the service
             var service = await _context.MedicalServices.FindAsync(app.DentistryId);
 
             if (_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
@@ -53,8 +53,10 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (card == null)
                 throw new KeyNotFoundException("Patient does not have a card. Please get a card to make an appointment.");
 
+            var cardtype = await _context.CardTypes.FindAsync(card.CardTypeId);
+
             var cardSetting = await _context.CardSettings
-                           .Where(c => c.CardType.Name == card.CardType.Name)
+                           .Where(c => c.CardType.Name == cardtype.Name)
                            .FirstOrDefaultAsync();
 
             if (cardSetting == null)
@@ -72,7 +74,7 @@ namespace Clinic_CRM.Services.AppointmentServices
 
             if (service == null)
                 throw new KeyNotFoundException("Medical service not found.");
-     
+
             // Load doctor with schedules
             var doc = await _context.MedicalProfessionals
                 .Include(d => d.DoctorSchedules)
@@ -82,12 +84,12 @@ namespace Clinic_CRM.Services.AppointmentServices
                 throw new KeyNotFoundException("Doctor not found.");
 
             // Compute appointment weekday
-            var appointmentWeekDay = app.Day.DayOfWeek.ToString();
+            var appointmentWeekDay = app.Day.DayOfWeek.ToString().ToLower();
 
             // Check if doctor has schedule on that day and time
             var scheduleAvailable = doc.DoctorSchedules?
                 .Any(s =>
-                    s.WeekDay.Equals(appointmentWeekDay, StringComparison.OrdinalIgnoreCase) &&
+                    s.WeekDay.ToLower() == appointmentWeekDay &&
                     s.StartTime <= app.ReservationTime &&
                     s.EndTime >= app.ReservationTime
                 ) ?? false;
@@ -114,35 +116,34 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .FirstOrDefaultAsync() ?? "";
             // Set status
             app.Status = APPOINTMENT_STATUS.SCHEDULED;
-
+            
             // Add appointment
             _context.Appointments.Add(app);
             await _context.SaveChangesAsync();
             app.Reference = $"{prefix}/{PREFIX.APPOINTMENT}/{app.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{app.CreatedAt.Year}";
-            await _context.SaveChangesAsync();
 
             if (app.Patient.User != null)
             {
                 await _notify.SendUserAsync(
-                  $"Appointment for {app.DentistryService.Name} Service",
+                  $"Appointment for {app.Dentistry.Name} Service",
                   $"Dear {app.Patient.FName}, You have successfully made an appointment for {app.Day} at {app.ReservationTime}. Please arrive on time as scheduled. If you need to make any changes, contact the clinic in advance.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
                   new List<int> { app.Patient.User.Id }
                   );
             }
 
-            if(app.MedicalProfessional.User != null)
+            if (app.MedicalProfessional.User != null)
             {
                 await _notify.SendUserAsync(
                   $"New Appointment",
                   $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, You have a new appointment for {app.Day} at {app.ReservationTime} with patient {app.Patient.FName}. If you need to make any changes, contact the clinic in advance.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> {app.MedicalProfessional.Id}
+                  new List<int> { app.MedicalProfessional.Id }
                   );
             }
 
             var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
-            
+
             if (receptions.Count > 0)
                 await _notify.SendUserAsync(
                     $"New Appointment",
@@ -402,7 +403,7 @@ namespace Clinic_CRM.Services.AppointmentServices
             return await _context.Appointments
                 .Include(x => x.Patient)
                 .Include(x => x.MedicalProfessional)
-                .Include(x => x.DentistryService)
+                .Include(x => x.Dentistry)
                 .Include(x => x.BranchSetting)
                 .Where(x => x.PatientId == Id)
                 .ToListAsync();

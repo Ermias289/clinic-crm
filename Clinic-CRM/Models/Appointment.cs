@@ -8,7 +8,7 @@ namespace Clinic_CRM.Models
         [Key]
         public int Id { get; set; }
         public string Reference { get; set; } = string.Empty;
-        public MedicalService DentistryService { get; set; }
+        public MedicalService Dentistry { get; set; }
         public int DentistryId { get; set; }
         public MedicalProfessional MedicalProfessional { get; set; }
         public int MedicalProfessionalId { get; set; }
