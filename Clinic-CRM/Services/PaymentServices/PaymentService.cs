@@ -96,23 +96,23 @@ namespace Clinic_CRM.Services.PaymentServices
             var payment = await _context.Payments.FindAsync(dto.Id);
 
 
-
-            var hasPendingPayment = await _context.Payments.AnyAsync(x =>
-                x.CardId == payment.CardId &&
-                (
-                    x.Status == PAYMENT_STATUS.AUTOPREPARED ||
-                    x.Status == PAYMENT_STATUS.REQUESTED ||
-                    x.Status == PAYMENT_STATUS.CHECKED
-                )
-            );
-
-            if (hasPendingPayment)
-                throw new InvalidOperationException("You have a pending payment. Complete it first.");
-
-            _mapper.Map(payment, dto);
-
             if (payment == null)
                 throw new KeyNotFoundException("Payment Not Prepared Yet.");
+
+            var pendingPayments = await _context.Payments
+                .Where(x =>
+                    x.CardId == payment.CardId &&
+                    (
+                        x.Status == PAYMENT_STATUS.REQUESTED ||
+                        x.Status == PAYMENT_STATUS.CHECKED
+                    )
+                )
+                .ToListAsync();
+
+            if (pendingPayments.Any())
+                throw new KeyNotFoundException("You have a pending payment.");
+
+            _mapper.Map(payment, dto);
 
             var card = await _context.Cards.FindAsync(payment.CardId);
 
@@ -121,7 +121,7 @@ namespace Clinic_CRM.Services.PaymentServices
 
             if (card.Status == CARD_STATUS.ACTIVE)
                 throw new KeyNotFoundException("Card Is Already Active. No Pending Payment");
-          
+
             payment.Status = PAYMENT_STATUS.REQUESTED;
             payment.CreatedAt = DateTime.UtcNow;
             payment.UnPaidAmount = payment.ExpectedAmount;
@@ -149,38 +149,49 @@ namespace Clinic_CRM.Services.PaymentServices
             //    }
             //}
 
-            
+
 
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
 
-            var prefix = await _context.CompanySetting
-                .AsNoTracking()
-                .Select(x => x.Prefix)
-                .FirstOrDefaultAsync() ?? "";
+            //var prefix = await _context.CompanySetting
+            //    .AsNoTracking()
+            //    .Select(x => x.Prefix)
+            //    .FirstOrDefaultAsync() ?? "";
 
-            //payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
-            await _context.SaveChangesAsync();
+            ////payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
+            //await _context.SaveChangesAsync();
 
-            var user = await _context.Users.Where(x => x.Id == card.Patient.UserId).FirstOrDefaultAsync();
+            //var user = await _context.Users.Where(x => x.Id == card.Patient.UserId).FirstOrDefaultAsync();
 
-            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+            var receptions = await _context.Users
+                .Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST
+                         || x.UserRole.Name == USER_ROLES.ADMIN
+                         || x.UserRole.Name == USER_ROLES.SUPER_ADMIN)
+                .Select(x => x.Id)
+                .ToListAsync();
 
-            if (receptions.Count > 0)
+            if (receptions.Any())
+            {
                 await _notify.SendUserAsync(
-                    $"Payment Request",
+                    "Payment Request",
                     $"Payment has been requested with reference number {payment.Reference}.",
                     NOTIFICATION_CONSTANTS.PAYMENT,
                     receptions
-                    );
+                );
+            }
 
-            if(user != null)
+
+            if (_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
+            {
                 await _notify.SendUserAsync(
-                        $"Payment Request",
-                        $"Payment has been requested with reference number {payment.Reference}.",
-                        NOTIFICATION_CONSTANTS.PAYMENT,
-                        new List<int> { user.Id }
-                        );
+                    "Payment Request",
+                    $"Payment has been requested with reference number {payment.Reference}.",
+                    NOTIFICATION_CONSTANTS.PAYMENT,
+                    new List<int> { _userService.GetCurrentUser().Id }
+                );
+            }
+
 
             return payment;
         }
