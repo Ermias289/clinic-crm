@@ -63,21 +63,30 @@ namespace Clinic_CRM.Services.MedicalServices
             _context.MedicalServices.Add(med);
             await _context.SaveChangesAsync();
 
-            var patient = await _context.Patients.Select(x => x.Id).ToListAsync();
 
-            await _notify.SendUserAsync(
-                      $"New Service Available",
-                      $"Dear Customer we have a new {med.Name} service onboard, be the first to get this service. We are always dedicated to give you the best experience at our clinic.",
-                      NOTIFICATION_CONSTANTS.SERVICE,
-                      patient
-                      );
+            var patientUserIds = await _context.Patients
+                 .Where(p => p.UserId != null)
+                 .Select(p => p.UserId.Value)
+                 .ToListAsync();
 
-            await _notify.SendUserAsync(
-                      $"New Service Available",
-                      $" A new {med.Name} service has been successfully added.",
-                      NOTIFICATION_CONSTANTS.SERVICE,
-                      new List<int> { _userService.GetCurrentUserNoInclude().Id}
-                      );
+            if (patientUserIds.Any())
+            {
+                await _notify.SendUserAsync(
+                    "New Service Available",
+                    $"Dear Customer, we have a new {med.Name} service onboard. Be the first to get this service.",
+                    NOTIFICATION_CONSTANTS.SERVICE,
+                    patientUserIds
+                );
+            }
+
+
+            if (_userService.GetCurrentUser() != null)
+                await _notify.SendUserAsync(
+                          $"New Service Available",
+                          $" A new {med.Name} service has been successfully added.",
+                          NOTIFICATION_CONSTANTS.SERVICE,
+                          new List<int> { _userService.GetCurrentUserNoInclude().Id}
+                          );
 
             return med;
         }

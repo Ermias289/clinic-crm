@@ -161,7 +161,7 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-app.UseSwaggerUI();
+    app.UseSwaggerUI();
 }
 //app.UsePathBase("/clinic-crm");
 //app.UseRouting();
