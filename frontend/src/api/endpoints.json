@@ -1,0 +1,435 @@
+{
+  "auth": {
+    "basePath": "/api/auth",
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/register",
+        "description": "Register a new user",
+        "requiresAuth": false,
+        "adminOnly": false
+      },
+      {
+        "method": "POST",
+        "path": "/login",
+        "description": "User login",
+        "requiresAuth": false,
+        "adminOnly": false
+      },
+      {
+        "method": "POST",
+        "path": "/changePassword",
+        "description": "Change user password",
+        "requiresAuth": true,
+        "adminOnly": false
+      }
+    ]
+  },
+  "users": {
+    "basePath": "/api/User",
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Create a new user account (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Get all users (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/{id}",
+        "description": "Get user by ID (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/{id}",
+        "description": "Update user (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "DELETE",
+        "path": "/{id}",
+        "description": "Delete user (Super Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/confirmAccount",
+        "description": "Confirm user account with OTP (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "medicalServices": {
+    "basePath": "/api/MedicalService",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Get all medical services",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/filteredService",
+        "description": "Get filtered medical services for appointment",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "parameters": ["serviceId", "branchId", "docId"],
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/{Id}",
+        "description": "Get medical service by ID",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Add new medical service (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "DELETE",
+        "path": "/{Id}",
+        "description": "Delete medical service (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "appointments": {
+    "basePath": "/api/Appointment",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Get all appointments (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/{Id}",
+        "description": "Get appointment by ID (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/bypatientId/{Id}",
+        "description": "Get appointments by patient ID (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Create a new appointment (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/cancelAppointment",
+        "description": "Cancel an appointment (Admin only)",
+        "parameters": ["Id", "reason"],
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/completeAppointments",
+        "description": "Mark appointments as completed (Admin only)",
+        "parameters": ["Id"],
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "DELETE",
+        "path": "/{Id}",
+        "description": "Delete an appointment (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "userRoles": {
+    "basePath": "/api/UserRole",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Get all user roles (Super Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN"]
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Create a new user role (Super Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/{id}",
+        "description": "Update a user role (Super Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN"]
+      }
+    ]
+  },
+  "patients": {
+    "basePath": "/api/Patient",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Get all patients (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/{id}",
+        "description": "Get patient by ID (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Create a new patient (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/{id}",
+        "description": "Update patient information (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "doctors": {
+    "basePath": "/api/MedicalProfessional",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Get all medical professionals (doctors)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/{id}",
+        "description": "Get medical professional by ID",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Add new medical professional (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/{id}",
+        "description": "Update medical professional (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "DELETE",
+        "path": "/{id}",
+        "description": "Delete medical professional (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "payments": {
+    "basePath": "/api/Payment",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/",
+        "description": "Get all payments (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/{id}",
+        "description": "Get payment by ID (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Process new payment (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/byAppointment/{appointmentId}",
+        "description": "Get payment by appointment ID (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "notifications": {
+    "basePath": "/api/Notification",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/user/{userId}",
+        "description": "Get notifications for a specific user (Admin only for other users)",
+        "requiresAuth": true,
+        "adminOnly": false,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN", "USER"]
+      },
+      {
+        "method": "PUT",
+        "path": "/markAsRead/{notificationId}",
+        "description": "Mark notification as read",
+        "requiresAuth": true,
+        "adminOnly": false,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN", "USER"]
+      },
+      {
+        "method": "POST",
+        "path": "/",
+        "description": "Send a notification (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "reports": {
+    "basePath": "/api/Report",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/appointments",
+        "description": "Generate appointments report (Admin only)",
+        "parameters": ["startDate", "endDate", "status", "doctorId"],
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/revenue",
+        "description": "Generate revenue report (Admin only)",
+        "parameters": ["startDate", "endDate", "serviceId", "doctorId"],
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/patientHistory/{patientId}",
+        "description": "Generate patient history report (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  },
+  "settings": {
+    "basePath": "/api/Setting",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/clinic",
+        "description": "Get clinic settings (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/clinic",
+        "description": "Update clinic settings (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "GET",
+        "path": "/workingHours",
+        "description": "Get working hours settings (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      },
+      {
+        "method": "PUT",
+        "path": "/workingHours",
+        "description": "Update working hours settings (Admin only)",
+        "requiresAuth": true,
+        "adminOnly": true,
+        "requiredRole": ["SUPER_ADMIN", "ADMIN"]
+      }
+    ]
+  }
+}

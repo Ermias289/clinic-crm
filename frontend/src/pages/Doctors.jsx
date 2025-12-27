@@ -4,47 +4,47 @@ import Table from "../components/Table";
 import Modal from "../components/Modal";
 import SearchBox from "../components/SearchBox";
 import Loading from "../components/Loading";
-import { getAllBranches, createBranch, updateBranch, deleteBranch } from "../api/branches.api";
+import { getAllDoctors, createDoctor, updateDoctor, deleteDoctor } from "../api/doctors.api";
 
-const Branches = () => {
-  const [branches, setBranches] = useState([]);
-  const [filteredBranches, setFilteredBranches] = useState([]);
+const Doctors = () => {
+  const [doctors, setDoctors] = useState([]);
+  const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editingBranch, setEditingBranch] = useState(null);
+  const [editingDoctor, setEditingDoctor] = useState(null);
   const [formData, setFormData] = useState({
-    name: "",
-    address: "",
+    fullName: "",
+    email: "",
     phoneNumber: "",
-    subCity: "",
-    city: "",
-    location: "",
+    specialization: "",
+    licenseNumber: "",
+    yearsOfExperience: "",
   });
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchBranches();
+    fetchDoctors();
   }, []);
 
   useEffect(() => {
-    const filtered = branches.filter(
-      (branch) =>
-        branch.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        branch.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        branch.phoneNumber?.includes(searchTerm)
+    const filtered = doctors.filter(
+      (doctor) =>
+        doctor.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.specialization?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setFilteredBranches(filtered);
-  }, [searchTerm, branches]);
+    setFilteredDoctors(filtered);
+  }, [searchTerm, doctors]);
 
-  const fetchBranches = async () => {
+  const fetchDoctors = async () => {
     try {
       setLoading(true);
-      const response = await getAllBranches();
-      setBranches(response.data);
-      setFilteredBranches(response.data);
+      const response = await getAllDoctors();
+      setDoctors(response.data);
+      setFilteredDoctors(response.data);
     } catch (err) {
-      setError("Failed to fetch branches");
+      setError("Failed to fetch doctors");
       console.error(err);
     } finally {
       setLoading(false);
@@ -56,52 +56,52 @@ const Branches = () => {
     setError("");
 
     try {
-      if (editingBranch) {
-        await updateBranch({ id: editingBranch.id, ...formData });
+      if (editingDoctor) {
+        await updateDoctor(editingDoctor.id, formData);
       } else {
-        await createBranch(formData);
+        await createDoctor(formData);
       }
-      fetchBranches();
+      fetchDoctors();
       handleCloseModal();
     } catch (err) {
       setError(err.response?.data?.message || "Operation failed");
     }
   };
 
-  const handleEdit = (branch) => {
-    setEditingBranch(branch);
+  const handleEdit = (doctor) => {
+    setEditingDoctor(doctor);
     setFormData({
-      name: branch.name || "",
-      address: branch.address || "",
-      phoneNumber: branch.phoneNumber || "",
-      subCity: branch.subCity || "",
-      city: branch.city || "",
-      location: branch.location || "",
+      fullName: doctor.fullName || "",
+      email: doctor.email || "",
+      phoneNumber: doctor.phoneNumber || "",
+      specialization: doctor.specialization || "",
+      licenseNumber: doctor.licenseNumber || "",
+      yearsOfExperience: doctor.yearsOfExperience || "",
     });
     setShowModal(true);
   };
 
-  const handleDelete = async (branchId) => {
-    if (!window.confirm("Are you sure you want to delete this branch?")) return;
+  const handleDelete = async (doctorId) => {
+    if (!window.confirm("Are you sure you want to delete this doctor?")) return;
 
     try {
-      await deleteBranch(branchId);
-      fetchBranches();
+      await deleteDoctor(doctorId);
+      fetchDoctors();
     } catch (err) {
-      setError("Failed to delete branch");
+      setError("Failed to delete doctor");
     }
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setEditingBranch(null);
+    setEditingDoctor(null);
     setFormData({
-      name: "",
-      address: "",
+      fullName: "",
+      email: "",
       phoneNumber: "",
-      subCity: "",
-      city: "",
-      location: "",
+      specialization: "",
+      licenseNumber: "",
+      yearsOfExperience: "",
     });
     setError("");
   };
@@ -111,11 +111,12 @@ const Branches = () => {
   };
 
   const columns = [
-    { header: "Branch Name", accessor: "name" },
-    { header: "City", accessor: "city" },
-    { header: "Sub City", accessor: "subCity" },
-    { header: "Phone Number", accessor: "phoneNumber" },
-    { header: "Address", accessor: "address" },
+    { header: "Name", accessor: "fullName" },
+    { header: "Specialization", accessor: "specialization" },
+    { header: "Email", accessor: "email" },
+    { header: "Phone", accessor: "phoneNumber" },
+    { header: "License #", accessor: "licenseNumber" },
+    { header: "Experience", accessor: "yearsOfExperience", render: (row) => `${row.yearsOfExperience || 0} years` },
   ];
 
   if (loading) return <DashboardLayout><Loading /></DashboardLayout>;
@@ -123,24 +124,22 @@ const Branches = () => {
   return (
     <DashboardLayout>
       <div className="page-header">
-        <h1 className="page-title">Branches Management</h1>
+        <h1 className="page-title">Medical Professionals</h1>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-          + Add Branch
+          + Add Doctor
         </button>
       </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="card">
         <SearchBox
           value={searchTerm}
           onChange={setSearchTerm}
-          placeholder="Search branches..."
+          placeholder="Search doctors..."
         />
 
         <Table
           columns={columns}
-          data={filteredBranches}
+          data={filteredDoctors}
           actions={(row) => (
             <>
               <button className="btn btn-sm btn-primary" onClick={() => handleEdit(row)}>
@@ -157,14 +156,14 @@ const Branches = () => {
       <Modal
         isOpen={showModal}
         onClose={handleCloseModal}
-        title={editingBranch ? "Edit Branch" : "Add New Branch"}
+        title={editingDoctor ? "Edit Doctor" : "Add New Doctor"}
         footer={
           <>
             <button className="btn btn-secondary" onClick={handleCloseModal}>
               Cancel
             </button>
             <button className="btn btn-primary" onClick={handleSubmit}>
-              {editingBranch ? "Update" : "Create"}
+              {editingDoctor ? "Update" : "Create"}
             </button>
           </>
         }
@@ -173,52 +172,25 @@ const Branches = () => {
           {error && <div className="alert alert-danger">{error}</div>}
 
           <div className="form-group">
-            <label className="form-label">Branch Name *</label>
+            <label className="form-label">Full Name *</label>
             <input
               type="text"
-              name="name"
+              name="fullName"
               className="form-input"
-              value={formData.name}
+              value={formData.fullName}
               onChange={handleChange}
-              placeholder="e.g., Main Branch, Downtown Branch"
               required
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">City *</label>
+            <label className="form-label">Email *</label>
             <input
-              type="text"
-              name="city"
+              type="email"
+              name="email"
               className="form-input"
-              value={formData.city}
+              value={formData.email}
               onChange={handleChange}
-              placeholder="e.g., Addis Ababa"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Sub City *</label>
-            <input
-              type="text"
-              name="subCity"
-              className="form-input"
-              value={formData.subCity}
-              onChange={handleChange}
-              placeholder="e.g., Bole, Kirkos"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Address *</label>
-            <textarea
-              name="address"
-              className="form-textarea"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Enter full street address"
               required
             />
           </div>
@@ -231,20 +203,43 @@ const Branches = () => {
               className="form-input"
               value={formData.phoneNumber}
               onChange={handleChange}
-              placeholder="e.g., +251911234567"
               required
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Location (GPS/Coordinates)</label>
+            <label className="form-label">Specialization *</label>
             <input
               type="text"
-              name="location"
+              name="specialization"
               className="form-input"
-              value={formData.location}
+              value={formData.specialization}
               onChange={handleChange}
-              placeholder="e.g., 9.0192° N, 38.7525° E or Google Maps link"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">License Number *</label>
+            <input
+              type="text"
+              name="licenseNumber"
+              className="form-input"
+              value={formData.licenseNumber}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Years of Experience</label>
+            <input
+              type="number"
+              name="yearsOfExperience"
+              className="form-input"
+              value={formData.yearsOfExperience}
+              onChange={handleChange}
+              min="0"
             />
           </div>
         </form>
@@ -253,4 +248,4 @@ const Branches = () => {
   );
 };
 
-export default Branches;
+export default Doctors;

@@ -7,13 +7,43 @@
   padding: 20px;
   height: 100vh;
   box-shadow: 2px 0 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
+
 .logo {
   font-size: 20px;
   text-align: center;
   margin-bottom: 30px;
   font-weight: bold;
+  flex-shrink: 0;
 }
+
+.sidebar nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
+  margin-bottom: 20px;
+}
+
+.sidebar nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar nav::-webkit-scrollbar-track {
+  background: #334155;
+  border-radius: 3px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb {
+  background: #64748b;
+  border-radius: 3px;
+}
+
+.sidebar nav::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
 .nav-link {
   display: block;
   padding: 12px;
@@ -34,7 +64,7 @@
   color: white;
 }
 .logout-btn {
-  margin-top: auto;
+  flex-shrink: 0;
   padding: 12px;
   border: none;
   background: #ef4444;
@@ -47,26 +77,4 @@
 
 .logout-btn:hover {
   background: #dc2626;
-}
-
-.settings-container {
-  display: flex;
-  flex-direction: column;
-}
-
-.dropdown {
-  display: flex;
-  flex-direction: column;
-  padding-left: 15px;
-  margin-top: 5px;
-}
-
-.dropdown-item {
-  padding: 5px 0;
-  color: white;
-  text-decoration: none;
-}
-
-.dropdown-item:hover {
-  background-color: #34495e;
 }
