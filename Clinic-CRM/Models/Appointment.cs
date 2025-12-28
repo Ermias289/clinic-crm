@@ -29,7 +29,6 @@ namespace Clinic_CRM.Models
         public int? CanceledById { get; set; }
         public DateTime CanceledAt { get; set; }
         public string CancelReason { get; set; } = string.Empty;
-        
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdateAt { get; set; }

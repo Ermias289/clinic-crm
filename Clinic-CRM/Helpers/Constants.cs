@@ -60,6 +60,7 @@
             public const string RESCHEDULED = "ReScheduled";
             public const string CANCELED = "Canceled";
             public const string COMPLETED = "Completed";
+            public const string OVERDUE = "Overdue";    
         }
 
         public static class NOTIFICATION_CONSTANTS

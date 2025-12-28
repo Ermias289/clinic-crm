@@ -32,8 +32,18 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
             var doctor = await _context.MedicalProfessionals.FindAsync(doc.MedicalProfessionalId);
 
 
-            if (doctor != null && doctor.Branches.Any(x => x.Id == doc.BranchSettingId))
-                throw new KeyNotFoundException("The chosen medical professional does not work at this branch.");
+            if (doctor == null)
+                throw new KeyNotFoundException("Medical professional not found.");
+
+            var worksAtBranch = await _context.MedicalProfessionals
+                     .Where(d => d.Id == doc.MedicalProfessionalId)
+                     .AnyAsync(d => d.Branches.Any(b => b.Id == doc.BranchSettingId));
+
+            if (!worksAtBranch)
+                throw new InvalidOperationException(
+                    "The chosen medical professional does not work at this branch."
+                );
+
 
             _context.DoctorSchedules.Add(doc);
             await _context.SaveChangesAsync();
@@ -42,7 +52,7 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
                        $"New Doctor Schedule Added",
                        $"Medical Professional schedule has been successfully added.",
                        NOTIFICATION_CONSTANTS.DOCTORSCHEDULE,
-                       new List<int> { _userService.GetCurrentUserNoInclude().Id, doc.Id  }
+                       new List<int> { _userService.GetCurrentUserNoInclude().Id }
                        );
 
             return doc;

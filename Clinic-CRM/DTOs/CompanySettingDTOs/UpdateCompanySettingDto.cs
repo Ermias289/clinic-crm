@@ -12,7 +12,5 @@
         public string City { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
         public string SubCity { get; set; } = string.Empty;
-        public TimeOnly OpeningTime { get; set; }
-        public TimeOnly ClosingTime { get; set; }
     }
 }

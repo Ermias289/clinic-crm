@@ -24,16 +24,19 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<AutoMapperProfile>());
 builder.Services.AddHttpContextAccessor();
 
 // ========================= CORS =========================
-var allowAllOrigins = "_allowAllOrigins";
+var corsPolicy = "AllowFrontend";
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: allowAllOrigins, policy =>
+    options.AddPolicy(corsPolicy, policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .SetIsOriginAllowed(_ => true); // allows mobile + browser
     });
 });
+
 
 // ========================= Controllers & JSON =========================
 builder.Services.AddControllers()
@@ -156,6 +159,9 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.MapGet("/health", () => Results.Ok("OK"))
+   .AllowAnonymous();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -165,9 +171,13 @@ if (app.Environment.IsDevelopment())
 }
 //app.UsePathBase("/clinic-crm");
 //app.UseRouting();
-
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
+app.UseCors(corsPolicy);
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

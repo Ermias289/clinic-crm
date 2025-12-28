@@ -8,7 +8,5 @@ namespace Clinic_CRM.DTOs.PaymentDTOs
         public decimal ChekedAmount { get; set; }
         public string CheckRemark { get; set; } = string.Empty;
         public string PaymentProof { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }
