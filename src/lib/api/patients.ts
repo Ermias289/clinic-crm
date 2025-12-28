@@ -1,0 +1,52 @@
+import apiClient from './client';
+
+export interface AddPatientDTO {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  address?: string;
+}
+
+export interface UpdatePatientDTO extends AddPatientDTO {
+  id: number;
+}
+
+export interface Patient {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  address?: string;
+}
+
+export const patientsService = {
+  getAll: async (): Promise<Patient[]> => {
+    const response = await apiClient.get<Patient[]>('/api/Patient');
+    return response.data;
+  },
+
+  getById: async (id: number): Promise<Patient> => {
+    const response = await apiClient.get<Patient>(`/api/Patient/${id}`);
+    return response.data;
+  },
+
+  create: async (data: AddPatientDTO): Promise<Patient> => {
+    const response = await apiClient.post<Patient>('/api/Patient', data);
+    return response.data;
+  },
+
+  update: async (data: UpdatePatientDTO): Promise<Patient> => {
+    const response = await apiClient.put<Patient>('/api/Patient', data);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await apiClient.delete(`/api/Patient/${id}`);
+  },
+};
