@@ -34,16 +34,18 @@ namespace Clinic_CRM.Services.AppointmentServices
             //Load the service
             var service = await _context.MedicalServices.FindAsync(app.DentistryId);
 
+            
+
             if (_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
             {
-                app.PatientId = _userService.GetCurrentUser().Id;
+                var userpatient = await _context.Patients.Where(x => x.UserId == _userService.GetCurrentUser().Id).FirstOrDefaultAsync();
+                app.PatientId = userpatient?.Id;
             }
 
-            // Load patient
-            var patient = await _context.Patients.FindAsync(app.PatientId);
+            var patient = await _context.Patients.Where(x => x.Id == dto.PatientId).FirstOrDefaultAsync();
 
             if (patient == null)
-                throw new KeyNotFoundException("Patient not found.");
+                throw new KeyNotFoundException("Patient Not Found");
 
             // Check patient's card
             var card = await _context.Cards
@@ -62,15 +64,16 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (cardSetting == null)
                 throw new KeyNotFoundException("Card Setting Not Found");
 
-            var cardExpiryDate = card.ActivatedAt.AddDays(cardSetting.ExpirationDuration);
+            var cardExpiryDate = DateOnly.FromDateTime(card.ActivatedAt.AddDays(cardSetting.ExpirationDuration));
 
             // appointmentDate = the date user selected
-            if (app.Day.Day > cardExpiryDate.Day)
+            if (app.Day > cardExpiryDate)
             {
                 throw new InvalidOperationException(
                     $"Your card will expire on {cardExpiryDate:yyyy-MM-dd}. Please choose an appointment date before this date."
                 );
             }
+
 
             if (service == null)
                 throw new KeyNotFoundException("Medical service not found.");
@@ -122,23 +125,27 @@ namespace Clinic_CRM.Services.AppointmentServices
             await _context.SaveChangesAsync();
             app.Reference = $"{prefix}/{PREFIX.APPOINTMENT}/{app.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{app.CreatedAt.Year}";
 
-            if (app.Patient.User != null)
+            var medicalPro = await _context.MedicalProfessionals.Include(x => x.User).Where(x => x.Id == app.MedicalProfessionalId).FirstOrDefaultAsync();
+            var patientn = await _context.Patients.Include(x => x.User).Where(x => x.Id == app.PatientId).FirstOrDefaultAsync();
+            
+
+            if (patient != null)
             {
                 await _notify.SendUserAsync(
                   $"Appointment for {app.Dentistry.Name} Service",
                   $"Dear {app.Patient.FName}, You have successfully made an appointment for {app.Day} at {app.ReservationTime}. Please arrive on time as scheduled. If you need to make any changes, contact the clinic in advance.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { app.Patient.User.Id }
+                  new List<int> { patient.Id }
                   );
             }
 
-            if (app.MedicalProfessional.User != null)
+            if (medicalPro != null)
             {
                 await _notify.SendUserAsync(
                   $"New Appointment",
                   $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, You have a new appointment for {app.Day} at {app.ReservationTime} with patient {app.Patient.FName}. If you need to make any changes, contact the clinic in advance.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { app.MedicalProfessional.Id }
+                  new List<int> { medicalPro.Id }
                   );
             }
 
@@ -157,7 +164,13 @@ namespace Clinic_CRM.Services.AppointmentServices
 
         public async Task<Appointment> UpdateAppointment(UpdateAppointmentDTO dto)
         {
-            var app = await _context.Appointments.FindAsync(dto.Id);
+            var app = await _context.Appointments
+                .Include(x => x.Patient)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.MedicalProfessional)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.Dentistry)
+                .Where(x => x.Id == dto.Id).FirstOrDefaultAsync();
 
             if (app == null)
                 throw new KeyNotFoundException("Appointment Not Found");
@@ -226,7 +239,7 @@ namespace Clinic_CRM.Services.AppointmentServices
                       $"Appointment Update",
                       $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, there has been a change on appointment number {app.Reference} please check your new schedule. If you need to make any changes, contact the clinic in advance.",
                       NOTIFICATION_CONSTANTS.APPOINTMENT,
-                      new List<int> { app.MedicalProfessional.Id }
+                      new List<int> { app.MedicalProfessional.User.Id }
                       );
                 }
 
@@ -262,7 +275,13 @@ namespace Clinic_CRM.Services.AppointmentServices
 
         public async Task<Appointment> DeleteAppointment(int Id)
         {
-            var app = await _context.Appointments.FindAsync(Id);
+            var app = await _context.Appointments
+               .Include(x => x.Patient)
+                   .ThenInclude(x => x.User)
+               .Include(x => x.MedicalProfessional)
+                    .ThenInclude(x => x.User)
+               .Include(x => x.Dentistry)
+               .Where(x => x.Id == Id).FirstOrDefaultAsync();
 
             if (app == null)
                 throw new KeyNotFoundException("Appointment Not Found");
@@ -283,7 +302,7 @@ namespace Clinic_CRM.Services.AppointmentServices
                   $"Appointment Deleted",
                   $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, your appointment with appointment number {app.Reference} with patient {app.Patient.FName} has been Deleted.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { app.MedicalProfessional.Id }
+                  new List<int> { app.MedicalProfessional.User.Id }
                   );
             }
 
@@ -304,13 +323,23 @@ namespace Clinic_CRM.Services.AppointmentServices
 
         public async Task<Appointment> CancelAppointment(int Id, string Reason)
         {
-            var app = await _context.Appointments.FindAsync(Id);
+            var app = await _context.Appointments
+                .Include(x => x.Patient)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.MedicalProfessional)
+                    .ThenInclude(x => x.User)
+                .Include(x => x.Dentistry)
+                .Where(x => x.Id ==Id).FirstOrDefaultAsync();
 
             if (app == null)
                 throw new KeyNotFoundException("Appointment Not Found");
 
+            if (app.Status != APPOINTMENT_STATUS.SCHEDULED || app.Status != APPOINTMENT_STATUS.RESCHEDULED)
+                throw new KeyNotFoundException("Appointment has to be scheduled to be canceled.");
+
             app.CancelReason = Reason;
             app.CanceledAt = DateTime.UtcNow;
+            app.Status = APPOINTMENT_STATUS.CANCELED;
 
             _context.Appointments.Update(app);
             await _context.SaveChangesAsync();
@@ -331,7 +360,7 @@ namespace Clinic_CRM.Services.AppointmentServices
                   $"Appointment Canceled",
                   $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, your appointment with appointment number {app.Reference} with patient {app.Patient.FName} has been canceled.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { app.MedicalProfessional.Id }
+                  new List<int> { app.MedicalProfessional.User.Id }
                   );
             }
 
@@ -352,15 +381,22 @@ namespace Clinic_CRM.Services.AppointmentServices
         {
             foreach(int Id in Ids)
             {
-                var app = await _context.Appointments.FindAsync(Id);
+                var app = await _context.Appointments
+                    .Include(x => x.Patient)
+                        .ThenInclude(x => x.User)
+                    .Include(x => x.MedicalProfessional)
+                        .ThenInclude(x => x.User)
+                    .Where(x => x.Id == Id)
+                    .FirstOrDefaultAsync();
 
-                if (app != null || app.Status != APPOINTMENT_STATUS.CANCELED)
-                {
-                    app.Status = APPOINTMENT_STATUS.COMPLETED;
-                    app.CompletedAt = DateTime.Now;
+                if (app.Status != APPOINTMENT_STATUS.SCHEDULED || app.Status != APPOINTMENT_STATUS.RESCHEDULED)
+                    throw new KeyNotFoundException("Appointment has to be scheduled to be completed.");
 
-                    _context.Appointments.Update(app);
-                }
+                app.Status = APPOINTMENT_STATUS.COMPLETED;
+                app.CompletedAt = DateTime.Now;
+
+                _context.Appointments.Update(app);
+               
 
                 if (app.Patient.User != null)
                 {
@@ -378,7 +414,7 @@ namespace Clinic_CRM.Services.AppointmentServices
                       $"Appointment Completed",
                       $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, your appointment with appointment number {app.Reference} with patient {app.Patient.FName} has been completed. Thank you for your service.",
                       NOTIFICATION_CONSTANTS.APPOINTMENT,
-                      new List<int> { app.MedicalProfessional.Id }
+                      new List<int> { app.MedicalProfessional.User.Id }
                       );
                 }
 

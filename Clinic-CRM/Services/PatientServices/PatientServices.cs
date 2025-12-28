@@ -85,16 +85,17 @@ namespace Clinic_CRM.Services.PatientServices
         public async Task<Patient> UpdatePatient(UpdatePatientDTO dto)
         {
             var patient = await _context.Patients.FindAsync(dto.Id);
-            var userRole = await _context.UserRoles.Where(x => x.Name == USER_ROLES.PATIENT).FirstOrDefaultAsync();
+            var userRole = await _context.UserRoles.Where(x => x.Name.ToLower() == USER_ROLES.PATIENT.ToLower()).FirstOrDefaultAsync();
 
             if (patient == null)
                 throw new KeyNotFoundException("Patient Data Not Found.");
 
-            if (userRole != null)
-                throw new KeyNotFoundException("Role Not Found To Create User Account.");
-
+           
             if (patient.RequiresUserAccount)
             {
+                if (userRole != null)
+                    throw new KeyNotFoundException("Role Not Found To Create User Account.");
+
                 var user = new CreateUserAccountDTO
                 {
                     FName = patient.FName,
@@ -116,7 +117,7 @@ namespace Clinic_CRM.Services.PatientServices
                 throw new KeyNotFoundException("Error Creating User Account. Please Try Again Later.");
 
             patient.UserId = userN.Id;
-
+            patient.UpdatedAt = DateTime.UtcNow;
 
             _mapper.Map(dto, patient);
             _context.Patients.Update(patient);

@@ -14,6 +14,7 @@ using Clinic_CRM.Services.PaymentServices;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Math;
 using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Services.CardServices
@@ -189,50 +190,66 @@ namespace Clinic_CRM.Services.CardServices
 
         public async Task<string> AutoExpire()
         {
-            var cards = await _context.Cards.ToListAsync();
+            var now = DateTime.UtcNow;
+
+            var cards = await _context.Cards
+                .Where(c => c.Status == CARD_STATUS.ACTIVE && c.ActivatedAt != null)
+                .ToListAsync();
+
             var cardSettings = await _context.CardSettings.ToListAsync();
 
             int expiredCount = 0;
 
             foreach (var card in cards)
             {
-                if (card.Status != CARD_STATUS.ACTIVE || card?.ActivatedAt == null)
-                    continue;
-
-                var expiry = cardSettings
-                    .FirstOrDefault(x => x.CardTypeId == card.CardTypeId);
-
-                if (expiry == null)
-                    continue;
-
-                var daysUsed = (DateTime.UtcNow - card.ActivatedAt).TotalDays;
-
-                if (daysUsed >= expiry.ExpirationDuration)
+                try
                 {
+                    var setting = cardSettings.FirstOrDefault(x => x.CardTypeId == card.CardTypeId);
+                    if (setting == null)
+                        continue;
+
+                    var daysUsed = (now - card.ActivatedAt).TotalDays;
+
+                    if (daysUsed < setting.ExpirationDuration)
+                        continue;
+
+                    // expire card
                     card.Status = CARD_STATUS.EXPIRED;
-                    card.ExpiredAt = DateTime.UtcNow;
+                    card.ExpiredAt = now;
                     expiredCount++;
+
+                    // prepare payment (safe, no throw)
+                    var prepared = await _paymentService.AutoPrepare(new AutoPaymentPrepareDTO
+                    {
+                        RequestedAmount = setting.Price,
+                        CardId = card.Id
+                    });
+
+                    // notify user (best effort)
+                    var patient = await _context.Patients.FindAsync(card.PatientId);
+                    var user = patient != null
+                        ? await _context.Users.FindAsync(patient.UserId)
+                        : null;
+
+                    if (user != null)
+                    {
+                        await _notify.SendSystemAsync(
+                            "Card Expired",
+                            $"Dear {patient!.FName}, your card has expired. Please renew it to continue enjoying premium services.",
+                            NOTIFICATION_CONSTANTS.CARD,
+                            new List<int> { user.Id }
+                        );
+                    }
                 }
-
-
-                var patient = await _context.Patients.FindAsync(card.PatientId);
-
-                var user = await _context.Users.FindAsync(patient?.UserId);
-
-                if(user != null)
+                catch (Exception ex)
                 {
-                   await _notify.SendSystemAsync(
-                   "Card Expired",
-                   $"Dear {card.Patient.FName},your card has expired. Please make a payment to renew it and enjoy unlimited appointments along with our full range of premium services.",
-                   NOTIFICATION_CONSTANTS.CARD,
-                   new List<int> { user.Id }
-                   );
+                    //_logger.LogError(ex, $"Failed processing Card {card.Id}");
+                    // continue loop
+                    Console.WriteLine($"Error expiring card {card.Id}: {ex.Message}");
                 }
-               
             }
 
             await _context.SaveChangesAsync();
-
 
             return $"{expiredCount} cards expired successfully.";
         }

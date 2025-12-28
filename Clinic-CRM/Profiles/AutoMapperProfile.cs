@@ -5,6 +5,7 @@ using Clinic_CRM.DTOs.BankDTOs;
 using Clinic_CRM.DTOs.BranchSettingDTOs;
 using Clinic_CRM.DTOs.CardDTOs;
 using Clinic_CRM.DTOs.CardSettingDTOs;
+using Clinic_CRM.DTOs.CardTypeDTOs;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
 using Clinic_CRM.DTOs.DoctorScheduleDTOs;
 using Clinic_CRM.DTOs.MedicalProfessionalDTOs;
@@ -87,6 +88,12 @@ namespace Clinic_CRM.Profiles
             CreateMap<UpdateCardDTO, Card>();
             CreateMap<Card, UpdateCardDTO>();
 
+            //Card Type
+            CreateMap<AddCardTypeDTO, CardType>();
+            CreateMap<CardType, AddCardTypeDTO>();
+            CreateMap<UpdateCardTypeDTO, CardType>();
+            CreateMap<CardType, UpdateCardTypeDTO>();
+
             //Payment
             CreateMap<Payment, CreatePaymentDTO>();
             CreateMap<CreatePaymentDTO, Payment>();
@@ -113,7 +120,6 @@ namespace Clinic_CRM.Profiles
             CreateMap<AddMedicalProfessionalDTO, MedicalProfessional>()
                 .ForMember(dest => dest.Branches, opt => opt.Ignore())
                 .ForMember(dest => dest.MedicalServices, opt => opt.Ignore());
-
             CreateMap<UpdateMedicalProfessionalDTO, MedicalProfessional>();
             CreateMap<MedicalProfessional, UpdateMedicalProfessionalDTO>();
 

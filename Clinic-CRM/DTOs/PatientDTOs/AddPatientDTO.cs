@@ -23,7 +23,6 @@ namespace Clinic_CRM.DTOs.PatientDTOs
         public string Country { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public int? UserId { get; set; }
-        public int? CardId { get; set; }
         public DateOnly DateOfBirth { get; set; } 
         public bool RequiresUserAccount { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

@@ -43,10 +43,13 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
             }
 
 
-            if (doc.RequiresUserAccount && role !=null)
+            if (doc.RequiresUserAccount)
             {
+                if (role == null)
+                    throw new KeyNotFoundException("User Role Not Found");
                 var user = new CreateUserAccountDTO
                 {
+                    Username = doc.FName,
                     FName = doc.FName,
                     LName = doc.LName,
                     MName = doc.MName,
@@ -59,6 +62,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
                 await _userService.CreateUserAsync(user);
             }
 
+            doc.CreatedAt = DateTime.UtcNow;
             _context.MedicalProfessionals.Add(doc);
             await _context.SaveChangesAsync();
 
@@ -73,11 +77,30 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
             _mapper.Map(dto, doc);
 
+
+
+            if (dto.MedicalServicesId.Any())
+            {
+                doc.MedicalServices = await _context.MedicalServices
+                    .Where(ms => dto.MedicalServicesId.Contains(ms.Id))
+                    .ToListAsync();
+            }
+
+            if (dto.Branches.Any())
+            {
+                doc.Branches = await _context.BranchSettings
+                    .Where(ms => dto.Branches.Contains(ms.Id))
+                    .ToListAsync();
+            }
+
+
             var role = await _context.UserRoles.Where(x => x.Name == USER_ROLES.ADMIN).FirstOrDefaultAsync();
 
 
-            if (doc.RequiresUserAccount && role != null)
+            if (doc.RequiresUserAccount)
             {
+                if (role == null)
+                    throw new KeyNotFoundException("User Role Not Found");
                 var user = new CreateUserAccountDTO
                 {
                     FName = doc.FName,
@@ -91,6 +114,8 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
                 await _userService.CreateUserAsync(user);
             }
+
+            doc.UpdatedAt = DateTime.UtcNow;
 
             _context.MedicalProfessionals.Update(doc);
             await _context.SaveChangesAsync();

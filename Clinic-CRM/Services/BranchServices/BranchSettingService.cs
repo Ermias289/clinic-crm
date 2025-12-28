@@ -32,7 +32,7 @@ namespace Clinic_CRM.Services.BranchServices
             if (branch == null)
                 throw new KeyNotFoundException("Branch Not Found.");
 
-            _mapper.Map<BranchSetting>(dto);
+            _mapper.Map(dto, branch);
             _context.BranchSettings.Update(branch);
             await _context.SaveChangesAsync();
             return branch;

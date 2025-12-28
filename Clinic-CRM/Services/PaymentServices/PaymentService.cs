@@ -29,7 +29,7 @@ namespace Clinic_CRM.Services.PaymentServices
             _notify = notify;
         }
 
-        public async Task<Payment> AutoPrepare(AutoPaymentPrepareDTO dto)
+        public async Task<bool> AutoPrepare(AutoPaymentPrepareDTO dto)
         {
             //mapping the dto to the model
             var payment = _mapper.Map<Payment>(dto);
@@ -51,11 +51,10 @@ namespace Clinic_CRM.Services.PaymentServices
             //gets card price by card type from card setting
             var cardPrice = await _context.CardSettings.FirstOrDefaultAsync(x => x.CardTypeId == cardType.Id);
 
-            var existingPayment = await _context.Payments.Where(x => x.CardId == card.Id && (x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status != PAYMENT_STATUS.REJECTED)).FirstOrDefaultAsync();
+            var existingPayment = await _context.Payments.Where(x => x.CardId == card.Id && (x.Status != PAYMENT_STATUS.APPROVED && x.Status != PAYMENT_STATUS.CANCELED && x.Status != PAYMENT_STATUS.REJECTED)).FirstOrDefaultAsync();
 
             if (existingPayment != null)
-                throw new KeyNotFoundException("You have a pending payment. Auto Payment Preparation Terminated.");
-
+                return false;
 
             //prepares prefix for the card
             var prefix = await _context.CompanySetting
@@ -68,7 +67,7 @@ namespace Clinic_CRM.Services.PaymentServices
                 throw new KeyNotFoundException("Card Price with the specified Card type does not exist.");
 
             payment.ExpectedAmount = cardPrice.Price;
-            
+            payment.UnPaidAmount = cardPrice.Price;
            
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
@@ -87,13 +86,18 @@ namespace Clinic_CRM.Services.PaymentServices
                     );
 
 
-            return payment;
+            return true;
         }
 
 
         public async Task<Payment> CreatePayment(CreatePaymentDTO dto)
         {
-            var payment = await _context.Payments.FindAsync(dto.Id);
+            var payment = await _context.Payments
+                .Include(x => x.Card)
+                    .ThenInclude(x => x.Patient)
+                        .ThenInclude(x => x.User)
+                .Where(x => x.Id == dto.Id)
+                .FirstOrDefaultAsync();
 
 
             if (payment == null)
@@ -198,7 +202,12 @@ namespace Clinic_CRM.Services.PaymentServices
 
         public async Task<Payment> CheckPayemnt(CheckPaymentDTO dto)
         {
-            var payment = await _context.Payments.FindAsync(dto.Id);
+            var payment = await _context.Payments
+                .Include(x => x.Card)
+                    .ThenInclude(x => x.Patient)
+                        .ThenInclude(x => x.User)
+                .Where(x => x.Id == dto.Id)
+                .FirstOrDefaultAsync();
 
             if (payment == null)
                 throw new KeyNotFoundException("Payment Request Not Found.");
@@ -218,6 +227,8 @@ namespace Clinic_CRM.Services.PaymentServices
             _mapper.Map(dto, payment);
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
+            
+            var user = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).FirstOrDefaultAsync();
 
             var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
 
@@ -229,11 +240,12 @@ namespace Clinic_CRM.Services.PaymentServices
                     receptions
                     );
 
-            await _notify.SendUserAsync(
+            if(user != null)
+                await _notify.SendUserAsync(
                     $"Payment Ckecked",
                     $"Your Payment has request with reference number {payment.Reference} has been checked.",
                     NOTIFICATION_CONSTANTS.PAYMENT,
-                    new List<int> { payment.Card.PatientId }
+                    new List<int> { user.Id }
                     );
 
 
@@ -243,7 +255,12 @@ namespace Clinic_CRM.Services.PaymentServices
         public async Task<Payment> ApprovePayment(ApprovePaymentDTO dto)
         {
 
-            var payment = await _context.Payments.FindAsync(dto.Id);
+            var payment = await _context.Payments
+                .Include(x => x.Card)
+                    .ThenInclude(x => x.Patient)
+                        .ThenInclude(x => x.User)
+                .Where(x => x.Id == dto.Id)
+                .FirstOrDefaultAsync();
 
             if (payment == null)
                 throw new KeyNotFoundException("Payment Request Not Found.");
@@ -273,12 +290,13 @@ namespace Clinic_CRM.Services.PaymentServices
 
                 payment.Status = PAYMENT_STATUS.APPROVED;
                 card.Status = CARD_STATUS.ACTIVE;
+                card.ActivatedAt = DateTime.UtcNow;
             }
 
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
 
-
+            var user = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).FirstOrDefaultAsync();
             var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
 
             if (receptions.Count > 0)
@@ -288,12 +306,12 @@ namespace Clinic_CRM.Services.PaymentServices
                     NOTIFICATION_CONSTANTS.PAYMENT,
                     receptions
                     );
-
-            await _notify.SendUserAsync(
+            if(user != null)
+                await _notify.SendUserAsync(
                     $"Payment Approved",
                     $"Your Payment has request with reference number {payment.Reference} has been Approved.",
                     NOTIFICATION_CONSTANTS.PAYMENT,
-                    new List<int> { payment.Card.PatientId }
+                    new List<int> { user.Id }
                     );
 
             return payment;
@@ -302,7 +320,12 @@ namespace Clinic_CRM.Services.PaymentServices
      
         public async Task<Payment> CancelPayment(CancelPaymentDTO dto)
         {
-            var payment = await _context.Payments.FindAsync(dto.Id);
+            var payment = await _context.Payments
+               .Include(x => x.Card)
+                   .ThenInclude(x => x.Patient)
+                       .ThenInclude(x => x.User)
+               .Where(x => x.Id == dto.Id)
+               .FirstOrDefaultAsync();
 
             if (payment == null)
                 throw new KeyNotFoundException("Payment Request Not Found.");
@@ -319,6 +342,7 @@ namespace Clinic_CRM.Services.PaymentServices
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
 
+            var user = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).FirstOrDefaultAsync();
             var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
 
             if (receptions.Count > 0)
@@ -328,12 +352,12 @@ namespace Clinic_CRM.Services.PaymentServices
                     NOTIFICATION_CONSTANTS.PAYMENT,
                     receptions
                     );
-
-            await _notify.SendUserAsync(
+            if(user != null)
+                await _notify.SendUserAsync(
                     $"Payment Canceled",
                     $"Your Payment has request with reference number {payment.Reference} has been canceled.",
                     NOTIFICATION_CONSTANTS.PAYMENT,
-                    new List<int> { payment.Card.PatientId }
+                    new List<int> { user.Id }
                     );
 
 
@@ -343,7 +367,12 @@ namespace Clinic_CRM.Services.PaymentServices
 
         public async Task<Payment> RejectPayment(RejectPaymentDTO dto)
         {
-            var payment = await _context.Payments.FindAsync(dto.Id);
+            var payment = await _context.Payments
+               .Include(x => x.Card)
+                   .ThenInclude(x => x.Patient)
+                       .ThenInclude(x => x.User)
+               .Where(x => x.Id == dto.Id)
+               .FirstOrDefaultAsync();
 
             if (payment == null)
                 throw new KeyNotFoundException("Payment Request Not Found.");
@@ -361,7 +390,7 @@ namespace Clinic_CRM.Services.PaymentServices
             _mapper.Map(dto, payment);
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
-
+            var user = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).FirstOrDefaultAsync();
             var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
 
             if (receptions.Count > 0)
@@ -371,12 +400,12 @@ namespace Clinic_CRM.Services.PaymentServices
                     NOTIFICATION_CONSTANTS.PAYMENT,
                     receptions
                     );
-
-            await _notify.SendUserAsync(
+            if(user != null)
+                await _notify.SendUserAsync(
                     $"Payment Rejection",
                     $"Your Payment has request with reference number {payment.Reference} has been Approved.",
                     NOTIFICATION_CONSTANTS.PAYMENT,
-                    new List<int> { payment.Card.PatientId }
+                    new List<int> { user.Id }
                     );
 
 

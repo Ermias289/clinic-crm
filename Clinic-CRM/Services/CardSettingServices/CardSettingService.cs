@@ -60,7 +60,7 @@ namespace Clinic_CRM.Services.CardSettingServices
 
         public async Task<CardSetting> UpdateCardSettingService(UpdateCardSettingDTO dto)
         {
-            var setting = await _context.CardSettings.FirstOrDefaultAsync();
+            var setting = await _context.CardSettings.FindAsync(dto.Id);
             var existing = await _context.CardSettings.Where(x => x.CardTypeId == dto.CardTypeId).FirstOrDefaultAsync();
 
            
