@@ -2,7 +2,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import AppointmentsPage from "./pages/AppointmentsPage";
@@ -31,23 +34,39 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<Index />} />
-          <Route path="/appointments" element={<AppointmentsPage />} />
-          <Route path="/cards" element={<CardsPage />} />
-          <Route path="/doctors" element={<DoctorsPage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/patients" element={<PatientsPage />} />
-          <Route path="/payments" element={<PaymentsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/settings/company" element={<CompanySettingsPage />} />
-          <Route path="/settings/branches" element={<BranchSettingsPage />} />
-          <Route path="/settings/cards" element={<CardSettingsPage />} />
-          <Route path="/settings/card-types" element={<CardTypesPage />} />
-          <Route path="/settings/onboarding" element={<OnboardingSettingsPage />} />
-          <Route path="/settings/working-days" element={<WorkingDaysPage />} />
-          <Route path="/settings/users" element={<UsersPage />} />
-          <Route path="/settings/roles" element={<UserRolesPage />} />
+          {/* Login page */}
+          <Route
+            path="/login"
+            element={
+              localStorage.getItem("token") ? (
+                <Navigate to="/" replace />
+              ) : (
+                <LoginPage />
+              )
+            }
+          />
+
+          {/* Protected dashboard / main page */}
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+
+          {/* Protected other pages */}
+          <Route path="/appointments" element={<ProtectedRoute><AppointmentsPage /></ProtectedRoute>} />
+          <Route path="/cards" element={<ProtectedRoute><CardsPage /></ProtectedRoute>} />
+          <Route path="/doctors" element={<ProtectedRoute><DoctorsPage /></ProtectedRoute>} />
+          <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
+          <Route path="/patients" element={<ProtectedRoute><PatientsPage /></ProtectedRoute>} />
+          <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/company" element={<ProtectedRoute><CompanySettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/branches" element={<ProtectedRoute><BranchSettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/cards" element={<ProtectedRoute><CardSettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/card-types" element={<ProtectedRoute><CardTypesPage /></ProtectedRoute>} />
+          <Route path="/settings/onboarding" element={<ProtectedRoute><OnboardingSettingsPage /></ProtectedRoute>} />
+          <Route path="/settings/working-days" element={<ProtectedRoute><WorkingDaysPage /></ProtectedRoute>} />
+          <Route path="/settings/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
+          <Route path="/settings/roles" element={<ProtectedRoute><UserRolesPage /></ProtectedRoute>} />
+
+          {/* 404 page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

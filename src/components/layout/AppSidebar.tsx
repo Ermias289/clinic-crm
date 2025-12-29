@@ -15,9 +15,10 @@ import {
   Clock,
   Building,
   Shield,
-  UserCircle
+  UserCircle,
+  LogOut
 } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 interface NavItem {
@@ -69,7 +70,12 @@ const ToothIcon = ({ className }: { className?: string }) => (
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>(['/settings']);
+
+  // Get user from localStorage
+  const storedUser = localStorage.getItem("user");
+  const user = storedUser ? JSON.parse(storedUser) : { name: "Admin User", email: "admin@brightsmile.com" };
 
   const toggleExpand = (href: string) => {
     setExpandedItems(prev => 
@@ -82,6 +88,13 @@ export function AppSidebar() {
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
     return location.pathname.startsWith(href);
+  };
+
+    // LOGOUT function
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
   return (
@@ -167,9 +180,17 @@ export function AppSidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-sidebar-foreground truncate">Admin User</p>
-            <p className="text-xs text-sidebar-foreground/60 truncate">admin@brightsmile.com</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">{user.email}</p>
           </div>
         </div>
+        {/* Logout button */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-3 py-2 mt-2 rounded-lg text-sm text-red-600 hover:bg-red-100"
+        >
+          <LogOut className="w-4 h-3" />
+          Logout
+        </button>
       </div>
     </aside>
   );

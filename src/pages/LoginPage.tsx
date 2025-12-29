@@ -26,28 +26,58 @@ const LoginPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
-      return;
-    }
+  // this is the mock handle logic i commented the real one so that i can test without the backend
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    setIsLoading(true);
-    try {
-      await authService.login({ email, password });
-      toast({ title: 'Success', description: 'Logged in successfully' });
-      navigate('/');
-    } catch (error: any) {
-      toast({ 
-        title: 'Login Failed', 
-        description: error.response?.data?.message || 'Invalid credentials', 
-        variant: 'destructive' 
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!email || !password) {
+    toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    // Simulate network
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // MOCK login
+    const mockUser = { email, role: "admin" };
+    localStorage.setItem("token", "mock-token");
+    localStorage.setItem("user", JSON.stringify(mockUser));
+
+    toast({ title: 'Success', description: 'Logged in successfully' });
+
+    navigate("/"); // goes to Index
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+   
+  // real handleLogin logic 
+
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!email || !password) {
+  //     toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   try {
+  //     await authService.login({ email, password });
+  //     toast({ title: 'Success', description: 'Logged in successfully' });
+  //     navigate('/');
+  //   } catch (error: any) {
+  //     toast({ 
+  //       title: 'Login Failed', 
+  //       description: error.response?.data?.message || 'Invalid credentials', 
+  //       variant: 'destructive' 
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
