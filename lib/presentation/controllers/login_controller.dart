@@ -35,6 +35,9 @@ class LoginController extends GetxController {
       await box.write('user', 'Test User');
       await box.write('userId', 3); // Matches SeedData.cs User ID
 
+      // Small delay to ensure token is properly saved
+      await Future.delayed(const Duration(milliseconds: 50));
+
       isLoading.value = false;
       // Redirect to dashboard and set services tab as active
       Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
@@ -53,6 +56,9 @@ class LoginController extends GetxController {
       await box.write('token', response.token);
       await box.write('user', response.user.username);
       await box.write('userId', response.user.id);
+
+      // Small delay to ensure token is properly saved
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Redirect to dashboard and set services tab as active
       Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});

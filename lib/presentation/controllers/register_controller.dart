@@ -17,9 +17,9 @@ class RegisterController extends GetxController {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  
-  // Default user role ID for Patient role
-  final int userRoleId = 4;
+
+  // Patient role ID (will be fetched dynamically from backend)
+  int? userRoleId;
 
   final isLoading = false.obs;
 
@@ -67,7 +67,10 @@ class RegisterController extends GetxController {
     }
 
     if (!_isValidPhone(phoneController.text)) {
-      Get.snackbar('Error', 'Please enter a valid phone number (e.g., +1234567890)');
+      Get.snackbar(
+        'Error',
+        'Please enter a valid phone number (e.g., +1234567890)',
+      );
       return;
     }
 
@@ -93,6 +96,11 @@ class RegisterController extends GetxController {
 
     isLoading.value = true;
     try {
+      // Fetch Patient role ID dynamically if not already fetched
+      if (userRoleId == null) {
+        userRoleId = await registerUseCase.getPatientRoleId();
+      }
+
       final fullname = '${fNameController.text} ${lNameController.text}';
 
       final request = RegisterRequestModel(
@@ -104,28 +112,31 @@ class RegisterController extends GetxController {
         email: emailController.text.trim(),
         phoneNumber: phoneController.text.trim(),
         password: passwordController.text,
-        userRoleId: userRoleId,
+        userRoleId: userRoleId!,
       );
 
       final response = await registerUseCase(request);
-      
+
       if (response.success) {
         Get.snackbar(
-          'Success', 
+          'Success',
           response.message,
           snackPosition: SnackPosition.BOTTOM,
         );
-        Get.offNamed(Routes.OTP_VERIFICATION, arguments: emailController.text.trim());
+        Get.offNamed(
+          Routes.OTP_VERIFICATION,
+          arguments: emailController.text.trim(),
+        );
       } else {
         Get.snackbar(
-          'Registration Failed', 
+          'Registration Failed',
           response.message,
           snackPosition: SnackPosition.BOTTOM,
         );
       }
     } catch (e) {
       Get.snackbar(
-        'Error', 
+        'Error',
         e.toString().replaceAll('Exception: ', ''),
         snackPosition: SnackPosition.BOTTOM,
       );
@@ -133,7 +144,7 @@ class RegisterController extends GetxController {
       isLoading.value = false;
     }
   }
-  
+
   void goToLogin() {
     Get.back();
   }

@@ -21,7 +21,10 @@ class MedicalServiceController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchServices();
+    // Add a small delay to ensure auth token is properly set after login
+    Future.delayed(const Duration(milliseconds: 100), () {
+      fetchServices();
+    });
   }
 
   Future<void> fetchServices() async {
@@ -29,9 +32,17 @@ class MedicalServiceController extends GetxController {
       isLoading.value = true;
       services.value = await _medicalServiceRepository.getMedicalServices();
     } catch (e) {
-      // Get.snackbar('Error', 'Failed to load services: $e');
-      // Quiet fail or retry? User will see empty list.
       print('Error loading services: $e');
+      // If it's a token-related error, retry once after a short delay
+      if (e.toString().contains('401') || e.toString().contains('token')) {
+        print('Retrying services fetch due to auth issue...');
+        await Future.delayed(const Duration(milliseconds: 500));
+        try {
+          services.value = await _medicalServiceRepository.getMedicalServices();
+        } catch (retryError) {
+          print('Retry failed: $retryError');
+        }
+      }
     } finally {
       isLoading.value = false;
     }

@@ -23,17 +23,30 @@ class _ServicesViewState extends State<ServicesView> {
   @override
   void initState() {
     super.initState();
-    // Initialize controller
-    final apiClient = Get.find<ApiClient>();
-    final medicalRemote = MedicalServiceRemoteDataSourceImpl(
-      apiClient: apiClient,
-    );
-    final medicalRepo = MedicalServiceRepositoryImpl(
-      remoteDataSource: medicalRemote,
-    );
-    final cardRemote = CardRemoteDataSourceImpl(apiClient: apiClient);
-    final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
-    controller = Get.put(MedicalServiceController(medicalRepo, cardRepo));
+    // Check if controller already exists, if not create it
+    if (!Get.isRegistered<MedicalServiceController>()) {
+      // Initialize controller
+      final apiClient = Get.find<ApiClient>();
+      final medicalRemote = MedicalServiceRemoteDataSourceImpl(
+        apiClient: apiClient,
+      );
+      final medicalRepo = MedicalServiceRepositoryImpl(
+        remoteDataSource: medicalRemote,
+      );
+      final cardRemote = CardRemoteDataSourceImpl(apiClient: apiClient);
+      final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
+      controller = Get.put(MedicalServiceController(medicalRepo, cardRepo));
+    } else {
+      // Reuse existing controller and refresh services
+      controller = Get.find<MedicalServiceController>();
+      // Refresh services when view is recreated (e.g., after logout/login)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Only refresh if services are empty or if this might be after a fresh login
+        if (controller.services.isEmpty || !controller.isLoading.value) {
+          controller.fetchServices();
+        }
+      });
+    }
   }
 
   @override
@@ -190,76 +203,57 @@ class _ServicesListView extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text('No services found', style: AppTextStyles.bodyLarge),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => controller.fetchServices(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Retry'),
+                      ),
                     ],
                   ),
                 );
               }
 
-              return GridView.builder(
-                padding: const EdgeInsets.all(20),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.75,
-                ),
-                itemCount: controller.services.length,
-                itemBuilder: (context, index) {
-                  final service = controller.services[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: AppColors.cardShadow,
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      child: InkWell(
-                        onTap: () => controller.onServiceSelected(service),
+              return RefreshIndicator(
+                onRefresh: () => controller.fetchServices(),
+                color: AppColors.primaryBlue,
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(20),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemCount: controller.services.length,
+                  itemBuilder: (context, index) {
+                    final service = controller.services[index];
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Service Image
-                            ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(20),
-                                topRight: Radius.circular(20),
-                              ),
-                              child: service.servicePicture.isEmpty
-                                  ? Container(
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            AppColors.primaryBlue.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            AppColors.accentBlue.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                      ),
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.local_hospital_rounded,
-                                          color: AppColors.primaryBlue,
-                                          size: 48,
-                                        ),
-                                      ),
-                                    )
-                                  : Image.network(
-                                      ImageUtils.buildImageUrl(
-                                        service.servicePicture,
-                                      ),
-                                      height: 120,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
+                        boxShadow: AppColors.cardShadow,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        child: InkWell(
+                          onTap: () => controller.onServiceSelected(service),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Service Image
+                              ClipRRect(
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(20),
+                                  topRight: Radius.circular(20),
+                                ),
+                                child: service.servicePicture.isEmpty
+                                    ? Container(
                                         height: 120,
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
@@ -282,67 +276,101 @@ class _ServicesListView extends StatelessWidget {
                                             size: 48,
                                           ),
                                         ),
-                                      ),
-                                    ),
-                            ),
-
-                            // Service Details
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      service.name,
-                                      style: AppTextStyles.h3.copyWith(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Expanded(
-                                      child: Text(
-                                        service.description,
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          fontSize: 12,
-                                          height: 1.3,
+                                      )
+                                    : Image.network(
+                                        ImageUtils.buildImageUrl(
+                                          service.servicePicture,
                                         ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.access_time_rounded,
-                                          size: 14,
-                                          color: AppColors.accentBlue,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${service.durationInMinutes} mins',
-                                          style: AppTextStyles.caption.copyWith(
-                                            color: AppColors.accentBlue,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 11,
+                                        height: 120,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Container(
+                                          height: 120,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                AppColors.primaryBlue
+                                                    .withValues(alpha: 0.1),
+                                                AppColors.accentBlue.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                          ),
+                                          child: const Center(
+                                            child: Icon(
+                                              Icons.local_hospital_rounded,
+                                              color: AppColors.primaryBlue,
+                                              size: 48,
+                                            ),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ],
+                                      ),
+                              ),
+
+                              // Service Details
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        service.name,
+                                        style: AppTextStyles.h3.copyWith(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Expanded(
+                                        child: Text(
+                                          service.description,
+                                          maxLines: 3,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                fontSize: 12,
+                                                height: 1.3,
+                                              ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.access_time_rounded,
+                                            size: 14,
+                                            color: AppColors.accentBlue,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${service.durationInMinutes} mins',
+                                            style: AppTextStyles.caption
+                                                .copyWith(
+                                                  color: AppColors.accentBlue,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 11,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               );
             }),
           ),
