@@ -5,6 +5,9 @@ class MedicalProfessional {
   final String? email;
   final String? specialization;
   final String? profilePictureUrl;
+  final String? jobTitle;
+  final String? educationalBackground;
+  final int? yearsOfExperience;
   final bool isActive;
 
   MedicalProfessional({
@@ -14,6 +17,9 @@ class MedicalProfessional {
     this.email,
     this.specialization,
     this.profilePictureUrl,
+    this.jobTitle,
+    this.educationalBackground,
+    this.yearsOfExperience,
     required this.isActive,
   });
 
@@ -54,7 +60,10 @@ class MedicalProfessional {
           ?.toString(),
       email: (json['email'])?.toString(),
       specialization:
-          (json['specialization'] ?? json['speciality'] ?? json['department'])
+          (json['specialization'] ??
+                  json['speciality'] ??
+                  json['specialty'] ??
+                  json['department'])
               ?.toString(),
       profilePictureUrl:
           (json['profilePictureUrl'] ??
@@ -62,10 +71,25 @@ class MedicalProfessional {
                   json['pictureUrl'] ??
                   json['photo'])
               ?.toString(),
+      jobTitle: (json['jobTitle'] ?? json['job_title'] ?? json['position'])
+          ?.toString(),
+      educationalBackground:
+          (json['educationalBackground'] ??
+                  json['educational_background'] ??
+                  json['education'])
+              ?.toString(),
+      yearsOfExperience: (json['yearsOfExperience'] is int)
+          ? json['yearsOfExperience'] as int
+          : int.tryParse(
+                  '${json['yearsOfExperience'] ?? json['years_of_experience'] ?? 0}',
+                ) ??
+                0,
       isActive: (json['isActive'] is bool)
           ? json['isActive'] as bool
           : (json['active'] is bool)
           ? json['active'] as bool
+          : (json['status']?.toString().toLowerCase() == 'active')
+          ? true
           : true,
     );
   }
@@ -78,6 +102,9 @@ class MedicalProfessional {
       'email': email,
       'specialization': specialization,
       'profilePictureUrl': profilePictureUrl,
+      'jobTitle': jobTitle,
+      'educationalBackground': educationalBackground,
+      'yearsOfExperience': yearsOfExperience,
       'isActive': isActive,
     };
   }

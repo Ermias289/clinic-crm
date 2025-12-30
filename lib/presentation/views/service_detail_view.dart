@@ -382,7 +382,7 @@ class ServiceDetailView extends StatelessWidget {
 
   Widget _buildDoctorsList(ServiceDetailController controller) {
     return SizedBox(
-      height: 160,
+      height: 220, // Increased height to accommodate enhanced doctor cards
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: controller.doctors.length,
@@ -400,6 +400,10 @@ class ServiceDetailView extends StatelessWidget {
   ) {
     return Container(
       width: 120,
+      constraints: const BoxConstraints(
+        minHeight: 160,
+        maxHeight: 220, // Prevent overflow by setting max height
+      ),
       margin: const EdgeInsets.only(right: 16),
       child: GestureDetector(
         onTap: () => controller.onDoctorSelected(doctor),
@@ -411,6 +415,7 @@ class ServiceDetailView extends StatelessWidget {
             boxShadow: AppColors.cardShadow,
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min, // Prevent overflow
             children: [
               // Doctor Avatar
               Container(
@@ -448,17 +453,87 @@ class ServiceDetailView extends StatelessWidget {
 
               const SizedBox(height: 4),
 
-              // Specialization
-              if (doctor.specialization?.isNotEmpty == true)
+              // Job Title
+              if (doctor.jobTitle?.isNotEmpty == true)
                 Text(
-                  doctor.specialization!,
+                  doctor.jobTitle!,
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+
+              // Specialization
+              if (doctor.specialization?.isNotEmpty == true) ...[
+                const SizedBox(height: 2),
+                Text(
+                  doctor.specialization!,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+
+              // Educational Background
+              if (doctor.educationalBackground?.isNotEmpty == true) ...[
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    doctor.educationalBackground!,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.accentBlue,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+
+              // Years of Experience
+              if (doctor.yearsOfExperience != null &&
+                  doctor.yearsOfExperience! > 0) ...[
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.work_outline,
+                      size: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 2),
+                    Flexible(
+                      child: Text(
+                        '${doctor.yearsOfExperience} yrs exp',
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 10,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
