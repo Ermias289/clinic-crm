@@ -14,7 +14,7 @@ import {
 
 export const mockCompany: Company = {
   id: '1',
-  name: 'Bright Smile Dental Clinic',
+  name: 'Lucid Dental Clinic',
   email: 'info@brightsmile.com',
   phone: '+1 (555) 123-4567',
   address: '123 Healthcare Avenue, Medical District, City 12345',

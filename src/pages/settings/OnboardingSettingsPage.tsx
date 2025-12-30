@@ -60,7 +60,7 @@ const OnboardingSettingsPage = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Welcome Email Subject</Label>
-              <Input defaultValue="Welcome to Bright Smile Dental Clinic!" />
+              <Input defaultValue="Welcome to Lucid Dental Clinic!" />
             </div>
             <div className="space-y-2">
               <Label>Welcome Message</Label>
