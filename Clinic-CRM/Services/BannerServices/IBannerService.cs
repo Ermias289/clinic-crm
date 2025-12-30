@@ -9,5 +9,6 @@ namespace Clinic_CRM.Services.BannerServices
         Task<List<Banner>> GetAllBanners();
         Task<Banner> GetBannerById(int Id); 
         Task<List<Banner>> GetAllActiveBanners();
+        Task<Banner> UpdateBanner(int id, string image, bool isActive);
     }
 }

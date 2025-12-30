@@ -70,7 +70,17 @@ namespace Clinic_CRM.Controllers
         }
 
 
-
-
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateBanner(int id, string image, bool isActive)
+        {
+            try
+            {
+                return Ok(await _bannerService.UpdateBanner(id, image, isActive));
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
     }
 }

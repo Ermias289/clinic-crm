@@ -63,5 +63,21 @@ namespace Clinic_CRM.Services.BannerServices
                 .ToListAsync();
         }
 
+        public async Task<Banner> UpdateBanner(int id, string image, bool isActive)
+        {
+            var banner = await _context.Banners.FindAsync(id);
+
+            if (banner == null)
+                throw new KeyNotFoundException("Banner not found");
+
+            banner.Image = image;
+            banner.IsActive = isActive;
+
+            _context.Banners.Update(banner);
+            await _context.SaveChangesAsync();
+
+            return banner;
+        }
+
     }
 }
