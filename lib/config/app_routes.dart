@@ -8,6 +8,7 @@ abstract class Routes {
   static const PROFILE = '/profile';
   static const CARDS = '/cards';
   static const SERVICES = '/services';
+  static const SERVICE_DETAIL = '/service-detail';
   static const OTP_VERIFICATION = '/otp-verification';
   static const BOOK_APPOINTMENT = '/book-appointment';
   static const DOCTOR_SCHEDULE_PICKER = '/doctor-schedule-picker';

@@ -10,7 +10,7 @@ import '../../domain/models/medical_professional_model.dart';
 ///   already used by other datasources (e.g. medical services).
 /// - The backend authorization is expected to be handled by `ApiClient` (token header).
 abstract class DoctorRemoteDataSource {
-  Future<List<MedicalProfessional>> getDoctors();
+  Future<List<MedicalProfessional>> getDoctors({int? branchId});
 
   /// Fetch all schedules (backend currently exposes a general list endpoint).
   /// Filter on the client for a specific doctor.
@@ -26,9 +26,10 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
   DoctorRemoteDataSourceImpl({required this.apiClient});
 
   @override
-  Future<List<MedicalProfessional>> getDoctors() async {
+  Future<List<MedicalProfessional>> getDoctors({int? branchId}) async {
     try {
-      final response = await apiClient.get('/MedicalProfessional');
+      final queryParams = branchId != null ? {'branchId': branchId.toString()} : null;
+      final response = await apiClient.get('/MedicalProfessional', query: queryParams);
 
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to fetch doctors');
@@ -39,7 +40,11 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       if (body is List) {
         return body
             .whereType<dynamic>()
-            .map((e) => MedicalProfessional.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => MedicalProfessional.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
       }
 
@@ -49,7 +54,11 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
         final List data = body['data'] as List;
         return data
             .whereType<dynamic>()
-            .map((e) => MedicalProfessional.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) => MedicalProfessional.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
+            )
             .toList();
       }
 
@@ -65,7 +74,9 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       final response = await apiClient.get('/DoctorSchedule');
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch doctor schedules');
+        throw Exception(
+          response.statusText ?? 'Failed to fetch doctor schedules',
+        );
       }
 
       final body = response.body;
@@ -73,7 +84,10 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       if (body is List) {
         return body
             .whereType<dynamic>()
-            .map((e) => DoctorSchedule.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) =>
+                  DoctorSchedule.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
       }
 
@@ -82,7 +96,10 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
         final List data = body['data'] as List;
         return data
             .whereType<dynamic>()
-            .map((e) => DoctorSchedule.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map(
+              (e) =>
+                  DoctorSchedule.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
             .toList();
       }
 
@@ -93,8 +110,47 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
   }
 
   @override
-  Future<List<DoctorSchedule>> getSchedulesForDoctor(int medicalProfessionalId) async {
-    final schedules = await getDoctorSchedules();
-    return schedules.where((s) => s.medicalProfessionalId == medicalProfessionalId).toList();
+  Future<List<DoctorSchedule>> getSchedulesForDoctor(
+    int medicalProfessionalId,
+  ) async {
+    try {
+      final response = await apiClient.get(
+        '/DoctorSchedule?medicalProfessionalId=$medicalProfessionalId',
+      );
+
+      if (response.hasError) {
+        throw Exception(
+          response.statusText ?? 'Failed to fetch doctor schedules',
+        );
+      }
+
+      final body = response.body;
+
+      if (body is List) {
+        return body
+            .whereType<dynamic>()
+            .map(
+              (e) =>
+                  DoctorSchedule.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
+            .toList();
+      }
+
+      // Defensive fallback in case backend wraps list in an object:
+      if (body is Map && body['data'] is List) {
+        final List data = body['data'] as List;
+        return data
+            .whereType<dynamic>()
+            .map(
+              (e) =>
+                  DoctorSchedule.fromJson(Map<String, dynamic>.from(e as Map)),
+            )
+            .toList();
+      }
+
+      throw Exception('Unexpected response format for doctor schedules');
+    } catch (e) {
+      throw Exception('Error fetching doctor schedules for doctor: $e');
+    }
   }
 }

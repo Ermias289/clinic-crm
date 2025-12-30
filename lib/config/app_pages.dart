@@ -10,7 +10,10 @@ import '../presentation/views/onboarding_view.dart';
 import '../presentation/views/card_selection_view.dart';
 import '../presentation/bindings/card_binding.dart';
 import '../presentation/views/services_list_view.dart';
+import '../presentation/views/service_detail_view.dart';
 import '../presentation/views/appointment_booking_view.dart';
+import '../presentation/bindings/medical_service_binding.dart';
+import '../presentation/bindings/service_detail_binding.dart';
 import '../presentation/views/otp_verification_view.dart';
 import '../presentation/bindings/otp_verification_binding.dart';
 import '../presentation/views/forgot_password_view.dart';
@@ -62,6 +65,12 @@ class AppPages {
     GetPage(
       name: Routes.SERVICES,
       page: () => ServicesListView(),
+      binding: MedicalServiceBinding(),
+    ),
+    GetPage(
+      name: Routes.SERVICE_DETAIL,
+      page: () => const ServiceDetailView(),
+      binding: ServiceDetailBinding(),
     ),
     GetPage(
       name: Routes.BOOK_APPOINTMENT,

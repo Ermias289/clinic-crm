@@ -251,9 +251,26 @@ class CardController extends GetxController {
       }
       print('DEBUG: Card Created. ID: $cardId');
 
-      // 2. Create Payment
+      // 2. Fetch Payment for the Card
+      print('DEBUG: Fetching Payment for Card...');
+      final payments = await repository.getPaymentsByCardId(cardId);
+      if (payments.isEmpty) {
+        throw Exception(
+          'No payment found for the card. Payment may not be prepared yet.',
+        );
+      }
+      final int paymentId = payments.first['id'] ?? 0;
+      if (paymentId == 0) {
+        throw Exception('Failed to retrieve Payment ID from response.');
+      }
+      print('DEBUG: Payment Found. ID: $paymentId');
+
+      // 3. Create Payment
       print('DEBUG: Creating Payment...');
-      await repository.createPayment(cardId, selectedPaymentProof.value!.path);
+      await repository.createPayment(
+        paymentId,
+        selectedPaymentProof.value!.path,
+      );
 
       // Navigation & Success
       Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});

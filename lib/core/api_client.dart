@@ -15,11 +15,6 @@ class ApiClient extends GetConnect {
     // Debug logging
     print('🌐 API Client initialized with baseUrl: $baseUrl');
 
-    httpClient.addRequestModifier((request) {
-      print('🛫 Request: ${request.method} ${request.url}');
-      // Body logging removed to prevent type errors with stream
-      return request;
-    });
 
     httpClient.addResponseModifier((request, response) {
       print('🛬 Response: ${response.statusCode} ${response.bodyString}');

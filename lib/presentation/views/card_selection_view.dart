@@ -205,166 +205,168 @@ class CardSelectionView extends GetView<CardController> {
   }
 
   Widget _buildCardItem(CardSettingModel card) {
-    // Get profile controller for user data
-    ProfileController? profileController;
-    try {
-      profileController = Get.find<ProfileController>();
-    } catch (e) {
-      // ProfileController not available
-    }
+    return GetBuilder<ProfileController>(
+      init: Get.find<ProfileController>(),
+      builder: (profileController) {
+        // Use reactive user data with better fallback
+        final userName =
+            profileController.currentUser.value?.fullname ??
+            profileController.currentUser.value?.fName ??
+            'User';
+        final userEmail =
+            profileController.currentUser.value?.email ?? 'user@example.com';
+        final expiryDate = DateFormat(
+          'MM/yy',
+        ).format(DateTime.now().add(Duration(days: card.expirationDuration)));
+        final maskedCardNumber = '**** **** **** 1234';
 
-    final userName = profileController?.currentUser.value?.fullname ?? 'John Doe';
-    final userEmail = profileController?.currentUser.value?.email ?? 'user@example.com';
-    final expiryDate = DateFormat('MM/yy').format(
-      DateTime.now().add(Duration(days: card.expirationDuration)),
-    );
-    final maskedCardNumber = '**** **** **** 1234';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        children: [
-          // Card Preview
-          Container(
-            height: 240,
-            decoration: BoxDecoration(
-              gradient: _getCardGradient(card.cardType?.name),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Decorative Circles
-                Positioned(
-                  top: -30,
-                  right: -30,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            children: [
+              // Card Preview
+              Container(
+                height: 240,
+                decoration: BoxDecoration(
+                  gradient: _getCardGradient(card.cardType?.name),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
                     ),
-                  ),
+                  ],
                 ),
-                Positioned(
-                  bottom: -20,
-                  left: -20,
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.05),
-                    ),
-                  ),
-                ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top Row: Icon and Subscription Text
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Icon(
-                            Icons.medical_services,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                          Text(
-                            '${card.cardType?.name ?? 'CLINIC'} SUBSCRIPTION',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      // Center: User Name and Card Number
-                      Text(
-                        userName,
-                        style: AppTextStyles.h3.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+                child: Stack(
+                  children: [
+                    // Decorative Circles
+                    Positioned(
+                      top: -30,
+                      right: -30,
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.1),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        maskedCardNumber,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: Colors.white,
-                          letterSpacing: 2,
+                    ),
+                    Positioned(
+                      bottom: -20,
+                      left: -20,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.05),
                         ),
                       ),
-                      const Spacer(),
-                      // Bottom: Expiry, Email, and Request Button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    ),
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          // Top Row: Icon and Subscription Text
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'EXP $expiryDate',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                ),
+                              const Icon(
+                                Icons.medical_services,
+                                color: Colors.white,
+                                size: 32,
                               ),
-                              const SizedBox(height: 4),
                               Text(
-                                userEmail,
-                                style: AppTextStyles.caption.copyWith(
+                                '${card.cardType?.name ?? 'CLINIC'} SUBSCRIPTION',
+                                style: AppTextStyles.bodySmall.copyWith(
                                   color: Colors.white,
-                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
                           ),
-                          // Request Button inside card
-                          ElevatedButton(
-                            onPressed: () => controller.startRequest(card),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryBlue,
-                              foregroundColor: Colors.white,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
+                          const Spacer(),
+                          // Center: User Name and Card Number
+                          Text(
+                            userName,
+                            style: AppTextStyles.h3.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
-                            child: const Text(
-                              'Request',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            maskedCardNumber,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: Colors.white,
+                              letterSpacing: 2,
                             ),
+                          ),
+                          const Spacer(),
+                          // Bottom: Expiry, Email, and Request Button
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'EXP $expiryDate',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    userEmail,
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              // Request Button inside card
+                              ElevatedButton(
+                                onPressed: () => controller.startRequest(card),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Request',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -18,8 +18,8 @@ class RegisterController extends GetxController {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   
-  // Default user role ID (assuming 2 is for standard user, 1 for admin based on API ref)
-  final int userRoleId = 2; 
+  // Default user role ID for Patient role
+  final int userRoleId = 4;
 
   final isLoading = false.obs;
 
@@ -40,52 +40,52 @@ class RegisterController extends GetxController {
       Get.snackbar('Error', 'Username is required');
       return;
     }
-    
+
     if (fNameController.text.isEmpty) {
       Get.snackbar('Error', 'First name is required');
       return;
     }
-    
+
     if (lNameController.text.isEmpty) {
       Get.snackbar('Error', 'Last name is required');
       return;
     }
-    
+
     if (emailController.text.isEmpty) {
       Get.snackbar('Error', 'Email is required');
       return;
     }
-    
+
     if (!_isValidEmail(emailController.text)) {
       Get.snackbar('Error', 'Please enter a valid email address');
       return;
     }
-    
+
     if (phoneController.text.isEmpty) {
       Get.snackbar('Error', 'Phone number is required');
       return;
     }
-    
+
     if (!_isValidPhone(phoneController.text)) {
       Get.snackbar('Error', 'Please enter a valid phone number (e.g., +1234567890)');
       return;
     }
-    
+
     if (passwordController.text.isEmpty) {
       Get.snackbar('Error', 'Password is required');
       return;
     }
-    
+
     if (passwordController.text.length < 8) {
       Get.snackbar('Error', 'Password must be at least 8 characters long');
       return;
     }
-    
+
     if (confirmPasswordController.text.isEmpty) {
       Get.snackbar('Error', 'Please confirm your password');
       return;
     }
-    
+
     if (passwordController.text != confirmPasswordController.text) {
       Get.snackbar('Error', 'Passwords do not match');
       return;
@@ -94,10 +94,6 @@ class RegisterController extends GetxController {
     isLoading.value = true;
     try {
       final fullname = '${fNameController.text} ${lNameController.text}';
-      
-      // Fetch Patient Role ID dynamically
-      final int roleId = await registerUseCase.getPatientRoleId();
-      print('DEBUG: Fetched Patient Role ID: $roleId');
 
       final request = RegisterRequestModel(
         username: usernameController.text.trim(),
@@ -108,7 +104,7 @@ class RegisterController extends GetxController {
         email: emailController.text.trim(),
         phoneNumber: phoneController.text.trim(),
         password: passwordController.text,
-        userRoleId: roleId,
+        userRoleId: userRoleId,
       );
 
       final response = await registerUseCase(request);

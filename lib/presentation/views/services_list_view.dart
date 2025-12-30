@@ -73,7 +73,7 @@ class _ServicesListView extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryBlue.withOpacity(0.3),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -91,7 +91,7 @@ class _ServicesListView extends StatelessWidget {
                       height: 150,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                       ),
                     ),
                   ),
@@ -103,7 +103,7 @@ class _ServicesListView extends StatelessWidget {
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                       ),
                     ),
                   ),
@@ -135,7 +135,9 @@ class _ServicesListView extends StatelessWidget {
                                   Text(
                                     'Choose a medical service',
                                     style: AppTextStyles.bodyMedium.copyWith(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
+                                      ),
                                       fontSize: 16,
                                     ),
                                   ),
@@ -144,7 +146,7 @@ class _ServicesListView extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(
@@ -230,8 +232,12 @@ class _ServicesListView extends StatelessWidget {
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            AppColors.primaryBlue.withOpacity(0.1),
-                                            AppColors.accentBlue.withOpacity(0.1),
+                                            AppColors.primaryBlue.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            AppColors.accentBlue.withValues(
+                                              alpha: 0.1,
+                                            ),
                                           ],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
@@ -255,8 +261,12 @@ class _ServicesListView extends StatelessWidget {
                                         decoration: BoxDecoration(
                                           gradient: LinearGradient(
                                             colors: [
-                                              AppColors.primaryBlue.withOpacity(0.1),
-                                              AppColors.accentBlue.withOpacity(0.1),
+                                              AppColors.primaryBlue.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              AppColors.accentBlue.withValues(
+                                                alpha: 0.1,
+                                              ),
                                             ],
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,

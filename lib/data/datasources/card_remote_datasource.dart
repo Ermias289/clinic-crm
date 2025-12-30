@@ -9,7 +9,8 @@ abstract class CardRemoteDataSource {
   Future<Map<String, dynamic>> requestCard(
     RequestCardModel request,
   ); // Changed to return Map (Card object)
-  Future<bool> createPayment(int cardId, String proofPath);
+  Future<List<Map<String, dynamic>>> getPaymentsByCardId(int cardId);
+  Future<bool> createPayment(int paymentId, String proofPath);
   Future<Map<String, dynamic>?> getMyCard();
 }
 
@@ -55,7 +56,23 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   }
 
   @override
-  Future<bool> createPayment(int cardId, String proofPath) async {
+  Future<List<Map<String, dynamic>>> getPaymentsByCardId(int cardId) async {
+    try {
+      final response = await apiClient.get('/Payment/bycardId/$cardId');
+
+      if (response.hasError) {
+        throw Exception(response.statusText ?? 'Failed to fetch payments');
+      }
+
+      final List<dynamic> data = response.body;
+      return data.map((e) => e as Map<String, dynamic>).toList();
+    } catch (e) {
+      throw Exception('Error fetching payments: $e');
+    }
+  }
+
+  @override
+  Future<bool> createPayment(int paymentId, String proofPath) async {
     try {
       // Check file size: 2MB limit
       final file = File(proofPath);
@@ -84,7 +101,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
 
       // 2. Create Payment Request with the uploaded file name
       final body = {
-        'id': cardId,
+        'id': paymentId,
         'requestedAmount': 0,
         'paymentProof': uploadedFileName,
       };

@@ -10,7 +10,10 @@ class MedicalServiceController extends GetxController {
   // CardRepository kept for future use when card checks are re-enabled
   final CardRepository _cardRepository;
 
-  MedicalServiceController(this._medicalServiceRepository, this._cardRepository);
+  MedicalServiceController(
+    this._medicalServiceRepository,
+    this._cardRepository,
+  );
 
   final services = <MedicalService>[].obs;
   final isLoading = true.obs;
@@ -21,7 +24,7 @@ class MedicalServiceController extends GetxController {
     fetchServices();
   }
 
-  Future<void> fetchServices() async { 
+  Future<void> fetchServices() async {
     try {
       isLoading.value = true;
       services.value = await _medicalServiceRepository.getMedicalServices();
@@ -35,9 +38,7 @@ class MedicalServiceController extends GetxController {
   }
 
   Future<void> onServiceSelected(MedicalService service) async {
-    // TEMP DEV OVERRIDE:
-    // For UI testing we skip card checks and go straight to booking.
-    // Restore the original logic when you want to enforce card requirements again.
-    Get.toNamed(Routes.BOOK_APPOINTMENT, arguments: service);
+    // Navigate to service detail page instead of directly to booking
+    Get.toNamed(Routes.SERVICE_DETAIL, arguments: service);
   }
 }
