@@ -257,10 +257,15 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         if (response.body is Map && response.body['message'] != null) {
           final backendMessage = response.body['message'] as String;
 
-          if (backendMessage.contains('card will expire')) {
+          // Only show activation message for invalid/very old expiration dates
+          // If the expiration date is 0001-01-02 or similar, it means card needs activation
+          if (backendMessage.contains('card will expire') &&
+              (backendMessage.contains('0001-01-') ||
+                  backendMessage.contains('1900-01-'))) {
             errorMessage =
                 'Your card needs to be activated before booking appointments. Please contact support or wait for card approval.';
           } else {
+            // For legitimate expiration dates or other errors, show the backend message
             errorMessage = backendMessage;
           }
         }

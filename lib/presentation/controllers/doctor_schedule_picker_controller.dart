@@ -102,7 +102,9 @@ class DoctorSchedulePickerController extends GetxController {
   }
 
   bool get canContinue =>
-      selectedDoctor.value != null && selectedDate.value != null && selectedTime.value != null;
+      selectedDoctor.value != null &&
+      selectedDate.value != null &&
+      selectedTime.value != null;
 
   /// Returns a combined DateTime for the selected date + time (local time),
   /// or null if incomplete.
@@ -179,10 +181,15 @@ class DoctorSchedulePickerController extends GetxController {
 
       // If dayOfWeek is provided, only include matching days.
       final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
+      print(
+        'DEBUG: Processing schedule - Day: ${schedule.dayOfWeek}, Start: ${schedule.startTime}, End: ${schedule.endTime}, Parsed DOW: $targetDow',
+      );
 
-      for (var day = clampedStart;
-          !day.isAfter(clampedEnd);
-          day = day.add(const Duration(days: 1))) {
+      for (
+        var day = clampedStart;
+        !day.isAfter(clampedEnd);
+        day = day.add(const Duration(days: 1))
+      ) {
         if (targetDow != null && day.weekday != targetDow) continue;
 
         // Only add the date if it has at least one available slot.
@@ -246,7 +253,10 @@ class DoctorSchedulePickerController extends GetxController {
     }
   }
 
-  List<TimeOfDay> _buildTimeSlotsForScheduleOnDate(DoctorSchedule schedule, DateTime date) {
+  List<TimeOfDay> _buildTimeSlotsForScheduleOnDate(
+    DoctorSchedule schedule,
+    DateTime date,
+  ) {
     final from = _parseTimeOfDay(schedule.startTime);
     final to = _parseTimeOfDay(schedule.endTime);
 
@@ -258,7 +268,8 @@ class DoctorSchedulePickerController extends GetxController {
     // If end is not after start, treat as invalid.
     if (toMin <= fromMin) return const [];
 
-    final slotMinutes = schedule.slotDurationInMinutes ?? _serviceDurationInMinutes ?? 30;
+    final slotMinutes =
+        schedule.slotDurationInMinutes ?? _serviceDurationInMinutes ?? 30;
     if (slotMinutes <= 0) return const [];
 
     // Build slots [start, end) with step = slotMinutes.

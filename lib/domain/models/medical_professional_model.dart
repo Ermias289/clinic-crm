@@ -19,13 +19,21 @@ class MedicalProfessional {
 
   factory MedicalProfessional.fromJson(Map<String, dynamic> json) {
     // Backend naming can vary; normalize a few common possibilities.
-    final fName = (json['fName'] ?? json['firstName'] ?? json['firstname'])?.toString();
-    final mName = (json['mName'] ?? json['middleName'] ?? json['middlename'])?.toString();
-    final lName = (json['lName'] ?? json['lastName'] ?? json['lastname'])?.toString();
+    final fName = (json['fName'] ?? json['firstName'] ?? json['firstname'])
+        ?.toString();
+    final mName = (json['mName'] ?? json['middleName'] ?? json['middlename'])
+        ?.toString();
+    final lName = (json['lName'] ?? json['lastName'] ?? json['lastname'])
+        ?.toString();
 
     String buildName() {
       final direct =
-          (json['fullName'] ?? json['fullname'] ?? json['name'] ?? json['userName'] ?? json['username'])?.toString();
+          (json['fullName'] ??
+                  json['fullname'] ??
+                  json['name'] ??
+                  json['userName'] ??
+                  json['username'])
+              ?.toString();
       if (direct != null && direct.trim().isNotEmpty) return direct.trim();
 
       final parts = <String>[];
@@ -38,18 +46,27 @@ class MedicalProfessional {
     }
 
     return MedicalProfessional(
-      id: (json['id'] is int) ? json['id'] as int : int.tryParse('${json['id'] ?? 0}') ?? 0,
+      id: (json['id'] is int)
+          ? json['id'] as int
+          : int.tryParse('${json['id'] ?? 0}') ?? 0,
       fullName: buildName(),
-      phoneNumber: (json['phoneNumber'] ?? json['phone'] ?? json['mobile'])?.toString(),
-      email: (json['email'])?.toString(),
-      specialization: (json['specialization'] ?? json['speciality'] ?? json['department'])?.toString(),
-      profilePictureUrl: (json['profilePictureUrl'] ?? json['profilePicture'] ?? json['pictureUrl'] ?? json['photo'])
+      phoneNumber: (json['phoneNumber'] ?? json['phone'] ?? json['mobile'])
           ?.toString(),
+      email: (json['email'])?.toString(),
+      specialization:
+          (json['specialization'] ?? json['speciality'] ?? json['department'])
+              ?.toString(),
+      profilePictureUrl:
+          (json['profilePictureUrl'] ??
+                  json['profilePicture'] ??
+                  json['pictureUrl'] ??
+                  json['photo'])
+              ?.toString(),
       isActive: (json['isActive'] is bool)
           ? json['isActive'] as bool
           : (json['active'] is bool)
-              ? json['active'] as bool
-              : true,
+          ? json['active'] as bool
+          : true,
     );
   }
 
@@ -124,7 +141,10 @@ class DoctorSchedule {
   }
 
   factory DoctorSchedule.fromJson(Map<String, dynamic> json) {
-    final mpIdRaw = json['medicalProfessionalId'] ?? json['doctorId'] ?? json['medicalProfessionalID'];
+    final mpIdRaw =
+        json['medicalProfessionalId'] ??
+        json['doctorId'] ??
+        json['medicalProfessionalID'];
     final mpId = (mpIdRaw is int) ? mpIdRaw : int.tryParse('$mpIdRaw') ?? 0;
 
     MedicalProfessional? mp;
@@ -134,7 +154,9 @@ class DoctorSchedule {
     }
 
     return DoctorSchedule(
-      id: (json['id'] is int) ? json['id'] as int : int.tryParse('${json['id'] ?? 0}') ?? 0,
+      id: (json['id'] is int)
+          ? json['id'] as int
+          : int.tryParse('${json['id'] ?? 0}') ?? 0,
       medicalProfessionalId: mpId,
       medicalProfessional: mp,
       branchSettingId: (json['branchSettingId'] is int)
@@ -143,19 +165,27 @@ class DoctorSchedule {
       medicalServiceId: (json['medicalServiceId'] is int)
           ? json['medicalServiceId'] as int
           : int.tryParse('${json['medicalServiceId'] ?? ''}'),
-      dayOfWeek: (json['dayOfWeek'] ?? json['workingDay'] ?? json['day'])?.toString(),
-      startTime: (json['startTime'] ?? json['from'] ?? json['timeFrom'])?.toString(),
+      dayOfWeek:
+          (json['dayOfWeek'] ??
+                  json['weekDay'] ??
+                  json['workingDay'] ??
+                  json['day'])
+              ?.toString(),
+      startTime: (json['startTime'] ?? json['from'] ?? json['timeFrom'])
+          ?.toString(),
       endTime: (json['endTime'] ?? json['to'] ?? json['timeTo'])?.toString(),
       startDate: _tryParseDate(json['startDate'] ?? json['fromDate']),
       endDate: _tryParseDate(json['endDate'] ?? json['toDate']),
       slotDurationInMinutes: (json['slotDurationInMinutes'] is int)
           ? json['slotDurationInMinutes'] as int
-          : int.tryParse('${json['slotDurationInMinutes'] ?? json['durationInMinutes'] ?? ''}'),
+          : int.tryParse(
+              '${json['slotDurationInMinutes'] ?? json['durationInMinutes'] ?? ''}',
+            ),
       isActive: (json['isActive'] is bool)
           ? json['isActive'] as bool
           : (json['active'] is bool)
-              ? json['active'] as bool
-              : true,
+          ? json['active'] as bool
+          : true,
     );
   }
 
