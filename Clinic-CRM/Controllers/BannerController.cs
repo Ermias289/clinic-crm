@@ -1,8 +1,10 @@
 ﻿using Clinic_CRM.Helpers;
 using Clinic_CRM.Services.BannerServices;
+using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
+using static Clinic_CRM.Helpers.Constants;
 
 namespace Clinic_CRM.Controllers
 {
@@ -11,10 +13,12 @@ namespace Clinic_CRM.Controllers
     public class BannerController : ControllerBase
     {
         private readonly IBannerService _bannerService;
+        private readonly IUserService _userService;
 
-        public BannerController(IBannerService bannerService)
+        public BannerController(IBannerService bannerService, IUserService userService)
         {
             _bannerService = bannerService;
+            _userService = userService;
         }
 
         [HttpPost("add")]
@@ -22,6 +26,11 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUserOnBoarding))
+                    throw new UnauthorizedAccessException();
+
                 return Ok(await _bannerService.AddBanner(Image));
             }
             catch (Exception ex)
@@ -61,6 +70,11 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUserOnBoarding))
+                    throw new UnauthorizedAccessException();
+
                 return Ok(await _bannerService.RemoveBanner(id));
             }
             catch (Exception ex)
@@ -75,6 +89,11 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanAddUserOnBoarding))
+                    throw new UnauthorizedAccessException();
+
                 return Ok(await _bannerService.UpdateBanner(id, image, isActive));
             }
             catch (Exception ex)
