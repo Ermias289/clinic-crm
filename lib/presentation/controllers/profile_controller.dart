@@ -33,22 +33,64 @@ class ProfileController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Load stored user data immediately for quick display
+    loadStoredUserData();
+    // Then load full profile from API
     loadUserProfile();
+  }
+
+  void loadStoredUserData() {
+    // Get stored user data from login for immediate display
+    final storedUsername = box.read('user');
+    final storedUserId = box.read('userId');
+    final storedFullname = box.read('userFullname');
+    final storedFName = box.read('userFName');
+    final storedEmail = box.read('userEmail');
+
+    if (storedUsername != null && storedUserId != null) {
+      // Create a user model with stored data for immediate display
+      currentUser.value = UserModel(
+        id: storedUserId,
+        username: storedUsername,
+        fullname: storedFullname ?? storedFName ?? storedUsername,
+        fName: storedFName ?? storedUsername,
+        email: storedEmail,
+      );
+
+      // Also populate form controllers with stored data
+      usernameController.text = storedUsername;
+      fullnameController.text = storedFullname ?? storedFName ?? storedUsername;
+      fNameController.text = storedFName ?? storedUsername;
+      emailController.text = storedEmail ?? '';
+    }
+  }
+
+  void clearUserData() {
+    currentUser.value = null;
+    usernameController.clear();
+    fullnameController.clear();
+    fNameController.clear();
+    mNameController.clear();
+    lNameController.clear();
+    emailController.clear();
+    phoneController.clear();
   }
 
   Future<void> loadUserProfile() async {
     try {
       isLoading.value = true;
-      
+
       // Get user ID from storage (saved during login)
       final userId = box.read('userId');
-      
+
       if (userId != null) {
         // TEMPORARY: Mock user data for testing without backend
         // TODO: Remove this before production
         if (userId == 1) {
-          await Future.delayed(const Duration(milliseconds: 300)); // Simulate API call
-          
+          await Future.delayed(
+            const Duration(milliseconds: 300),
+          ); // Simulate API call
+
           currentUser.value = UserModel(
             id: 1,
             username: 'testuser',
@@ -61,7 +103,7 @@ class ProfileController extends GetxController {
             roleName: 'User',
             userRoleId: 2,
           );
-          
+
           // Populate form controllers
           usernameController.text = 'testuser';
           fullnameController.text = 'Test User';
@@ -70,15 +112,15 @@ class ProfileController extends GetxController {
           lNameController.text = 'User';
           emailController.text = 'test@example.com';
           phoneController.text = '+1234567890';
-          
+
           isLoading.value = false;
           return;
         }
         // END TEMPORARY
-        
+
         final user = await userDataSource.getUserById(userId);
         currentUser.value = user;
-        
+
         // Populate form controllers
         usernameController.text = user.username ?? '';
         fullnameController.text = user.fullname ?? '';
@@ -127,7 +169,7 @@ class ProfileController extends GetxController {
 
       final updatedUser = await userDataSource.updateUser(userId, data);
       currentUser.value = updatedUser;
-      
+
       // Update stored username
       box.write('user', updatedUser.username);
 
@@ -178,8 +220,9 @@ class ProfileController extends GetxController {
     try {
       isLoading.value = true;
 
-      final phoneOrEmail = currentUser.value?.email ?? currentUser.value?.phoneNumber ?? '';
-      
+      final phoneOrEmail =
+          currentUser.value?.email ?? currentUser.value?.phoneNumber ?? '';
+
       await userDataSource.changePassword(
         phoneOrEmail,
         oldPasswordController.text,
@@ -235,7 +278,9 @@ class ProfileController extends GetxController {
             const SizedBox(height: 16),
             TextField(
               controller: confirmPasswordController,
-              decoration: const InputDecoration(labelText: 'Confirm New Password'),
+              decoration: const InputDecoration(
+                labelText: 'Confirm New Password',
+              ),
               obscureText: true,
             ),
           ],
@@ -250,16 +295,18 @@ class ProfileController extends GetxController {
             },
             child: const Text('Cancel'),
           ),
-          Obx(() => ElevatedButton(
-            onPressed: isLoading.value ? null : changePassword,
-            child: isLoading.value
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Change Password'),
-          )),
+          Obx(
+            () => ElevatedButton(
+              onPressed: isLoading.value ? null : changePassword,
+              child: isLoading.value
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Change Password'),
+            ),
+          ),
         ],
       ),
     );

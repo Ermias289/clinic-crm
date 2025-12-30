@@ -56,6 +56,10 @@ class LoginController extends GetxController {
       await box.write('token', response.token);
       await box.write('user', response.user.username);
       await box.write('userId', response.user.id);
+      // Save additional user data for immediate display
+      await box.write('userFullname', response.user.fullname);
+      await box.write('userFName', response.user.fName);
+      await box.write('userEmail', response.user.email);
 
       // Small delay to ensure token is properly saved
       await Future.delayed(const Duration(milliseconds: 50));
