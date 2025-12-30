@@ -8,6 +8,7 @@ import '../../core/api_client.dart';
 import '../controllers/medical_service_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/image_utils.dart';
 
 class ServicesView extends StatefulWidget {
   const ServicesView({super.key});
@@ -252,7 +253,9 @@ class _ServicesListView extends StatelessWidget {
                                       ),
                                     )
                                   : Image.network(
-                                      service.servicePicture,
+                                      ImageUtils.buildImageUrl(
+                                        service.servicePicture,
+                                      ),
                                       height: 120,
                                       width: double.infinity,
                                       fit: BoxFit.cover,

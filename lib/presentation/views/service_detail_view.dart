@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/image_utils.dart';
 import '../../domain/models/medical_professional_model.dart';
 import '../controllers/service_detail_controller.dart';
 import '../widgets/custom_button.dart';
@@ -47,7 +48,9 @@ class ServiceDetailView extends StatelessWidget {
                               child:
                                   controller.service.servicePicture.isNotEmpty
                                   ? Image.network(
-                                      controller.service.servicePicture,
+                                      ImageUtils.buildImageUrl(
+                                        controller.service.servicePicture,
+                                      ),
                                       fit: BoxFit.cover,
                                       errorBuilder:
                                           (context, error, stackTrace) =>
@@ -420,7 +423,7 @@ class ServiceDetailView extends StatelessWidget {
                 child: ClipOval(
                   child: doctor.profilePictureUrl?.isNotEmpty == true
                       ? Image.network(
-                          doctor.profilePictureUrl!,
+                          ImageUtils.buildImageUrl(doctor.profilePictureUrl!),
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
                               _buildDoctorAvatar(),

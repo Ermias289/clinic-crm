@@ -10,7 +10,7 @@ import '../../domain/models/medical_professional_model.dart';
 ///   already used by other datasources (e.g. medical services).
 /// - The backend authorization is expected to be handled by `ApiClient` (token header).
 abstract class DoctorRemoteDataSource {
-  Future<List<MedicalProfessional>> getDoctors({int? branchId});
+  Future<List<MedicalProfessional>> getDoctors();
 
   /// Fetch all schedules (backend currently exposes a general list endpoint).
   /// Filter on the client for a specific doctor.
@@ -26,10 +26,9 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
   DoctorRemoteDataSourceImpl({required this.apiClient});
 
   @override
-  Future<List<MedicalProfessional>> getDoctors({int? branchId}) async {
+  Future<List<MedicalProfessional>> getDoctors() async {
     try {
-      final queryParams = branchId != null ? {'branchId': branchId.toString()} : null;
-      final response = await apiClient.get('/MedicalProfessional', query: queryParams);
+      final response = await apiClient.get('/MedicalProfessional');
 
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to fetch doctors');

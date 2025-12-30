@@ -7,6 +7,7 @@ import '../../data/models/request_card_model.dart';
 import '../../data/models/bank_model.dart';
 import '../../data/repositories/card_repository_impl.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';
+import '../../config/app_routes.dart';
 import 'package:get_storage/get_storage.dart';
 import 'profile_controller.dart';
 
@@ -203,12 +204,22 @@ class CardController extends GetxController {
       return;
     }
 
+    print('DEBUG: Starting card request submission...');
+    print('DEBUG: Payment proof file: ${selectedPaymentProof.value!.path}');
+
     try {
       isLoading.value = true;
       final patientId =
           _box.read('userId') ?? 0; // Ensure this is valid or handle 0
 
-      // Construct Patient Details
+      // 1. Upload Payment Proof Image First
+      print('DEBUG: Uploading payment proof image...');
+      final uploadedFileName = await repository.uploadPaymentProof(
+        selectedPaymentProof.value!.path,
+      );
+      print('DEBUG: Payment proof uploaded. Filename: $uploadedFileName');
+
+      // 2. Construct Patient Details
       final patientDetails = PatientDetails(
         fName: fNameController.text,
         mName: mNameController.text,
@@ -231,19 +242,16 @@ class CardController extends GetxController {
       );
 
       final request = RequestCardModel(
-        patientId:
-            patientId, // Use the userId as patientId, assuming patient.Id == user.Id or existing patient
+        patientId: patientId,
         cardTypeId: selectedCard.value?.cardTypeId ?? 0,
-        requestRemark: 'Mobile App Request',
+        requestRemark: 'Mobile App Request - Payment Proof: $uploadedFileName',
         patient: patientDetails,
       );
 
-      // 1. Request Card
+      // 3. Request Card
       print('DEBUG: Requesting Card...');
       final cardResponse = await repository.requestCard(request);
       // Assuming response contains 'id' of the created card.
-      // Need to inspect API response structure. Usually it returns the object.
-      // If 'id' key exists.
       final int cardId = cardResponse['id'] ?? 0;
 
       if (cardId == 0) {
@@ -251,38 +259,21 @@ class CardController extends GetxController {
       }
       print('DEBUG: Card Created. ID: $cardId');
 
-      // 2. Fetch Payment for the Card
-      print('DEBUG: Fetching Payment for Card...');
-      final payments = await repository.getPaymentsByCardId(cardId);
-      if (payments.isEmpty) {
-        throw Exception(
-          'No payment found for the card. Payment may not be prepared yet.',
-        );
-      }
-      final int paymentId = payments.first['id'] ?? 0;
-      if (paymentId == 0) {
-        throw Exception('Failed to retrieve Payment ID from response.');
-      }
-      print('DEBUG: Payment Found. ID: $paymentId');
-
-      // 3. Create Payment
-      print('DEBUG: Creating Payment...');
-      await repository.createPayment(
-        paymentId,
-        selectedPaymentProof.value!.path,
-      );
-
       // Navigation & Success
-      Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
+      print('DEBUG: Navigating to dashboard...');
+      Get.offAllNamed(Routes.DASHBOARD, arguments: {'initialTab': 2});
 
+      print('DEBUG: Showing success message...');
       Get.snackbar(
         'Success',
-        'Your request has been submitted successfully! We will review your payment.',
+        'Your card request and payment proof have been submitted successfully! We will review your request.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 5),
       );
+
+      print('DEBUG: Card request completed successfully!');
     } catch (e) {
       print('DEBUG: Error in submitRequest: $e');
       Get.snackbar(

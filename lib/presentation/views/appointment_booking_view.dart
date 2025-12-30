@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/medical_service_model.dart';
 import '../../core/theme/app_colors.dart';
@@ -56,7 +57,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         selectedDateTime != null) {
       // Show confirmation dialog
       final confirmed = await _showConfirmationDialog();
-      
+
       if (confirmed == true) {
         await _bookAppointment();
       }
@@ -102,7 +103,9 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
               const SizedBox(height: 8),
               Text(
                 'Please review your appointment details',
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -114,9 +117,17 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                 ),
                 child: Column(
                   children: [
-                    _buildDetailRow(Icons.medical_services, 'Service', service.name),
+                    _buildDetailRow(
+                      Icons.medical_services,
+                      'Service',
+                      service.name,
+                    ),
                     const Divider(height: 24),
-                    _buildDetailRow(Icons.person, 'Doctor', selectedDoctorName ?? 'N/A'),
+                    _buildDetailRow(
+                      Icons.person,
+                      'Doctor',
+                      selectedDoctorName ?? 'N/A',
+                    ),
                     const Divider(height: 24),
                     _buildDetailRow(
                       Icons.calendar_today,
@@ -145,7 +156,10 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Cancel', style: TextStyle(fontSize: 16)),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -161,7 +175,13 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text('Proceed', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Proceed',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -187,7 +207,9 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
               const SizedBox(height: 2),
               Text(
                 value,
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -207,14 +229,19 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       );
 
       final apiClient = Get.find<ApiClient>();
-      
+
+      // Get patient ID from storage
+      final box = GetStorage();
+      final patientId = box.read('userId') ?? 0;
+
       // Format date and time for API
       final dateOnly = DateFormat('yyyy-MM-dd').format(selectedDate!);
       final timeOnly = DateFormat('H:mm').format(selectedDateTime!);
-      
+
       final response = await apiClient.post('/Appointment', {
         'dentistryId': service.id,
         'medicalProfessionalId': selectedDoctorId,
+        'patientId': patientId, // Added missing patient ID
         'day': dateOnly,
         'reservationTime': timeOnly,
       });
@@ -223,7 +250,22 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       Get.back();
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to book appointment');
+        // Handle specific error messages
+        String errorMessage =
+            response.statusText ?? 'Failed to book appointment';
+
+        if (response.body is Map && response.body['message'] != null) {
+          final backendMessage = response.body['message'] as String;
+
+          if (backendMessage.contains('card will expire')) {
+            errorMessage =
+                'Your card needs to be activated before booking appointments. Please contact support or wait for card approval.';
+          } else {
+            errorMessage = backendMessage;
+          }
+        }
+
+        throw Exception(errorMessage);
       }
 
       // Show success message
@@ -239,13 +281,12 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
 
       // Navigate back to dashboard
       Get.until((route) => route.isFirst);
-      
     } catch (e) {
       // Close loading dialog if still open
       if (Get.isDialogOpen ?? false) {
         Get.back();
       }
-      
+
       Get.snackbar(
         'Error',
         'Failed to book appointment: ${e.toString()}',
@@ -294,7 +335,10 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -302,21 +346,29 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                           children: [
                             IconButton(
                               onPressed: () => Get.back(),
-                              icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                              icon: const Icon(
+                                Icons.arrow_back_ios,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                             ),
                             const SizedBox(width: 16),
                             Text(
                               'Select Schedule',
-                              style: AppTextStyles.h2.copyWith(color: Colors.white),
+                              style: AppTextStyles.h2.copyWith(
+                                color: Colors.white,
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 20),
                         Text(
                           'Service',
-                          style: AppTextStyles.caption.copyWith(color: Colors.white70),
+                          style: AppTextStyles.caption.copyWith(
+                            color: Colors.white70,
+                          ),
                         ),
                         Text(
                           service.name,
@@ -349,12 +401,15 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
 
                     _buildSelectionCard(
                       title: 'Select Doctor & Slot',
-                      value: (selectedDoctorName == null || selectedDateTime == null)
+                      value:
+                          (selectedDoctorName == null ||
+                              selectedDateTime == null)
                           ? 'Choose Doctor, Date & Time'
                           : '${selectedDoctorName!} • ${DateFormat('EEE, d MMM').format(selectedDateTime!)} • ${DateFormat.jm().format(selectedDateTime!)}',
                       icon: Icons.event_available_rounded,
                       onTap: _openDoctorSchedulePicker,
-                      isSelected: selectedDoctorId != null && selectedDateTime != null,
+                      isSelected:
+                          selectedDoctorId != null && selectedDateTime != null,
                     ),
 
                     const SizedBox(height: 40),
@@ -374,7 +429,13 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text('Book Appointment', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Book Appointment',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -417,12 +478,16 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : AppColors.backgroundLight,
+                    color: isSelected
+                        ? AppColors.primaryBlue.withOpacity(0.1)
+                        : AppColors.backgroundLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icon,
-                    color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.primaryBlue
+                        : AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -430,16 +495,15 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: AppTextStyles.caption,
-                      ),
+                      Text(title, style: AppTextStyles.caption),
                       const SizedBox(height: 4),
                       Text(
                         value,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? AppColors.textPrimary : AppColors.textHint,
+                          color: isSelected
+                              ? AppColors.textPrimary
+                              : AppColors.textHint,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -450,7 +514,9 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: isSelected ? AppColors.primaryBlue : AppColors.textHint,
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : AppColors.textHint,
                 ),
               ],
             ),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/image_utils.dart';
 import '../../domain/models/medical_service_model.dart';
 import '../controllers/doctor_schedule_picker_controller.dart';
 
@@ -27,7 +28,8 @@ class DoctorSchedulePickerView extends StatefulWidget {
   const DoctorSchedulePickerView({super.key});
 
   @override
-  State<DoctorSchedulePickerView> createState() => _DoctorSchedulePickerViewState();
+  State<DoctorSchedulePickerView> createState() =>
+      _DoctorSchedulePickerViewState();
 }
 
 class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
@@ -107,7 +109,10 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
                     Text('Doctor', style: AppTextStyles.h3),
                     const SizedBox(height: 8),
-                    Text('Choose your preferred doctor', style: AppTextStyles.bodySmall),
+                    Text(
+                      'Choose your preferred doctor',
+                      style: AppTextStyles.bodySmall,
+                    ),
                     const SizedBox(height: 16),
 
                     _buildDoctorSection(),
@@ -146,8 +151,11 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryBlue,
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor: AppColors.primaryBlue.withOpacity(0.4),
-                          disabledForegroundColor: Colors.white.withOpacity(0.9),
+                          disabledBackgroundColor: AppColors.primaryBlue
+                              .withOpacity(0.4),
+                          disabledForegroundColor: Colors.white.withOpacity(
+                            0.9,
+                          ),
                           elevation: 8,
                           shadowColor: AppColors.primaryBlue.withOpacity(0.4),
                           shape: RoundedRectangleBorder(
@@ -156,7 +164,10 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                         ),
                         child: const Text(
                           'Continue',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -241,16 +252,18 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
                   return GridView.builder(
                     padding: const EdgeInsets.all(16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.85,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.85,
+                        ),
                     itemCount: list.length,
                     itemBuilder: (context, index) {
                       final doctor = list[index];
-                      final selected = _controller.selectedDoctor.value?.id == doctor.id;
+                      final selected =
+                          _controller.selectedDoctor.value?.id == doctor.id;
 
                       return InkWell(
                         onTap: () async {
@@ -260,10 +273,14 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: selected ? AppColors.primaryBlue.withOpacity(0.08) : Colors.white,
+                            color: selected
+                                ? AppColors.primaryBlue.withOpacity(0.08)
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: selected ? AppColors.primaryBlue : AppColors.textHint.withOpacity(0.15),
+                              color: selected
+                                  ? AppColors.primaryBlue
+                                  : AppColors.textHint.withOpacity(0.15),
                               width: 1.5,
                             ),
                             boxShadow: AppColors.softShadow,
@@ -281,28 +298,42 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: selected ? AppColors.primaryBlue : AppColors.textHint.withOpacity(0.2),
+                                        color: selected
+                                            ? AppColors.primaryBlue
+                                            : AppColors.textHint.withOpacity(
+                                                0.2,
+                                              ),
                                         width: 2,
                                       ),
                                     ),
                                     child: ClipOval(
-                                      child: doctor.profilePictureUrl != null && doctor.profilePictureUrl!.isNotEmpty
+                                      child:
+                                          doctor.profilePictureUrl != null &&
+                                              doctor
+                                                  .profilePictureUrl!
+                                                  .isNotEmpty
                                           ? Image.network(
-                                              doctor.profilePictureUrl!,
+                                              ImageUtils.buildImageUrl(
+                                                doctor.profilePictureUrl!,
+                                              ),
                                               width: 70,
                                               height: 70,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Container(
-                                                color: AppColors.primaryBlue.withOpacity(0.1),
-                                                child: Icon(
-                                                  Icons.person_rounded,
-                                                  color: AppColors.primaryBlue,
-                                                  size: 35,
-                                                ),
-                                              ),
+                                              errorBuilder: (_, __, ___) =>
+                                                  Container(
+                                                    color: AppColors.primaryBlue
+                                                        .withOpacity(0.1),
+                                                    child: Icon(
+                                                      Icons.person_rounded,
+                                                      color:
+                                                          AppColors.primaryBlue,
+                                                      size: 35,
+                                                    ),
+                                                  ),
                                             )
                                           : Container(
-                                              color: AppColors.primaryBlue.withOpacity(0.1),
+                                              color: AppColors.primaryBlue
+                                                  .withOpacity(0.1),
                                               child: Icon(
                                                 Icons.person_rounded,
                                                 color: AppColors.primaryBlue,
@@ -320,7 +351,10 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                         decoration: BoxDecoration(
                                           color: AppColors.primaryBlue,
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: Colors.white, width: 2),
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.check,
@@ -334,7 +368,9 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                               const SizedBox(height: 12),
                               // Doctor Name
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                                 child: Text(
                                   doctor.fullName,
                                   style: AppTextStyles.bodyMedium.copyWith(
@@ -348,9 +384,12 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                               ),
                               const SizedBox(height: 4),
                               // Specialization
-                              if (doctor.specialization != null && doctor.specialization!.isNotEmpty)
+                              if (doctor.specialization != null &&
+                                  doctor.specialization!.isNotEmpty)
                                 Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
                                   child: Text(
                                     doctor.specialization!,
                                     style: AppTextStyles.caption.copyWith(
@@ -366,9 +405,11 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                               // Selection Indicator
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: selected 
+                                  color: selected
                                       ? AppColors.primaryBlue.withOpacity(0.1)
                                       : Colors.transparent,
                                   borderRadius: const BorderRadius.only(
@@ -377,8 +418,12 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                   ),
                                 ),
                                 child: Icon(
-                                  selected ? Icons.check_circle : Icons.radio_button_unchecked,
-                                  color: selected ? AppColors.primaryBlue : AppColors.textHint,
+                                  selected
+                                      ? Icons.check_circle
+                                      : Icons.radio_button_unchecked,
+                                  color: selected
+                                      ? AppColors.primaryBlue
+                                      : AppColors.textHint,
                                   size: 20,
                                 ),
                               ),
@@ -599,8 +644,9 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
       final selected = _controller.selectedTime.value;
 
-      final label =
-          selected != null ? _formatTime(context, selected) : 'Choose Time';
+      final label = selected != null
+          ? _formatTime(context, selected)
+          : 'Choose Time';
 
       return _SelectionCard(
         title: 'Select Time',
@@ -730,9 +776,11 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     );
   }
 
-  bool _isSameDate(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
+  bool _isSameDate(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
-  bool _isSameTime(TimeOfDay a, TimeOfDay b) => a.hour == b.hour && a.minute == b.minute;
+  bool _isSameTime(TimeOfDay a, TimeOfDay b) =>
+      a.hour == b.hour && a.minute == b.minute;
 
   String _formatTime(BuildContext context, TimeOfDay t) {
     final dt = DateTime(2025, 1, 1, t.hour, t.minute);
@@ -787,7 +835,11 @@ class _Header extends StatelessWidget {
                       children: [
                         IconButton(
                           onPressed: () => Get.back(),
-                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                          icon: const Icon(
+                            Icons.arrow_back_ios,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         ),
@@ -801,7 +853,9 @@ class _Header extends StatelessWidget {
                     const SizedBox(height: 18),
                     Text(
                       'Service',
-                      style: AppTextStyles.caption.copyWith(color: Colors.white70),
+                      style: AppTextStyles.caption.copyWith(
+                        color: Colors.white70,
+                      ),
                     ),
                     Text(
                       serviceName,
@@ -810,7 +864,9 @@ class _Header extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Select doctor, date, and time from schedule',
-                      style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white70,
+                      ),
                     ),
                   ],
                 ),
@@ -863,12 +919,16 @@ class _SelectionCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : AppColors.backgroundLight,
+                    color: isSelected
+                        ? AppColors.primaryBlue.withOpacity(0.1)
+                        : AppColors.backgroundLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icon,
-                    color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.primaryBlue
+                        : AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -882,7 +942,9 @@ class _SelectionCard extends StatelessWidget {
                         value,
                         style: AppTextStyles.bodyMedium.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? AppColors.textPrimary : AppColors.textHint,
+                          color: isSelected
+                              ? AppColors.textPrimary
+                              : AppColors.textHint,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -893,7 +955,9 @@ class _SelectionCard extends StatelessWidget {
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: isSelected ? AppColors.primaryBlue : AppColors.textHint,
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : AppColors.textHint,
                 ),
               ],
             ),
@@ -923,9 +987,7 @@ class _DisabledHintCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppColors.softShadow,
-        border: Border.all(
-          color: AppColors.textHint.withOpacity(0.15),
-        ),
+        border: Border.all(color: AppColors.textHint.withOpacity(0.15)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -944,7 +1006,12 @@ class _DisabledHintCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                  Text(
+                    title,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(subtitle, style: AppTextStyles.bodySmall),
                 ],
@@ -1029,7 +1096,12 @@ class _EmptyStateCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(subtitle, style: AppTextStyles.bodySmall),
                 const SizedBox(height: 10),
@@ -1039,10 +1111,18 @@ class _EmptyStateCard extends StatelessWidget {
                     onPressed: onAction,
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primaryBlue,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    child: Text(actionLabel, style: const TextStyle(fontWeight: FontWeight.w700)),
+                    child: Text(
+                      actionLabel,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
               ],
@@ -1071,7 +1151,10 @@ class _ErrorBanner extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: AppColors.warningOrange),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppColors.warningOrange,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

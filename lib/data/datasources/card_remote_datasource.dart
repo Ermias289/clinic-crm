@@ -12,6 +12,9 @@ abstract class CardRemoteDataSource {
   Future<List<Map<String, dynamic>>> getPaymentsByCardId(int cardId);
   Future<bool> createPayment(int paymentId, String proofPath);
   Future<Map<String, dynamic>?> getMyCard();
+  Future<String> uploadPaymentProof(
+    String imagePath,
+  ); // New method for just uploading image
 }
 
 class CardRemoteDataSourceImpl implements CardRemoteDataSource {
@@ -61,12 +64,20 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       final response = await apiClient.get('/Payment/bycardId/$cardId');
 
       if (response.hasError) {
+        // Handle 404 as empty list (no payments found)
+        if (response.statusCode == 404) {
+          return [];
+        }
         throw Exception(response.statusText ?? 'Failed to fetch payments');
       }
 
       final List<dynamic> data = response.body;
       return data.map((e) => e as Map<String, dynamic>).toList();
     } catch (e) {
+      // Handle 404 errors as empty list
+      if (e.toString().contains('404') || e.toString().contains('Not Found')) {
+        return [];
+      }
       throw Exception('Error fetching payments: $e');
     }
   }
@@ -117,6 +128,45 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       return true;
     } catch (e) {
       throw Exception('Error creating payment: $e');
+    }
+  }
+
+  @override
+  Future<String> uploadPaymentProof(String imagePath) async {
+    try {
+      // Check file size: 2MB limit
+      final file = File(imagePath);
+      final int fileSize = await file.length();
+      const int maxSize = 2 * 1024 * 1024; // 2MB in bytes
+      if (fileSize > maxSize) {
+        throw Exception(
+          'Payment proof file size exceeds the maximum allowed limit of 2MB.',
+        );
+      }
+
+      print('DEBUG: Uploading payment proof image...');
+
+      // Upload the image
+      final form = FormData({
+        'file': MultipartFile(imagePath, filename: 'payment_proof.jpg'),
+      });
+
+      final uploadResponse = await apiClient.post('/FileUpload/upload', form);
+
+      if (uploadResponse.hasError) {
+        throw Exception(
+          uploadResponse.statusText ?? 'Failed to upload payment proof',
+        );
+      }
+
+      final String uploadedFileName = uploadResponse.body['fileName'];
+      print(
+        'DEBUG: Payment proof uploaded successfully. Filename: $uploadedFileName',
+      );
+
+      return uploadedFileName;
+    } catch (e) {
+      throw Exception('Error uploading payment proof: $e');
     }
   }
 
