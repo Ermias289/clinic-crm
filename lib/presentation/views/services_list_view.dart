@@ -6,6 +6,7 @@ import '../../data/datasources/card_remote_datasource.dart';
 import '../../data/repositories/card_repository_impl.dart';
 import '../../core/api_client.dart';
 import '../controllers/medical_service_controller.dart';
+import '../widgets/banner_carousel.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
@@ -220,161 +221,201 @@ class _ServicesListView extends StatelessWidget {
               return RefreshIndicator(
                 onRefresh: () => controller.fetchServices(),
                 color: AppColors.primaryBlue,
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(20),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.75,
-                  ),
-                  itemCount: controller.services.length,
-                  itemBuilder: (context, index) {
-                    final service = controller.services[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: AppColors.cardShadow,
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(20),
-                        child: InkWell(
-                          onTap: () => controller.onServiceSelected(service),
-                          borderRadius: BorderRadius.circular(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Service Image
-                              ClipRRect(
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(20),
-                                  topRight: Radius.circular(20),
-                                ),
-                                child: service.servicePicture.isEmpty
-                                    ? Container(
-                                        height: 120,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              AppColors.primaryBlue.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                              AppColors.accentBlue.withValues(
-                                                alpha: 0.1,
-                                              ),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                        ),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.local_hospital_rounded,
-                                            color: AppColors.primaryBlue,
-                                            size: 48,
-                                          ),
-                                        ),
-                                      )
-                                    : Image.network(
-                                        ImageUtils.buildImageUrl(
-                                          service.servicePicture,
-                                        ),
-                                        height: 120,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) => Container(
-                                          height: 120,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                AppColors.primaryBlue
-                                                    .withValues(alpha: 0.1),
-                                                AppColors.accentBlue.withValues(
-                                                  alpha: 0.1,
-                                                ),
-                                              ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                          ),
-                                          child: const Center(
-                                            child: Icon(
-                                              Icons.local_hospital_rounded,
-                                              color: AppColors.primaryBlue,
-                                              size: 48,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                              ),
-
-                              // Service Details
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        service.name,
-                                        style: AppTextStyles.h3.copyWith(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Expanded(
-                                        child: Text(
-                                          service.description,
-                                          maxLines: 3,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: AppTextStyles.bodySmall
-                                              .copyWith(
-                                                fontSize: 12,
-                                                height: 1.3,
-                                              ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.access_time_rounded,
-                                            size: 14,
-                                            color: AppColors.accentBlue,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${service.durationInMinutes} mins',
-                                            style: AppTextStyles.caption
-                                                .copyWith(
-                                                  color: AppColors.accentBlue,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 11,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                child: CustomScrollView(
+                  slivers: [
+                    // First 4 services
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.75,
+                            ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final service = controller.services[index];
+                            return _buildServiceCard(service);
+                          },
+                          childCount: controller.services.length > 4
+                              ? 4
+                              : controller.services.length,
                         ),
                       ),
-                    );
-                  },
+                    ),
+
+                    // Banner after 4 services (show if there are 4 or more services)
+                    if (controller.services.length >= 4)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const BannerCarousel(),
+                        ),
+                      ),
+
+                    // Remaining services (if more than 4)
+                    if (controller.services.length > 4)
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: 0.75,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final serviceIndex =
+                                index + 4; // Skip first 4 services
+                            final service = controller.services[serviceIndex];
+                            return _buildServiceCard(service);
+                          }, childCount: controller.services.length - 4),
+                        ),
+                      ),
+
+                    // Add bottom padding for all cases
+                    const SliverPadding(padding: EdgeInsets.only(bottom: 20)),
+                  ],
                 ),
               );
             }),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(dynamic service) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: () => controller.onServiceSelected(service),
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Service Image
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                child: service.servicePicture.isEmpty
+                    ? Container(
+                        height: 120,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primaryBlue.withValues(alpha: 0.1),
+                              AppColors.accentBlue.withValues(alpha: 0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.local_hospital_rounded,
+                            color: AppColors.primaryBlue,
+                            size: 48,
+                          ),
+                        ),
+                      )
+                    : Image.network(
+                        ImageUtils.buildImageUrl(service.servicePicture),
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          height: 120,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primaryBlue.withValues(alpha: 0.1),
+                                AppColors.accentBlue.withValues(alpha: 0.1),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.local_hospital_rounded,
+                              color: AppColors.primaryBlue,
+                              size: 48,
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+
+              // Service Details
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.name,
+                        style: AppTextStyles.h3.copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 6),
+                      Expanded(
+                        child: Text(
+                          service.description,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time_rounded,
+                            size: 14,
+                            color: AppColors.accentBlue,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${service.durationInMinutes} mins',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.accentBlue,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
