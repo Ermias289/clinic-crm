@@ -108,7 +108,7 @@ export function AppSidebar() {
           <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-sidebar-foreground">BrightSmile</h1>
+          <h1 className="text-lg font-bold text-sidebar-foreground">Lucid</h1>
           <p className="text-xs text-sidebar-foreground/60">Dental Clinic CRM</p>
         </div>
       </div>
