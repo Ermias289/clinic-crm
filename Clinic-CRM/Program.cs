@@ -164,11 +164,11 @@ app.MapGet("/health", () => Results.Ok("OK"))
 
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+//if (app.Environment.IsDevelopment())
+//{
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+//}
 //app.UsePathBase("/clinic-crm");
 //app.UseRouting();
 app.UseHttpsRedirection();

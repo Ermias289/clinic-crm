@@ -31,6 +31,7 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<OTP> OTPs { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<UserNotification> UserNotifications { get; set; }
+        public DbSet<Banner> Banners { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Patient>()
