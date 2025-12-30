@@ -1,28 +1,31 @@
 import apiClient from './client';
 
 export interface AddPatientDTO {
-  firstName: string;
-  lastName: string;
+  fName: string;
+  mName?: string;
+  lName: string;
   email?: string;
-  phone?: string;
+  phoneNumber?: string;
   dateOfBirth?: string;
   gender?: string;
   address?: string;
+  subCity?: string;
+  country?: string;
+  city?: string;
+  alergies?: string;
+  chronicConditions?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  requiresUserAccount?: boolean;
 }
 
 export interface UpdatePatientDTO extends AddPatientDTO {
   id: number;
 }
 
-export interface Patient {
+export interface Patient extends AddPatientDTO {
   id: number;
-  firstName: string;
-  lastName: string;
-  email?: string;
-  phone?: string;
-  dateOfBirth?: string;
-  gender?: string;
-  address?: string;
+  createdAt?: string;
 }
 
 export const patientsService = {
