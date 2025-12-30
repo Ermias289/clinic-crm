@@ -25,7 +25,8 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLoginRequest = error.config?.url?.includes('/Auth/login');
+    if (error.response?.status === 401 && !isLoginRequest) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -35,3 +36,5 @@ apiClient.interceptors.response.use(
 );
 
 export default apiClient;
+
+

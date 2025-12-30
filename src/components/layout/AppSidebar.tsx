@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { authService } from '@/lib/api/auth';
+import avatar from '../../assets/avatar.png';
 
 interface NavItem {
   title: string;
@@ -73,9 +75,10 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>(['/settings']);
 
-  // Get user from localStorage
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : { name: "Admin User", email: "admin@brightsmile.com" };
+
+  const user = authService.getCurrentUser();
+  // console.log(user);
+
 
   const toggleExpand = (href: string) => {
     setExpandedItems(prev => 
@@ -175,12 +178,10 @@ export function AppSidebar() {
       {/* Footer */}
       <div className="px-4 py-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent">
-          <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center">
-            <span className="text-sm font-medium text-sidebar-primary-foreground">AD</span>
-          </div>
+          <img src={avatar} alt="user avatar" className="w-8 h-8 rounded-full"/>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">Admin User</p>
-            <p className="text-xs text-sidebar-foreground/60 truncate">{user.email}</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.fName} {user?.lName}</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</p>
           </div>
         </div>
         {/* Logout button */}

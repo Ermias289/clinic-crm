@@ -16,19 +16,31 @@ export interface LogInReturnDTO {
   token: string;
   user: {
     id: number;
+    username: string;
+    fName: string;
+    mName?: string;
+    lName: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
+    phoneNumber?: string;
+    userRoleId?: number;
+    userRole?: {
+      id: number;
+      name: string;
+      canEditCompanySettings?: boolean;
+      canView?: boolean;
+    };
   };
 }
 
+
 export interface ChangePasswordDTO {
-  currentPassword?: string;
+  phoneOrEmail: string;
+  password?: string;  
   newPassword: string;
   otp?: string;
   reset?: boolean;
-  email?: string;
 }
+
 
 export const authService = {
   register: async (data: CreateUserAccountDTO) => {
@@ -37,27 +49,48 @@ export const authService = {
   },
 
   login: async (data: LogInDTO): Promise<LogInReturnDTO> => {
-    const response = await apiClient.post<LogInReturnDTO>('/api/Auth/login', data);
+    const response = await apiClient.post<LogInReturnDTO>(
+      '/api/Auth/login',
+      {
+        phoneOrEmail: data.email,  
+        password: data.password,   
+      }
+    );
+    
     if (response.data.token) {
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      // console.log('Login response:', response.data);
+
     }
+
     return response.data;
   },
 
   changePassword: async (data: ChangePasswordDTO) => {
-    const response = await apiClient.post('/api/Auth/changePassword', data);
+    const response = await apiClient.post('/api/Auth/changePassword', {
+      phoneOrEmail: data.phoneOrEmail,
+      password: data.password,      // current password
+      newPassword: data.newPassword,
+      reset: false,
+    });
+
     return response.data;
   },
 
-  resetPassword: async (email: string, otp: string, newPassword: string) => {
+  resetPassword: async (
+    phoneOrEmail: string,
+    otp: string,
+    newPassword: string
+  ) => {
     const response = await apiClient.post('/api/Auth/changePassword', {
-      email,
-      otp,
+      phoneOrEmail,
+      password: '',     // backend still expects this field
       newPassword,
+      otp,
       reset: true,
-      currentPassword: '',
     });
+
     return response.data;
   },
 

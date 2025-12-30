@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Mail, Lock, KeyRound } from 'lucide-react';
+import axios from "axios";
+
 
 type AuthStep = 'login' | 'forgot-password' | 'verify-otp' | 'reset-password';
 
@@ -26,58 +28,47 @@ const LoginPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // this is the mock handle logic i commented the real one so that i can test without the backend
+
 const handleLogin = async (e: React.FormEvent) => {
   e.preventDefault();
 
   if (!email || !password) {
-    toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
+    toast({
+      title: 'Error',
+      description: 'Please fill in all fields',
+      variant: 'destructive',
+    });
     return;
   }
 
   setIsLoading(true);
   try {
-    // Simulate network
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await authService.login({ email, password });
 
-    // MOCK login
-    const mockUser = { email, role: "admin" };
-    localStorage.setItem("token", "mock-token");
-    localStorage.setItem("user", JSON.stringify(mockUser));
+    toast({
+      title: 'Success',
+      description: 'Logged in successfully',
+    });
 
-    toast({ title: 'Success', description: 'Logged in successfully' });
+    navigate('/'); // protected dashboard
+  } catch (error: unknown) {
+      let message = "Invalid credentials";
 
-    navigate("/"); // goes to Index
-  } finally {
-    setIsLoading(false);
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast({
+        title: "Login Failed",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
-};
-
-   
-  // real handleLogin logic 
-
-  // const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (!email || !password) {
-  //     toast({ title: 'Error', description: 'Please fill in all fields', variant: 'destructive' });
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   try {
-  //     await authService.login({ email, password });
-  //     toast({ title: 'Success', description: 'Logged in successfully' });
-  //     navigate('/');
-  //   } catch (error: any) {
-  //     toast({ 
-  //       title: 'Login Failed', 
-  //       description: error.response?.data?.message || 'Invalid credentials', 
-  //       variant: 'destructive' 
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,13 +82,21 @@ const handleLogin = async (e: React.FormEvent) => {
       await otpService.resendOTP(email);
       toast({ title: 'OTP Sent', description: 'Check your email for the verification code' });
       setStep('verify-otp');
-    } catch (error: any) {
-      toast({ 
-        title: 'Error', 
-        description: error.response?.data?.message || 'Failed to send OTP', 
-        variant: 'destructive' 
-      });
-    } finally {
+    } catch (error: unknown) {
+        let message = 'Failed to send OTP';
+
+        if (axios.isAxiosError(error)) {
+          message = error.response?.data?.message || message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        }
+
+        toast({
+          title: 'Error',
+          description: message,
+          variant: 'destructive',
+        });
+      }finally {
       setIsLoading(false);
     }
   };
@@ -114,16 +113,24 @@ const handleLogin = async (e: React.FormEvent) => {
       await otpService.verifyOTP(email, otp);
       toast({ title: 'OTP Verified', description: 'Please set your new password' });
       setStep('reset-password');
-    } catch (error: any) {
-      toast({ 
-        title: 'Error', 
-        description: error.response?.data?.message || 'Invalid OTP', 
-        variant: 'destructive' 
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    } catch (error: unknown) {
+        let message = "Invalid OTP";
+
+        if (axios.isAxiosError(error)) {
+          message = error.response?.data?.message || message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        }
+
+        toast({
+          title: "Error",
+          description: message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+  }
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,16 +152,29 @@ const handleLogin = async (e: React.FormEvent) => {
     setIsLoading(true);
     try {
       await authService.resetPassword(email, otp, newPassword);
-      toast({ title: 'Password Reset', description: 'You can now login with your new password' });
+
+      toast({
+        title: 'Password Reset',
+        description: 'You can now login with your new password',
+      });
+
       setStep('login');
       setOtp('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
-      toast({ 
-        title: 'Error', 
-        description: error.response?.data?.message || 'Failed to reset password', 
-        variant: 'destructive' 
+    } catch (error: unknown) {
+      let message = 'Failed to reset password';
+
+      if (axios.isAxiosError(error)) {
+        message = error.response?.data?.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -384,5 +404,6 @@ const handleLogin = async (e: React.FormEvent) => {
     </div>
   );
 };
+
 
 export default LoginPage;
