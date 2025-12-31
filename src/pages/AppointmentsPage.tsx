@@ -41,20 +41,25 @@ const AppointmentsPage = () => {
       setServices(svcs);
       setBranches(brs);
 
+console.log("Doctors:", docs);
+console.log("Services:", svcs);
+console.log("Branches:", brs);
+console.log("Appointments:", apts);
    
       const mappedAppointments = apts.map((apt) => {
-        const doctor = docs.find(d => d.id === apt.medicalProfessionalId);
-        const service = svcs.find(s => s.id === apt.dentistryId);
-        const branch = brs.find(b => b.id === apt.branchId);
+        const doctor = docs.find(d => d.id.toString() === apt.medicalProfessionalId.toString() );
+        const service = svcs.find(s => s.id.toString()  === apt.dentistryId.toString() );
+        const branch = brs.find(b => b.id.toString()  === apt.branchId.toString() );
 
         return {
           ...apt,
-          doctorName: doctor ? `${doctor.firstName} ${doctor.lastName}` : "Unknown",
+          doctorName: doctor ? `${doctor.fName} ${doctor.mName ?? ''} ${doctor.lName}`.trim() : "Unknown",
           serviceName: service?.name ?? "Unknown",
           branchName: branch?.name ?? "Unknown",
           patientName: `Patient #${apt.patientId}`, // replace if you have patient API
         };
       });
+
 
       setAppointments(mappedAppointments);
     };
@@ -99,7 +104,7 @@ const AppointmentsPage = () => {
               <SelectItem value="all">All Doctors</SelectItem>
               {doctors.map(doc => (
                 <SelectItem key={doc.id} value={doc.id.toString()}>
-                  Dr. {doc.firstName} {doc.lastName}
+                  Dr. {doc.fName} {doc.lName}
                 </SelectItem>
               ))}
             </SelectContent>

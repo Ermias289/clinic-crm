@@ -15,13 +15,21 @@ export interface UpdateMedicalProfessionalDTO extends AddMedicalProfessionalDTO 
 
 export interface MedicalProfessional {
   id: number;
-  firstName: string;
-  lastName: string;
-  specialization?: string;
-  email?: string;
-  phone?: string;
-  branchId?: number;
+  fName: string;
+  mName?: string;
+  lName: string;
+  email: string;
+  phoneNumber: string;
+  specialty: string;
+  jobTitle: string;
+  licenseNumber: string;
+  yearsOfExperience: number;
+  profilePicture?: string;
+  status: string;
+  branches: { id: number; name: string }[]; // if needed
+  medicalServices: { id: number; name: string }[]; // if needed
 }
+
 
 export const medicalProfessionalsService = {
   getAll: async (): Promise<MedicalProfessional[]> => {

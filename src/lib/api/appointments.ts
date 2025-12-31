@@ -2,26 +2,41 @@ import apiClient from './client';
 
 export interface AppointmentDTO {
   id: number;
-  reference: string;
-  dentistryId: number;
   medicalProfessionalId: number;
-  patientId: number;
+  dentistryId: number;
   branchId: number;
-  reservationTime: string;
+  patientId: number;
   day: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'NoShow';
-  completedAt: string;
-  canceledAt: string;
-  cancelReason: string;
-  createdAt: string;
-  updateAt: string;
-
-  //fields for frontend display
-  patientName?: string;
+  reservationTime: string;
+  status: string;
   doctorName?: string;
   serviceName?: string;
   branchName?: string;
+  patientName?: string;
 }
+
+// export interface AppointmentDTO {
+//   id: number;
+//   reference: string;
+//   dentistryId: number;
+//   medicalProfessionalId: number;
+//   patientId: number;
+//   branchId: number;
+//   reservationTime: string;
+//   day: string;
+//   status: 'Scheduled' | 'Completed' | 'Cancelled' | 'NoShow';
+//   completedAt: string;
+//   canceledAt: string;
+//   cancelReason: string;
+//   createdAt: string;
+//   updateAt: string;
+
+//   //fields for frontend display
+//   patientName?: string;
+//   doctorName?: string;
+//   serviceName?: string;
+//   branchName?: string;
+// }
 
 export const appointmentService = {
   getAll: async (): Promise<AppointmentDTO[]> => {
