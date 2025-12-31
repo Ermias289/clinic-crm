@@ -1,29 +1,26 @@
 import apiClient from './client';
 
-export interface AddAppointmentDTO {
-  patientId: number;
-  doctorId: number;
-  serviceId: number;
-  branchId: number;
-  date: string;
-  time: string;
-  notes?: string;
-}
-
 export interface AppointmentDTO {
   id: number;
+  reference: string;
+  dentistryId: number;
+  medicalProfessionalId: number;
   patientId: number;
-  patientName: string;
-  doctorId: number;
-  doctorName: string;
-  serviceId: number;
-  serviceName: string;
   branchId: number;
-  branchName: string;
-  date: string;
-  time: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
-  notes?: string;
+  reservationTime: string;
+  day: string;
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'NoShow';
+  completedAt: string;
+  canceledAt: string;
+  cancelReason: string;
+  createdAt: string;
+  updateAt: string;
+
+  //fields for frontend display
+  patientName?: string;
+  doctorName?: string;
+  serviceName?: string;
+  branchName?: string;
 }
 
 export const appointmentService = {
@@ -37,12 +34,14 @@ export const appointmentService = {
     return response.data;
   },
 
-  getByPatientId: async (patientId: number): Promise<AppointmentDTO[]> => {
-    const response = await apiClient.get<AppointmentDTO[]>(`/api/Appointment/bypatientId/${patientId}`);
-    return response.data;
-  },
-
-  create: async (data: AddAppointmentDTO): Promise<AppointmentDTO> => {
+  create: async (data: {
+    patientId: number;
+    medicalProfessionalId: number;
+    serviceId: number;
+    branchId: number;
+    day: string;
+    reservationTime: string;
+  }): Promise<AppointmentDTO> => {
     const response = await apiClient.post<AppointmentDTO>('/api/Appointment', data);
     return response.data;
   },
@@ -55,9 +54,5 @@ export const appointmentService = {
     await apiClient.put('/api/Appointment/cancelAppointment', null, {
       params: { Id: id, reason },
     });
-  },
-
-  completeMultiple: async (ids: number[]): Promise<void> => {
-    await apiClient.put('/api/Appointment/completeAppointments', ids);
   },
 };

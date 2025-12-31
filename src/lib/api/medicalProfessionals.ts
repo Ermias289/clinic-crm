@@ -28,22 +28,18 @@ export const medicalProfessionalsService = {
     const response = await apiClient.get<MedicalProfessional[]>('/api/MedicalProfessional');
     return response.data;
   },
-
   getById: async (id: number): Promise<MedicalProfessional> => {
     const response = await apiClient.get<MedicalProfessional>(`/api/MedicalProfessional/${id}`);
     return response.data;
   },
-
   create: async (data: AddMedicalProfessionalDTO): Promise<MedicalProfessional> => {
     const response = await apiClient.post<MedicalProfessional>('/api/MedicalProfessional', data);
     return response.data;
   },
-
   update: async (data: UpdateMedicalProfessionalDTO): Promise<MedicalProfessional> => {
     const response = await apiClient.put<MedicalProfessional>('/api/MedicalProfessional', data);
     return response.data;
   },
-
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/MedicalProfessional/${id}`);
   },

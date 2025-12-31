@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,28 +28,79 @@ import {
   CreditCard,
   User,
   Calendar,
-  Gift,
   Edit,
   Eye
 } from "lucide-react";
-import { mockCards, mockCardTypes, mockPatients } from "@/data/mockData";
-import { PatientCard } from "@/types/clinic";
+
+import { cardService, CardDTO } from "@/lib/api/cards";
+import { cardTypeService, CardTypeDTO } from "@/lib/api/cardTypes";
+import { patientsService, Patient } from "@/lib/api/patients";
 
 const CardsPage = () => {
-  const [cards] = useState<PatientCard[]>(mockCards);
+  const [cards, setCards] = useState<CardDTO[]>([]);
+  const [cardTypes, setCardTypes] = useState<CardTypeDTO[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [cardTypeFilter, setCardTypeFilter] = useState<string>("all");
-  const [selectedCard, setSelectedCard] = useState<PatientCard | null>(null);
+  const [selectedCard, setSelectedCard] = useState<CardDTO | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const filteredCards = cards.filter(card => {
-    const matchesSearch = card.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          card.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || card.status === statusFilter;
-    const matchesType = cardTypeFilter === "all" || card.cardTypeId === cardTypeFilter;
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  // Fetch cards, card types, and patients from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [cardsData, cardTypesData, patientsData] = await Promise.all([
+          cardService.getAll(),
+          cardTypeService.getAll(),
+          patientsService.getAll(),
+        ]);
+        setCards(cardsData);
+        setCardTypes(cardTypesData);
+        setPatients(patientsData);
+      } catch (err) {
+        console.error("Failed to fetch cards or related data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Map backend card to frontend display fields
+  const mapCard = (card: CardDTO) => {
+    const patient = patients.find(p => p.id === card.patientId);
+    const cardType = cardTypes.find(ct => ct.id === card.cardTypeId);
+
+    return {
+      ...card,
+      patientName: patient ? `${patient.fName} ${patient.lName}` : "Unknown",
+      cardTypeName: cardType ? cardType.name : "Unknown",
+      issueDate: card.activatedAt ? card.activatedAt.split("T")[0] : card.createdAt.split("T")[0],
+      expiryDate: card.expiredAt === "0001-01-01T00:00:00" ? "N/A" : card.expiredAt?.split("T")[0],
+      referenceNumber: card.cardNumber,
+    };
+  };
+
+  const statusMap: Record<string, "active" | "pending" | "expired" | "suspended"> = {
+  Active: "active",
+  Pending: "pending",
+  Expired: "expired",
+  Suspended: "suspended",
+};
+
+  // Filter and map cards safely
+  const filteredCards = cards
+    .map(mapCard)
+    .filter(card => {
+      const matchesSearch =
+        card.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        card.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus = statusFilter === "all" || card.status.toLowerCase() === statusFilter;
+      const matchesType = cardTypeFilter === "all" || card.cardTypeId.toString() === cardTypeFilter;
+
+      return matchesSearch && matchesStatus && matchesType;
+    });
 
   return (
     <DashboardLayout 
@@ -78,9 +129,9 @@ const CardsPage = () => {
                     <SelectValue placeholder="Select patient" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockPatients.map(patient => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        {patient.firstName} {patient.lastName}
+                    {patients.map(patient => (
+                      <SelectItem key={patient.id} value={patient.id.toString()}>
+                        {patient.fName} {patient.lName}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -93,8 +144,8 @@ const CardsPage = () => {
                     <SelectValue placeholder="Select card type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockCardTypes.map(type => (
-                      <SelectItem key={type.id} value={type.id}>
+                    {cardTypes.map(type => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
                         {type.name} - ${type.price}
                       </SelectItem>
                     ))}
@@ -116,14 +167,14 @@ const CardsPage = () => {
     >
       {/* Summary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {mockCardTypes.map(type => (
+        {cardTypes.map(type => (
           <Card key={type.id} style={{ borderTopColor: type.color, borderTopWidth: '3px' }}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">{type.name}</p>
                   <p className="text-2xl font-bold">
-                    {cards.filter(c => c.cardTypeId === type.id && c.status === 'active').length}
+                    {cards.filter(c => c.cardTypeId === type.id && c.status.toLowerCase() === 'active').length}
                   </p>
                   <p className="text-xs text-muted-foreground">active cards</p>
                 </div>
@@ -172,8 +223,8 @@ const CardsPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {mockCardTypes.map(type => (
-                    <SelectItem key={type.id} value={type.id}>
+                  {cardTypes.map(type => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
                       {type.name}
                     </SelectItem>
                   ))}
@@ -224,8 +275,8 @@ const CardsPage = () => {
                       <span 
                         className="px-2 py-1 rounded-full text-xs font-medium"
                         style={{ 
-                          backgroundColor: `${mockCardTypes.find(t => t.id === card.cardTypeId)?.color}20`,
-                          color: mockCardTypes.find(t => t.id === card.cardTypeId)?.color
+                          backgroundColor: `${cardTypes.find(t => t.id === card.cardTypeId)?.color}20`,
+                          color: cardTypes.find(t => t.id === card.cardTypeId)?.color
                         }}
                       >
                         {card.cardTypeName}
@@ -244,7 +295,7 @@ const CardsPage = () => {
                       </div>
                     </td>
                     <td>
-                      <StatusBadge status={card.status} />
+                      <StatusBadge status={statusMap[card.status] || "pending"} />
                     </td>
                     <td>
                       <div className="flex items-center gap-1">
@@ -267,74 +318,6 @@ const CardsPage = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Card Details Dialog */}
-      <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Card Details</DialogTitle>
-            <DialogDescription>
-              View and manage card information
-            </DialogDescription>
-          </DialogHeader>
-          {selectedCard && (
-            <div className="space-y-4">
-              <div 
-                className="p-6 rounded-xl text-center"
-                style={{ 
-                  background: `linear-gradient(135deg, ${mockCardTypes.find(t => t.id === selectedCard.cardTypeId)?.color} 0%, ${mockCardTypes.find(t => t.id === selectedCard.cardTypeId)?.color}99 100%)` 
-                }}
-              >
-                <CreditCard className="w-12 h-12 mx-auto text-white mb-2" />
-                <p className="text-white/80 text-sm">Reference Number</p>
-                <p className="text-white text-xl font-bold font-mono">{selectedCard.referenceNumber}</p>
-                <p className="text-white mt-2 font-medium">{selectedCard.cardTypeName}</p>
-              </div>
-
-              <div className="grid gap-4">
-                <div className="flex items-center gap-3 p-3 rounded-lg border">
-                  <User className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Patient</p>
-                    <p className="font-medium">{selectedCard.patientName}</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-lg border">
-                    <p className="text-sm text-muted-foreground">Issue Date</p>
-                    <p className="font-medium">{selectedCard.issueDate}</p>
-                  </div>
-                  <div className="p-3 rounded-lg border">
-                    <p className="text-sm text-muted-foreground">Expiry Date</p>
-                    <p className="font-medium">{selectedCard.expiryDate}</p>
-                  </div>
-                </div>
-                
-                <div className="p-3 rounded-lg border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Gift className="w-4 h-4 text-primary" />
-                    <p className="text-sm font-medium">Benefits</p>
-                  </div>
-                  <ul className="space-y-1">
-                    {selectedCard.benefits.map((benefit, idx) => (
-                      <li key={idx} className="text-sm text-muted-foreground flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                        {benefit}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedCard(null)}>Close</Button>
-                <Button variant="dental">Edit Card</Button>
-              </DialogFooter>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 };

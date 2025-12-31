@@ -1,37 +1,48 @@
 import apiClient from './client';
 
-export interface CreatePaymentDTO {
-  appointmentId: number;
-  amount: number;
-  paymentMethod?: string;
+export interface PaymentCard {
+  id: number;
+  cardNumber: string;
+  patientId: number;
+  cardTypeId: number;
+  status: string;
+  requestedById: number;
+  requestRemark: string;
+  requestedAt: string;
+  activationRemark: string;
+  activatedAt: string;
+  expiredAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface CheckPaymentDTO {
-  paymentId: number;
-}
-
-export interface ApprovePaymentDTO {
-  paymentId: number;
-  approvedBy?: number;
-}
-
-export interface CancelPaymentDTO {
-  paymentId: number;
-  reason?: string;
-}
-
-export interface RejectPaymentDTO {
-  paymentId: number;
-  reason?: string;
+export interface PaymentUser {
+  id: number;
+  username: string;
+  fName: string;
+  mName?: string;
+  lName: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 export interface Payment {
   id: number;
-  appointmentId: number;
-  amount: number;
-  status: string;
-  paymentMethod?: string;
-  createdAt: string;
+  reference: string;
+  status: 'Approved' | 'Pending' | 'Rejected' | 'UnderReview';
+  card: PaymentCard;
+  cardId: number;
+  expectedAmount: number;
+  unPaidAmount: number;
+  paidAmount: number;
+  paymentProof?: string;
+  isInsuranceCovered?: boolean;
+  requestedAmount: number;
+  requestedBy: PaymentUser;
+  requestedById: number;
+  requestedAt: string;
+  approvedAt?: string;
+  approvedBy?: PaymentUser;
 }
 
 export const paymentsService = {
@@ -45,45 +56,27 @@ export const paymentsService = {
     return response.data;
   },
 
-  getById: async (id: number): Promise<Payment> => {
-    const response = await apiClient.get<Payment>(`/${id}`);
+  paymentRequest: async (data: Partial<Payment>): Promise<Payment> => {
+    const response = await apiClient.post<Payment>('/api/Payment/paymentRequest', data);
     return response.data;
   },
 
-  getByPatientId: async (patientId: number): Promise<Payment[]> => {
-    const response = await apiClient.get<Payment[]>(`/api/Payment/bypatientId/${patientId}`, {
-      params: { patientId },
+  checkPayment: async (paymentId: number): Promise<Payment> => {
+    const response = await apiClient.get<Payment>(`/api/Payment/checkPayment`, {
+      params: { paymentId },
     });
     return response.data;
   },
 
-  getByCardId: async (cardId: number): Promise<Payment[]> => {
-    const response = await apiClient.get<Payment[]>(`/api/Payment/bycardId/${cardId}`, {
-      params: { cardId },
-    });
-    return response.data;
+  approvePayment: async (paymentId: number): Promise<void> => {
+    await apiClient.put(`/api/Payment/approvePayment`, { paymentId });
   },
 
-  createPaymentRequest: async (data: CreatePaymentDTO): Promise<Payment> => {
-    const response = await apiClient.put<Payment>('/api/Payment/paymentRequest', data);
-    return response.data;
+  cancelPayment: async (paymentId: number): Promise<void> => {
+    await apiClient.put(`/api/Payment/cancelPayment`, { paymentId });
   },
 
-  checkPayment: async (data: CheckPaymentDTO): Promise<Payment> => {
-    const response = await apiClient.put<Payment>('/api/Payment/checkPayment', data);
-    return response.data;
-  },
-
-  approvePayment: async (data: ApprovePaymentDTO): Promise<Payment> => {
-    const response = await apiClient.put<Payment>('/api/Payment/approvePayment', data);
-    return response.data;
-  },
-
-  cancelPayment: async (data: CancelPaymentDTO): Promise<void> => {
-    await apiClient.put('/api/Payment/cancelPayment', data);
-  },
-
-  rejectPayment: async (data: RejectPaymentDTO): Promise<void> => {
-    await apiClient.put('/api/Payment/rejectPayment', data);
+  rejectPayment: async (paymentId: number): Promise<void> => {
+    await apiClient.put(`/api/Payment/rejectPayment`, { paymentId });
   },
 };

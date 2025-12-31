@@ -23,38 +23,23 @@ export interface MedicalService {
   doctorId?: number;
 }
 
-export interface FilterServiceParams {
-  serviceId?: number;
-  branchId?: number;
-  docId?: number;
-}
-
 export const medicalServicesService = {
   getAll: async (): Promise<MedicalService[]> => {
     const response = await apiClient.get<MedicalService[]>('/api/MedicalService');
     return response.data;
   },
-
   getById: async (id: number): Promise<MedicalService> => {
     const response = await apiClient.get<MedicalService>(`/api/MedicalService/${id}`);
     return response.data;
   },
-
-  getFiltered: async (params: FilterServiceParams): Promise<MedicalService[]> => {
-    const response = await apiClient.get<MedicalService[]>('/api/MedicalService/filteredService', { params });
-    return response.data;
-  },
-
   create: async (data: AddMedicalServiceDTO): Promise<MedicalService> => {
     const response = await apiClient.post<MedicalService>('/api/MedicalService', data);
     return response.data;
   },
-
   update: async (data: UpdateMedicalServiceDTO): Promise<MedicalService> => {
     const response = await apiClient.put<MedicalService>('/api/MedicalService', data);
     return response.data;
   },
-
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/MedicalService/${id}`);
   },

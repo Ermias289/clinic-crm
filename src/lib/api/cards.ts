@@ -12,16 +12,21 @@ export interface UpdateCardDTO {
 
 export interface CardDTO {
   id: number;
-  referenceNumber: string;
+  cardNumber: string;           
   patientId: number;
-  patientName: string;
   cardTypeId: number;
-  cardTypeName: string;
-  status: 'active' | 'expired' | 'pending' | 'suspended';
-  issueDate: string;
-  expiryDate: string;
-  benefits: string[];
+  status: 'Active' | 'Pending' | 'Expired' | 'Suspended';
+  requestRemark?: string;
+  activatedAt?: string;
+  activationRemark?: string;
+  createdAt: string;
+  expiredAt?: string;
+  updatedAt?: string;
+  requestedAt?: string;
+  requestedById?: number;
+  benefits?: string[];          
 }
+
 
 export const cardService = {
   getAll: async (): Promise<CardDTO[]> => {
