@@ -11,12 +11,14 @@ namespace Clinic_CRM.Models.Settings
         public string Prefix { get; set; } = string.Empty;
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
+        public string EmergencyPhoneNumber { get; set; } = string.Empty;
         [Phone]
         public string PhoneNumber { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
         public string SubCity { get; set; } = string.Empty;
+        public string LocationOnMap { get; set; } = string.Empty;
         public ICollection<BranchSetting>? Branches { get; set; }
         public ICollection<WorkingDaySetting>? Workdays { get; set; }
 

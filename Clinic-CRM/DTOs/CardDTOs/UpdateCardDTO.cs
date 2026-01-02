@@ -7,7 +7,6 @@ namespace Clinic_CRM.DTOs.CardDTOs
     public class UpdateCardDTO
     {
         public int Id { get; set; }
-        public UpdatePatientDTO PatientDTO { get; set; }
         public int PatientId { get; set; }
         public int CardTypeId { get; set; }
     }

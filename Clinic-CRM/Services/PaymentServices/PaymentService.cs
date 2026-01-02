@@ -273,7 +273,7 @@ namespace Clinic_CRM.Services.PaymentServices
 
             var card = await _context.Cards.FindAsync(payment.CardId);
 
-            payment.ApprovedBy = _userService.GetCurrentUserNoInclude();
+            payment.ApprovedById = _userService.GetCurrentUserNoInclude().Id;
             payment.ApprovedAt = DateTime.UtcNow;
             payment.PaidAmount = payment.ApprovedAmount;
             payment.UnPaidAmount = payment.ExpectedAmount - payment.ApprovedAmount;

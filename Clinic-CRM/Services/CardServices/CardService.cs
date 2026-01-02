@@ -42,6 +42,11 @@ namespace Clinic_CRM.Services.CardServices
         {
             var card = _mapper.Map<Card>(dto);
 
+            var patient = await _context.Patients.FindAsync(dto.PatientId);
+
+            if (patient == null)
+                throw new KeyNotFoundException("Patient Not Registered Yet.");
+
             var user = await _context.Users
              .Include(u => u.UserRole)
              .Where(u => u.Id == _userService.GetCurrentUser().Id)
@@ -64,7 +69,7 @@ namespace Clinic_CRM.Services.CardServices
             _context.Cards.Add(card);
             await _context.SaveChangesAsync();
 
-            card.Patient.CardId = card.Id;
+            patient.CardId = card.Id;
 
             var payCard = new AutoPaymentPrepareDTO
             {
@@ -120,9 +125,10 @@ namespace Clinic_CRM.Services.CardServices
         {
             var card = await _context.Cards.FindAsync(dto.Id);
 
+            if (card == null)
+                throw new KeyNotFoundException($"Card Not Found.");
             _mapper.Map(card, dto);
 
-            await _patientService.UpdatePatient(dto.PatientDTO);
             _context.Cards.Update(card);
 
             return card;

@@ -100,11 +100,13 @@ namespace Clinic_CRM.Helpers
                     Logo = "file_997207_2025_12_23_17_13_26.png",
                     Prefix = "LDC",
                     Email = "",
+                    EmergencyPhoneNumber = "+2510909090909",
                     PhoneNumber = "+2510909090909",
                     Address = "Bole Dembel",
                     City = "Addis Ababa",
                     Country = "Ethiopia",
                     SubCity = "Bole",
+                    LocationOnMap = "non for now"
                 };
                 _context.CompanySetting.Add(companySetting);
             }

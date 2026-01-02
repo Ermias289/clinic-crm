@@ -12,5 +12,7 @@
         public string City { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
         public string SubCity { get; set; } = string.Empty;
+        public string LocationOnMap { get; set; } = string.Empty; 
+        public string EmergencyPhoneNumber { get; set; } = string.Empty;
     }
 }
