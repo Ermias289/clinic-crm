@@ -24,7 +24,7 @@ class _ServicesViewState extends State<ServicesView> {
   @override
   void initState() {
     super.initState();
-    // Check if controller already exists, if not create it
+    // Get or create controller - the controller itself will handle when to load services
     if (!Get.isRegistered<MedicalServiceController>()) {
       // Initialize controller
       final apiClient = Get.find<ApiClient>();
@@ -38,14 +38,11 @@ class _ServicesViewState extends State<ServicesView> {
       final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
       controller = Get.put(MedicalServiceController(medicalRepo, cardRepo));
     } else {
-      // Reuse existing controller and refresh services
+      // Reuse existing controller
       controller = Get.find<MedicalServiceController>();
-      // Refresh services when view is recreated (e.g., after logout/login)
+      // Check if services should be loaded (e.g., after fresh login)
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Only refresh if services are empty or if this might be after a fresh login
-        if (controller.services.isEmpty || !controller.isLoading.value) {
-          controller.fetchServices();
-        }
+        controller.checkAndLoadServices();
       });
     }
   }
@@ -206,7 +203,7 @@ class _ServicesListView extends StatelessWidget {
                       Text('No services found', style: AppTextStyles.bodyLarge),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => controller.fetchServices(),
+                        onPressed: () => controller.refreshServices(),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryBlue,
                           foregroundColor: Colors.white,
@@ -219,7 +216,7 @@ class _ServicesListView extends StatelessWidget {
               }
 
               return RefreshIndicator(
-                onRefresh: () => controller.fetchServices(),
+                onRefresh: () => controller.refreshServices(),
                 color: AppColors.primaryBlue,
                 child: CustomScrollView(
                   slivers: [

@@ -35,6 +35,9 @@ class LoginController extends GetxController {
       await box.write('user', 'Test User');
       await box.write('userId', 3); // Matches SeedData.cs User ID
 
+      // Mark login time for services reload detection
+      await box.write('last_login_time', DateTime.now().millisecondsSinceEpoch);
+
       // Small delay to ensure token is properly saved
       await Future.delayed(const Duration(milliseconds: 50));
 
@@ -60,6 +63,9 @@ class LoginController extends GetxController {
       await box.write('userFullname', response.user.fullname);
       await box.write('userFName', response.user.fName);
       await box.write('userEmail', response.user.email);
+
+      // Mark login time for services reload detection
+      await box.write('last_login_time', DateTime.now().millisecondsSinceEpoch);
 
       // Small delay to ensure token is properly saved
       await Future.delayed(const Duration(milliseconds: 50));

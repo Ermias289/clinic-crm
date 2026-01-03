@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import '../../data/repositories/medical_service_repository_impl.dart';
 import '../../data/repositories/card_repository_impl.dart';
 import '../../domain/models/medical_service_model.dart';
@@ -9,6 +10,7 @@ class MedicalServiceController extends GetxController {
 
   // CardRepository kept for future use when card checks are re-enabled
   final CardRepository _cardRepository;
+  final box = GetStorage();
 
   MedicalServiceController(
     this._medicalServiceRepository,
@@ -16,31 +18,72 @@ class MedicalServiceController extends GetxController {
   );
 
   final services = <MedicalService>[].obs;
-  final isLoading = true.obs;
+  final isLoading = false.obs;
+  bool _hasLoadedOnce = false;
 
   @override
   void onInit() {
     super.onInit();
-    // Add a small delay to ensure auth token is properly set after login
-    Future.delayed(const Duration(milliseconds: 100), () {
-      fetchServices();
-    });
+    // Always check if we should load services on init
+    checkAndLoadServices();
+  }
+
+  // Method to check if services should be loaded and load them if needed
+  void checkAndLoadServices() {
+    if (_shouldLoadServices()) {
+      // Add a small delay to ensure auth token is properly set after login
+      Future.delayed(const Duration(milliseconds: 100), () {
+        fetchServices();
+      });
+    }
+  }
+
+  bool _shouldLoadServices() {
+    final lastLoginTime = box.read('last_login_time') ?? 0;
+    final lastServicesLoadTime = box.read('last_services_load_time') ?? 0;
+
+    // Always load if services are empty (this covers the case after login)
+    if (services.isEmpty) {
+      return true;
+    }
+
+    // Load if never loaded before
+    if (!_hasLoadedOnce) {
+      return true;
+    }
+
+    // If login happened after last services load, reload
+    if (lastLoginTime > lastServicesLoadTime) {
+      return true;
+    }
+
+    return false;
   }
 
   Future<void> fetchServices() async {
     try {
       isLoading.value = true;
       services.value = await _medicalServiceRepository.getMedicalServices();
+      _hasLoadedOnce = true;
+
+      // Store the time when services were loaded
+      await box.write(
+        'last_services_load_time',
+        DateTime.now().millisecondsSinceEpoch,
+      );
     } catch (e) {
-      print('Error loading services: $e');
       // If it's a token-related error, retry once after a short delay
       if (e.toString().contains('401') || e.toString().contains('token')) {
-        print('Retrying services fetch due to auth issue...');
         await Future.delayed(const Duration(milliseconds: 500));
         try {
           services.value = await _medicalServiceRepository.getMedicalServices();
+          _hasLoadedOnce = true;
+          await box.write(
+            'last_services_load_time',
+            DateTime.now().millisecondsSinceEpoch,
+          );
         } catch (retryError) {
-          print('Retry failed: $retryError');
+          // Retry failed, but we'll let the UI handle the empty state
         }
       }
     } finally {
@@ -51,5 +94,17 @@ class MedicalServiceController extends GetxController {
   Future<void> onServiceSelected(MedicalService service) async {
     // Navigate to service detail page instead of directly to booking
     Get.toNamed(Routes.SERVICE_DETAIL, arguments: service);
+  }
+
+  // Method to force refresh (for pull-to-refresh)
+  Future<void> refreshServices() async {
+    await fetchServices();
+  }
+
+  // Method to reset state (for logout)
+  void resetState() {
+    services.clear();
+    _hasLoadedOnce = false;
+    isLoading.value = false;
   }
 }

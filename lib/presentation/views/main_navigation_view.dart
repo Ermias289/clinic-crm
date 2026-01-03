@@ -11,19 +11,20 @@ import '../../core/theme/app_colors.dart';
 class MainNavigationView extends GetView<MainNavigationController> {
   const MainNavigationView({super.key});
 
+  // Create pages once to avoid recreation
+  static final List<Widget> _pages = [
+    const AppointmentsView(),
+    const CardSelectionView(), // Cards Page
+    const ServicesListView(), // Services moved to middle
+    const ProfileView(),
+    const ContactUsView(),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      const AppointmentsView(),
-      const CardSelectionView(), // Cards Page
-      ServicesListView(), // Services moved to middle
-      const ProfileView(),
-      const ContactUsView(),
-    ];
-
     return Obx(
       () => Scaffold(
-        body: pages[controller.currentIndex.value],
+        body: _pages[controller.currentIndex.value],
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: Colors.white,
