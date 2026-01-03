@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../config/app_routes.dart';
 import '../../core/api_client.dart';
+import '../../data/models/card_model.dart';
 
 class AppointmentBookingView extends StatefulWidget {
   const AppointmentBookingView({super.key});
@@ -18,6 +19,8 @@ class AppointmentBookingView extends StatefulWidget {
 class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   final _formKey = GlobalKey<FormState>();
   late MedicalService service;
+  CardModel? userCard;
+  bool isLoadingCard = true;
 
   // Selected values must come from the doctor schedule picker (not free pickers)
   String? selectedDoctorName;
@@ -30,6 +33,30 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   void initState() {
     super.initState();
     service = Get.arguments as MedicalService;
+    _loadUserCard();
+  }
+
+  Future<void> _loadUserCard() async {
+    try {
+      setState(() {
+        isLoadingCard = true;
+      });
+
+      final apiClient = Get.find<ApiClient>();
+      final response = await apiClient.get('/Card/my-card');
+
+      if (!response.hasError && response.body != null) {
+        setState(() {
+          userCard = CardModel.fromJson(response.body as Map<String, dynamic>);
+        });
+      }
+    } catch (e) {
+      // User doesn't have a card yet, that's okay
+    } finally {
+      setState(() {
+        isLoadingCard = false;
+      });
+    }
   }
 
   Future<void> _openDoctorSchedulePicker() async {
@@ -85,7 +112,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.1),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -322,7 +349,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryBlue.withOpacity(0.3),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -336,7 +363,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                     top: -20,
                     child: CircleAvatar(
                       radius: 60,
-                      backgroundColor: Colors.white.withOpacity(0.1),
+                      backgroundColor: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   Padding(
@@ -361,7 +388,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                             ),
                             const SizedBox(width: 16),
                             Text(
-                              'Select Schedule',
+                              'Book Appointment',
                               style: AppTextStyles.h2.copyWith(
                                 color: Colors.white,
                               ),
@@ -390,61 +417,83 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
           // Form Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Doctor, Date & Time', style: AppTextStyles.h3),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Choose from the doctor’s available schedule',
-                      style: AppTextStyles.bodySmall,
-                    ),
-                    const SizedBox(height: 24),
+              padding: const EdgeInsets.all(0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // User Card Display
+                  _buildUserCardDisplay(),
 
-                    _buildSelectionCard(
-                      title: 'Select Doctor & Slot',
-                      value:
-                          (selectedDoctorName == null ||
-                              selectedDateTime == null)
-                          ? 'Choose Doctor, Date & Time'
-                          : '${selectedDoctorName!} • ${DateFormat('EEE, d MMM').format(selectedDateTime!)} • ${DateFormat.jm().format(selectedDateTime!)}',
-                      icon: Icons.event_available_rounded,
-                      onTap: _openDoctorSchedulePicker,
-                      isSelected:
-                          selectedDoctorId != null && selectedDateTime != null,
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _submitBooking,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryBlue,
-                          foregroundColor: Colors.white,
-                          elevation: 8,
-                          shadowColor: AppColors.primaryBlue.withOpacity(0.4),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                  // Form Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Doctor, Date & Time', style: AppTextStyles.h3),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Choose from the doctor\'s available schedule',
+                            style: AppTextStyles.bodySmall,
                           ),
-                        ),
-                        child: const Text(
-                          'Book Appointment',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 24),
+
+                          _buildSelectionCard(
+                            title: 'Select Doctor & Slot',
+                            value:
+                                (selectedDoctorName == null ||
+                                    selectedDateTime == null)
+                                ? 'Choose Doctor, Date & Time'
+                                : '${selectedDoctorName!} • ${DateFormat('EEE, d MMM').format(selectedDateTime!)} • ${DateFormat.jm().format(selectedDateTime!)}',
+                            icon: Icons.event_available_rounded,
+                            onTap: _openDoctorSchedulePicker,
+                            isSelected:
+                                selectedDoctorId != null &&
+                                selectedDateTime != null,
                           ),
-                        ),
+
+                          const SizedBox(height: 40),
+
+                          // Button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 56,
+                            child: ElevatedButton(
+                              onPressed: userCard?.isActive == true
+                                  ? _submitBooking
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryBlue,
+                                foregroundColor: Colors.white,
+                                elevation: 8,
+                                shadowColor: AppColors.primaryBlue.withValues(
+                                  alpha: 0.4,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                disabledBackgroundColor: AppColors.textSecondary
+                                    .withValues(alpha: 0.3),
+                              ),
+                              child: Text(
+                                userCard?.isActive == true
+                                    ? 'Book Appointment'
+                                    : 'Card Required',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -484,7 +533,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primaryBlue.withOpacity(0.1)
+                        ? AppColors.primaryBlue.withValues(alpha: 0.1)
                         : AppColors.backgroundLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -527,6 +576,236 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildUserCardDisplay() {
+    if (isLoadingCard) {
+      return Container(
+        height: 200,
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (userCard == null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.credit_card_off,
+              size: 48,
+              color: AppColors.textSecondary.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Active Card',
+              style: AppTextStyles.h3.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'You need an active card to book appointments',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => Get.toNamed(Routes.CARDS),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Request Card'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Display the user's card
+    final cardTypeName = userCard!.cardType?.name ?? 'CLINIC';
+    final expiryDate = userCard!.calculatedExpiryDate ?? userCard!.expiredAt;
+    final isActive = userCard!.isActive;
+
+    LinearGradient cardGradient;
+    if (cardTypeName.toLowerCase() == 'platinum') {
+      cardGradient = const LinearGradient(
+        colors: [Color(0xFF1a1a1a), Color(0xFF333333), Color(0xFF4d4d4d)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (cardTypeName.toLowerCase() == 'gold') {
+      cardGradient = const LinearGradient(
+        colors: [Color(0xFFFFD700), Color(0xFFFFB347), Color(0xFFFFA500)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else {
+      cardGradient = const LinearGradient(
+        colors: [Color(0xFFE8E8E8), Color(0xFFC0C0C0), Color(0xFFA8A8A8)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        gradient: cardGradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Decorative Circles
+          Positioned(
+            top: -30,
+            right: -30,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -20,
+            left: -40,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Row: Icon and Subscription Text
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Icon(
+                      Icons.medical_services,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    Text(
+                      '$cardTypeName SUBSCRIPTION',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                // Center: Card Number
+                Text(
+                  userCard!.cardNumber.isNotEmpty
+                      ? userCard!.cardNumber
+                      : '**** **** **** 1234',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Colors.white,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const Spacer(),
+                // Bottom: Expiry and Status
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'EXP ${expiryDate != null ? DateFormat('MM/yy').format(expiryDate) : 'N/A'}',
+                          style: AppTextStyles.caption.copyWith(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Status: ${isActive ? 'ACTIVE' : 'INACTIVE'}',
+                          style: AppTextStyles.caption.copyWith(
+                            color: isActive ? Colors.green : Colors.orange,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!isActive)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'PENDING',
+                          style: AppTextStyles.caption.copyWith(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -3,14 +3,15 @@ import 'package:get/get.dart'; // Needed for FormData & MultipartFile
 import '../../core/api_client.dart';
 import '../models/card_setting_model.dart';
 import '../models/request_card_model.dart';
+import '../models/payment_model.dart';
 
 abstract class CardRemoteDataSource {
   Future<List<CardSettingModel>> getCardSettings();
   Future<Map<String, dynamic>> requestCard(
     RequestCardModel request,
   ); // Changed to return Map (Card object)
-  Future<List<Map<String, dynamic>>> getPaymentsByCardId(int cardId);
-  Future<bool> createPayment(int paymentId, String proofPath);
+  Future<List<PaymentModel>> getPaymentsByCardId(int cardId);
+  Future<PaymentModel> createPaymentRequest(CreatePaymentRequest request);
   Future<Map<String, dynamic>?> getMyCard();
   Future<String> uploadPaymentProof(
     String imagePath,
@@ -41,11 +42,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   @override
   Future<Map<String, dynamic>> requestCard(RequestCardModel request) async {
     try {
-      print('DEBUG BODY: ${request.toJson()}'); // Debug log
       final response = await apiClient.post('/Card', request.toJson());
-
-      print('DEBUG RESPONSE STATUS: ${response.statusCode}');
-      print('DEBUG RESPONSE BODY: ${response.body}');
 
       if (response.hasError) {
         throw Exception(response.statusText ?? 'Failed to request card');
@@ -59,9 +56,9 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getPaymentsByCardId(int cardId) async {
+  Future<List<PaymentModel>> getPaymentsByCardId(int cardId) async {
     try {
-      final response = await apiClient.get('/Payment/bycardId/$cardId');
+      final response = await apiClient.get('/Payment/bycardId?cardId=$cardId');
 
       if (response.hasError) {
         // Handle 404 as empty list (no payments found)
@@ -72,7 +69,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       }
 
       final List<dynamic> data = response.body;
-      return data.map((e) => e as Map<String, dynamic>).toList();
+      return data.map((json) => PaymentModel.fromJson(json)).toList();
     } catch (e) {
       // Handle 404 errors as empty list
       if (e.toString().contains('404') || e.toString().contains('Not Found')) {
@@ -83,51 +80,24 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   }
 
   @override
-  Future<bool> createPayment(int paymentId, String proofPath) async {
+  Future<PaymentModel> createPaymentRequest(
+    CreatePaymentRequest request,
+  ) async {
     try {
-      // Check file size: 2MB limit
-      final file = File(proofPath);
-      final int fileSize = await file.length();
-      const int maxSize = 2 * 1024 * 1024; // 2MB in bytes
-      if (fileSize > maxSize) {
-        throw Exception(
-          'Payment proof file size exceeds the maximum allowed limit of 2MB.',
-        );
-      }
-
-      // 1. Upload the image first
-      final form = FormData({
-        'file': MultipartFile(proofPath, filename: 'payment_proof.jpg'),
-      });
-
-      final uploadResponse = await apiClient.post('/FileUpload/upload', form);
-
-      if (uploadResponse.hasError) {
-        throw Exception(
-          uploadResponse.statusText ?? 'Failed to upload payment proof',
-        );
-      }
-
-      final String uploadedFileName = uploadResponse.body['fileName'];
-
-      // 2. Create Payment Request with the uploaded file name
-      final body = {
-        'id': paymentId,
-        'requestedAmount': 0,
-        'paymentProof': uploadedFileName,
-      };
-
-      final response = await apiClient.put('/Payment/paymentRequest', body);
-
-      print('DEBUG PAYMENT RESPONSE STATUS: ${response.statusCode}');
-      print('DEBUG PAYMENT RESPONSE BODY: ${response.body}');
+      final response = await apiClient.put(
+        '/Payment/paymentRequest',
+        request.toJson(),
+      );
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to create payment');
+        throw Exception(
+          response.statusText ?? 'Failed to create payment request',
+        );
       }
-      return true;
+
+      return PaymentModel.fromJson(response.body as Map<String, dynamic>);
     } catch (e) {
-      throw Exception('Error creating payment: $e');
+      throw Exception('Error creating payment request: $e');
     }
   }
 
@@ -144,8 +114,6 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
         );
       }
 
-      print('DEBUG: Uploading payment proof image...');
-
       // Upload the image
       final form = FormData({
         'file': MultipartFile(imagePath, filename: 'payment_proof.jpg'),
@@ -160,9 +128,6 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       }
 
       final String uploadedFileName = uploadResponse.body['fileName'];
-      print(
-        'DEBUG: Payment proof uploaded successfully. Filename: $uploadedFileName',
-      );
 
       return uploadedFileName;
     } catch (e) {

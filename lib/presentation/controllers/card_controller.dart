@@ -4,20 +4,25 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../data/models/card_setting_model.dart';
 import '../../data/models/request_card_model.dart';
+import '../../data/models/patient_model.dart';
+import '../../data/models/payment_model.dart';
 import '../../data/models/bank_model.dart';
 import '../../data/repositories/card_repository_impl.dart';
+import '../../data/repositories/patient_repository_impl.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';
 import '../../config/app_routes.dart';
 import 'package:get_storage/get_storage.dart';
 import 'profile_controller.dart';
 
 class CardController extends GetxController {
-  final CardRepositoryImpl repository;
+  final CardRepositoryImpl cardRepository;
+  final PatientRepositoryImpl patientRepository;
   final GetBankDetailsUseCase getBankDetailsUseCase;
   final _box = GetStorage();
 
   CardController({
-    required this.repository,
+    required this.cardRepository,
+    required this.patientRepository,
     required this.getBankDetailsUseCase,
   });
 
@@ -29,6 +34,12 @@ class CardController extends GetxController {
 
   // Request Flow State
   final Rx<CardSettingModel?> selectedCard = Rx<CardSettingModel?>(null);
+  final Rx<PatientModel?> createdPatient = Rx<PatientModel?>(null);
+  final Rx<Map<String, dynamic>?> createdCardData = Rx<Map<String, dynamic>?>(
+    null,
+  );
+  final RxList<PaymentModel> cardPayments = <PaymentModel>[].obs;
+  final Rx<PaymentModel?> autoPreparedPayment = Rx<PaymentModel?>(null);
 
   // Form Controllers
   final TextEditingController fNameController = TextEditingController();
@@ -36,8 +47,7 @@ class CardController extends GetxController {
   final TextEditingController lNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  final TextEditingController genderController =
-      TextEditingController(); // Could be dropdown
+  final TextEditingController genderController = TextEditingController();
   final TextEditingController allergiesController = TextEditingController();
   final TextEditingController chronicConditionsController =
       TextEditingController();
@@ -48,8 +58,8 @@ class CardController extends GetxController {
   final TextEditingController subCityController = TextEditingController();
   final TextEditingController countryController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
-  final TextEditingController dobController =
-      TextEditingController(); // Date picker handling needed ideally
+  final TextEditingController dobController = TextEditingController();
+  final TextEditingController requestRemarkController = TextEditingController();
 
   final Rx<File?> selectedPaymentProof = Rx<File?>(null);
 
@@ -66,7 +76,7 @@ class CardController extends GetxController {
   Future<void> fetchCardSettings() async {
     try {
       isLoading.value = true;
-      final settings = await repository.getCardSettings();
+      final settings = await cardRepository.getCardSettings();
       cardSettings.assignAll(settings);
     } catch (e) {
       Get.snackbar(
@@ -85,7 +95,6 @@ class CardController extends GetxController {
       final bankList = await getBankDetailsUseCase.getAllBanks();
       banks.assignAll(bankList);
 
-      // Fetch all bank accounts
       final accountList = await getBankDetailsUseCase.getAllBankAccounts();
       bankAccounts.assignAll(accountList);
     } catch (e) {
@@ -103,7 +112,7 @@ class CardController extends GetxController {
     selectedCard.value = cardSetting;
     _clearForm();
     await _preFillFromProfile();
-    Get.toNamed('/request-card-details');
+    Get.toNamed(Routes.REQUEST_CARD_DETAILS);
   }
 
   void validateAndProceed() {
@@ -133,9 +142,7 @@ class CardController extends GetxController {
       return;
     }
 
-    // Add more validation as needed (Email regex, etc.)
-
-    Get.toNamed('/request-card-payment');
+    Get.toNamed(Routes.REQUEST_CARD_PAYMENT);
   }
 
   void _clearForm() {
@@ -154,14 +161,18 @@ class CardController extends GetxController {
     countryController.clear();
     cityController.clear();
     dobController.clear();
+    requestRemarkController.clear();
     selectedPaymentProof.value = null;
+    createdPatient.value = null;
+    createdCardData.value = null;
+    cardPayments.clear();
+    autoPreparedPayment.value = null;
   }
 
   Future<void> _preFillFromProfile() async {
     try {
       final profileController = Get.find<ProfileController>();
 
-      // Ensure profile is loaded
       if (profileController.currentUser.value == null) {
         isLoading.value = true;
         await profileController.loadUserProfile();
@@ -175,7 +186,6 @@ class CardController extends GetxController {
       phoneController.text = profileController.phoneController.text;
     } catch (e) {
       // ProfileController not found or not initialized, skip pre-filling
-      print('ProfileController not available for pre-filling: $e');
     }
   }
 
@@ -194,7 +204,8 @@ class CardController extends GetxController {
     }
   }
 
-  Future<void> submitRequest() async {
+  /// PM's Specified Flow Implementation
+  Future<void> submitCardRequest() async {
     if (selectedPaymentProof.value == null) {
       Get.snackbar(
         'Required',
@@ -204,82 +215,121 @@ class CardController extends GetxController {
       return;
     }
 
-    print('DEBUG: Starting card request submission...');
-    print('DEBUG: Payment proof file: ${selectedPaymentProof.value!.path}');
-
     try {
       isLoading.value = true;
-      final patientId =
-          _box.read('userId') ?? 0; // Ensure this is valid or handle 0
+      final currentUserId = _box.read('userId') ?? 0;
 
-      // 1. Upload Payment Proof Image First
-      print('DEBUG: Uploading payment proof image...');
-      final uploadedFileName = await repository.uploadPaymentProof(
-        selectedPaymentProof.value!.path,
-      );
-      print('DEBUG: Payment proof uploaded. Filename: $uploadedFileName');
+      if (currentUserId == 0) {
+        throw Exception('User not logged in');
+      }
 
-      // 2. Construct Patient Details
-      final patientDetails = PatientDetails(
-        fName: fNameController.text,
-        mName: mNameController.text,
-        lName: lNameController.text,
-        email: emailController.text,
-        phoneNumber: phoneController.text,
-        gender: genderController.text,
-        alergies: allergiesController.text,
-        chronicConditions: chronicConditionsController.text,
-        emergencyContactName: emergencyNameController.text,
-        emergencyContactPhone: emergencyPhoneController.text,
-        address: addressController.text,
-        subCity: subCityController.text,
-        country: countryController.text,
-        city: cityController.text,
-        dateOfBirth: dobController.text, // Ensure correct format YYYY-MM-DD
-        requiresUserAccount:
-            false, // Defaulting to false for now, or add checkbox
-        userId: patientId, // Linking new patient to current user
+      // Step 1: Create Patient using POST /api/Patient
+      final patientRequest = CreatePatientRequest(
+        fName: fNameController.text.trim(),
+        mName: mNameController.text.trim(),
+        lName: lNameController.text.trim(),
+        email: emailController.text.trim(),
+        phoneNumber: phoneController.text.trim(),
+        gender: genderController.text.trim(),
+        alergies: allergiesController.text.trim(),
+        chronicConditions: chronicConditionsController.text.trim(),
+        emergencyContactName: emergencyNameController.text.trim(),
+        emergencyContactPhone: emergencyPhoneController.text.trim(),
+        address: addressController.text.trim(),
+        subCity: subCityController.text.trim(),
+        country: countryController.text.trim(),
+        city: cityController.text.trim(),
+        dateOfBirth: dobController.text
+            .trim(), // Should be in YYYY-MM-DD format
+        userId: currentUserId,
+        requiresUserAccount: false,
       );
 
-      final request = RequestCardModel(
-        patientId: patientId,
+      final patient = await patientRepository.createPatient(patientRequest);
+      createdPatient.value = patient;
+
+      // Step 2: Request Card using POST /api/Card
+      final cardRequest = RequestCardModel(
+        patientId: patient.id,
         cardTypeId: selectedCard.value?.cardTypeId ?? 0,
-        requestRemark: 'Mobile App Request - Payment Proof: $uploadedFileName',
-        patient: patientDetails,
+        requestRemark: requestRemarkController.text.trim().isEmpty
+            ? 'Mobile App Request'
+            : requestRemarkController.text.trim(),
+        patient: PatientDetails(
+          fName: patient.fName,
+          mName: patient.mName,
+          lName: patient.lName,
+          email: patient.email,
+          phoneNumber: patient.phoneNumber,
+          gender: patient.gender,
+          alergies: patient.alergies,
+          chronicConditions: patient.chronicConditions,
+          emergencyContactName: patient.emergencyContactName,
+          emergencyContactPhone: patient.emergencyContactPhone,
+          address: patient.address,
+          subCity: patient.subCity,
+          country: patient.country,
+          city: patient.city,
+          dateOfBirth: patient.dateOfBirth,
+          requiresUserAccount: patient.requiresUserAccount,
+          userId: patient.userId,
+        ),
       );
 
-      // 3. Request Card
-      print('DEBUG: Requesting Card...');
-      final cardResponse = await repository.requestCard(request);
-      // Assuming response contains 'id' of the created card.
-      final int cardId = cardResponse['id'] ?? 0;
+      final cardResponse = await cardRepository.requestCard(cardRequest);
+      createdCardData.value = cardResponse;
+      final cardId = cardResponse['id'] ?? 0;
 
       if (cardId == 0) {
-        throw Exception('Failed to retrieve Card ID from response.');
+        throw Exception('Failed to retrieve Card ID from response');
       }
-      print('DEBUG: Card Created. ID: $cardId');
 
-      // Navigation & Success
-      print('DEBUG: Navigating to dashboard...');
+      // Step 3: Get payments by card ID to find auto-prepared payment
+      final payments = await cardRepository.getPaymentsByCardId(cardId);
+      cardPayments.assignAll(payments);
+
+      // Find the auto-prepared payment (should be only one)
+      final autoPrepared = payments.where((p) => p.isAutoPrepared).firstOrNull;
+
+      if (autoPrepared == null) {
+        throw Exception('Auto-prepared payment not found');
+      }
+
+      autoPreparedPayment.value = autoPrepared;
+
+      // Step 4: Upload payment proof
+      final uploadedFileName = await cardRepository.uploadPaymentProof(
+        selectedPaymentProof.value!.path,
+      );
+
+      // Step 5: Create payment request using PUT /api/Payment/paymentRequest
+      final paymentRequest = CreatePaymentRequest(
+        id: autoPrepared.id,
+        requestedAmount: autoPrepared.expectedAmount,
+        paymentProof: uploadedFileName,
+        isInsuranceCovered: false, // Default to false, can be made configurable
+      );
+
+      await cardRepository.createPaymentRequest(paymentRequest);
+
+      // Success - Navigate to dashboard
       Get.offAllNamed(Routes.DASHBOARD, arguments: {'initialTab': 2});
 
-      print('DEBUG: Showing success message...');
       Get.snackbar(
         'Success',
-        'Your card request and payment proof have been submitted successfully! We will review your request.',
+        'Your card request and payment have been submitted successfully! Your card will be activated once the payment is approved.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
       );
-
-      print('DEBUG: Card request completed successfully!');
     } catch (e) {
-      print('DEBUG: Error in submitRequest: $e');
       Get.snackbar(
         'Error',
         'Failed to submit request: $e',
         snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
       );
     } finally {
       isLoading.value = false;

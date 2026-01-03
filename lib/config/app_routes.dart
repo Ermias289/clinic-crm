@@ -7,6 +7,8 @@ abstract class Routes {
   static const ONBOARDING = '/onboarding';
   static const PROFILE = '/profile';
   static const CARDS = '/cards';
+  static const REQUEST_CARD_DETAILS = '/request-card-details';
+  static const REQUEST_CARD_PAYMENT = '/request-card-payment';
   static const SERVICES = '/services';
   static const SERVICE_DETAIL = '/service-detail';
   static const OTP_VERIFICATION = '/otp-verification';

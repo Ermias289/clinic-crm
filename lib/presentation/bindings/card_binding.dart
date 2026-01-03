@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import '../../data/datasources/card_remote_datasource.dart';
+import '../../data/datasources/patient_remote_datasource.dart';
 import '../../data/datasources/bank_remote_datasource.dart';
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/repositories/card_repository_impl.dart';
+import '../../data/repositories/patient_repository_impl.dart';
 import '../../data/repositories/bank_repository_impl.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';
 import '../../core/api_client.dart';
@@ -20,12 +22,23 @@ class CardBinding extends Bindings {
       Get.lazyPut(() => ProfileController(userDataSource: Get.find()));
     }
 
+    // Card dependencies
     Get.lazyPut<CardRemoteDataSourceImpl>(
       () => CardRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
     );
     Get.lazyPut<CardRepositoryImpl>(
       () => CardRepositoryImpl(
         remoteDataSource: Get.find<CardRemoteDataSourceImpl>(),
+      ),
+    );
+
+    // Patient dependencies
+    Get.lazyPut<PatientRemoteDataSourceImpl>(
+      () => PatientRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+    );
+    Get.lazyPut<PatientRepositoryImpl>(
+      () => PatientRepositoryImpl(
+        remoteDataSource: Get.find<PatientRemoteDataSourceImpl>(),
       ),
     );
 
@@ -44,7 +57,8 @@ class CardBinding extends Bindings {
 
     Get.lazyPut<CardController>(
       () => CardController(
-        repository: Get.find<CardRepositoryImpl>(),
+        cardRepository: Get.find<CardRepositoryImpl>(),
+        patientRepository: Get.find<PatientRepositoryImpl>(),
         getBankDetailsUseCase: Get.find<GetBankDetailsUseCase>(),
       ),
     );

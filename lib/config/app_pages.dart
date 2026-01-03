@@ -22,6 +22,8 @@ import '../presentation/views/reset_password_view.dart';
 import '../presentation/bindings/reset_password_binding.dart';
 import '../presentation/views/doctor_schedule_picker_view.dart';
 import '../presentation/bindings/doctor_schedule_picker_binding.dart';
+import '../presentation/views/request_card_details_view.dart';
+import '../presentation/views/request_card_payment_view.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -60,6 +62,16 @@ class AppPages {
     GetPage(
       name: Routes.CARDS,
       page: () => const CardSelectionView(),
+      binding: CardBinding(),
+    ),
+    GetPage(
+      name: Routes.REQUEST_CARD_DETAILS,
+      page: () => RequestCardDetailsView(),
+      binding: CardBinding(),
+    ),
+    GetPage(
+      name: Routes.REQUEST_CARD_PAYMENT,
+      page: () => const RequestCardPaymentView(),
       binding: CardBinding(),
     ),
     GetPage(

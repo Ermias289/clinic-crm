@@ -1,12 +1,13 @@
 import '../datasources/card_remote_datasource.dart';
 import '../models/card_setting_model.dart';
 import '../models/request_card_model.dart';
+import '../models/payment_model.dart';
 
 abstract class CardRepository {
   Future<List<CardSettingModel>> getCardSettings();
   Future<Map<String, dynamic>> requestCard(RequestCardModel request);
-  Future<List<Map<String, dynamic>>> getPaymentsByCardId(int cardId);
-  Future<bool> createPayment(int paymentId, String proofPath);
+  Future<List<PaymentModel>> getPaymentsByCardId(int cardId);
+  Future<PaymentModel> createPaymentRequest(CreatePaymentRequest request);
   Future<Map<String, dynamic>?> getMyCard();
   Future<String> uploadPaymentProof(String imagePath); // New method
 }
@@ -27,13 +28,15 @@ class CardRepositoryImpl implements CardRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getPaymentsByCardId(int cardId) async {
+  Future<List<PaymentModel>> getPaymentsByCardId(int cardId) async {
     return await remoteDataSource.getPaymentsByCardId(cardId);
   }
 
   @override
-  Future<bool> createPayment(int paymentId, String proofPath) async {
-    return await remoteDataSource.createPayment(paymentId, proofPath);
+  Future<PaymentModel> createPaymentRequest(
+    CreatePaymentRequest request,
+  ) async {
+    return await remoteDataSource.createPaymentRequest(request);
   }
 
   @override

@@ -11,7 +11,9 @@ import '../../domain/usecases/get_bank_details_usecase.dart';
 import '../../core/api_client.dart';
 import '../controllers/card_controller.dart';
 import '../../data/datasources/card_remote_datasource.dart';
+import '../../data/datasources/patient_remote_datasource.dart';
 import '../../data/repositories/card_repository_impl.dart';
+import '../../data/repositories/patient_repository_impl.dart';
 import '../controllers/appointment_controller.dart';
 import '../../data/datasources/appointment_remote_data_source.dart';
 import '../../data/repositories/appointment_repository_impl.dart';
@@ -34,6 +36,16 @@ class MainNavigationBinding extends Bindings {
       ),
     );
 
+    // Patient Dependencies
+    Get.lazyPut<PatientRemoteDataSourceImpl>(
+      () => PatientRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+    );
+    Get.lazyPut<PatientRepositoryImpl>(
+      () => PatientRepositoryImpl(
+        remoteDataSource: Get.find<PatientRemoteDataSourceImpl>(),
+      ),
+    );
+
     // Bank Dependencies
     Get.lazyPut<BankRemoteDataSourceImpl>(
       () => BankRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
@@ -49,7 +61,8 @@ class MainNavigationBinding extends Bindings {
 
     Get.lazyPut<CardController>(
       () => CardController(
-        repository: Get.find<CardRepositoryImpl>(),
+        cardRepository: Get.find<CardRepositoryImpl>(),
+        patientRepository: Get.find<PatientRepositoryImpl>(),
         getBankDetailsUseCase: Get.find<GetBankDetailsUseCase>(),
       ),
     );

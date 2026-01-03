@@ -361,14 +361,14 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Payment',
+                              'Card Payment',
                               style: AppTextStyles.h2.copyWith(
                                 color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Step 2: Complete Payment',
+                              'Complete your card request',
                               style: AppTextStyles.bodyMedium.copyWith(
                                 color: Colors.white.withValues(alpha: 0.9),
                               ),
@@ -387,9 +387,9 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Card Details Section (First)
+                        // Order Summary Section
                         Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
@@ -411,64 +411,28 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Card Type',
-                                    style: AppTextStyles.bodySmall,
-                                  ),
-                                  Obx(
-                                    () => Text(
-                                      controller
-                                              .selectedCard
-                                              .value
-                                              ?.cardType
-                                              ?.name ??
-                                          'N/A',
-                                      style: AppTextStyles.h3.copyWith(
-                                        color: AppColors.primaryBlue,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              _buildSummaryRow(
+                                'Card Type',
+                                controller.selectedCard.value?.cardType?.name ??
+                                    'N/A',
+                              ),
+                              _buildSummaryRow(
+                                'Patient',
+                                '${controller.fNameController.text} ${controller.lNameController.text}',
+                              ),
+                              _buildSummaryRow(
+                                'Email',
+                                controller.emailController.text,
+                              ),
+                              _buildSummaryRow(
+                                'Phone',
+                                controller.phoneController.text,
                               ),
                               const Divider(height: 24),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Patient',
-                                    style: AppTextStyles.bodySmall,
-                                  ),
-                                  Text(
-                                    '${controller.fNameController.text} ${controller.lNameController.text}',
-                                    style: AppTextStyles.bodyMedium.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Amount to Pay',
-                                    style: AppTextStyles.bodySmall,
-                                  ),
-                                  Obx(
-                                    () => Text(
-                                      '\$${controller.selectedCard.value?.price.toStringAsFixed(2) ?? "0.00"}',
-                                      style: AppTextStyles.h3.copyWith(
-                                        color: Colors.green,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              _buildSummaryRow(
+                                'Amount',
+                                '\$${controller.selectedCard.value?.price.toStringAsFixed(2) ?? "0.00"}',
+                                isTotal: true,
                               ),
                             ],
                           ),
@@ -476,43 +440,47 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
 
                         const SizedBox(height: 24),
 
-                        // Payment Proof Section (Second)
+                        // Payment Proof Section
                         Text(
                           'Payment Proof',
                           style: AppTextStyles.h3.copyWith(
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Upload a screenshot or photo of your payment receipt',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
                         GestureDetector(
                           onTap: controller.pickPaymentProof,
                           child: Obx(() {
+                            final selectedImage =
+                                controller.selectedPaymentProof.value;
+
                             return Container(
-                              height: 120,
                               width: double.infinity,
+                              height: selectedImage != null ? 200 : 120,
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
+                                color: AppColors.backgroundLight,
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: AppColors.primaryBlue.withValues(
                                     alpha: 0.3,
                                   ),
                                   width: 2,
+                                  style: BorderStyle.solid,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
                               ),
-                              child:
-                                  controller.selectedPaymentProof.value != null
+                              child: selectedImage != null
                                   ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(14),
+                                      borderRadius: BorderRadius.circular(10),
                                       child: Image.file(
-                                        controller.selectedPaymentProof.value!,
+                                        selectedImage,
                                         fit: BoxFit.cover,
                                       ),
                                     )
@@ -521,17 +489,24 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Icon(
-                                          Icons.image_outlined,
-                                          size: 28,
-                                          color: AppColors.textSecondary,
+                                          Icons.cloud_upload_outlined,
+                                          size: 48,
+                                          color: AppColors.primaryBlue,
                                         ),
                                         const SizedBox(height: 8),
                                         Text(
-                                          'Click to attach receipt',
-                                          style: AppTextStyles.bodySmall
+                                          'Tap to upload payment proof',
+                                          style: AppTextStyles.bodyMedium
                                               .copyWith(
-                                                color: AppColors.textSecondary,
+                                                color: AppColors.primaryBlue,
                                               ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'JPG, PNG (Max 2MB)',
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -541,14 +516,21 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
 
                         const SizedBox(height: 24),
 
-                        // Bank Details Section (Third)
+                        // Available Payment Methods Section
                         Text(
                           'Available Payment Methods',
                           style: AppTextStyles.h3.copyWith(
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 8),
+                        Text(
+                          'You can pay to any of these accounts',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
                         Obx(() {
                           if (controller.isBankLoading.value) {
@@ -628,7 +610,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                           style: AppTextStyles.bodySmall
                                               .copyWith(color: Colors.white70),
                                         ),
-                                        Icon(
+                                        const Icon(
                                           Icons.account_balance,
                                           color: Colors.white70,
                                         ),
@@ -680,7 +662,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
             () => FloatingActionButton.extended(
               onPressed: controller.isLoading.value
                   ? null
-                  : controller.submitRequest,
+                  : controller.submitCardRequest,
               backgroundColor: AppColors.primaryBlue,
               elevation: 8,
               icon: controller.isLoading.value
@@ -694,7 +676,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                     )
                   : const Icon(Icons.send, color: Colors.white),
               label: Text(
-                controller.isLoading.value ? 'Submitting...' : 'Submit Request',
+                controller.isLoading.value ? 'Processing...' : 'Submit Request',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -706,6 +688,31 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
               FloatingActionButtonLocation.centerFloat,
         );
       },
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value, {bool isTotal = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: isTotal ? AppColors.textPrimary : AppColors.textSecondary,
+              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          Text(
+            value,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: isTotal ? Colors.green : AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
