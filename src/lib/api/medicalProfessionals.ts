@@ -1,17 +1,28 @@
-import apiClient from './client';
+import apiClient from "./client";
 
-export interface AddMedicalProfessionalDTO {
-  firstName: string;
-  lastName: string;
-  specialization?: string;
-  email?: string;
-  phone?: string;
-  branchId?: number;
+export interface CreateMedicalProfessionalDTO {
+  fName: string;
+  mName?: string;
+  lName: string;
+  email: string;
+  phoneNumber: string;
+  jobTitle: string;
+  specialty: string;
+  licenseNumber: string;
+  educationalBackground: string;
+  yearsOfExperience: number;
+  status: string;
+  profilePicture?: string;
+  requiresUserAccount: boolean;
+  medicalServicesId: number[];
+  branches: number[];
 }
 
-export interface UpdateMedicalProfessionalDTO extends AddMedicalProfessionalDTO {
+export interface UpdateMedicalProfessionalDTO
+  extends CreateMedicalProfessionalDTO {
   id: number;
 }
+
 
 export interface MedicalProfessional {
   id: number;
@@ -20,34 +31,46 @@ export interface MedicalProfessional {
   lName: string;
   email: string;
   phoneNumber: string;
-  specialty: string;
   jobTitle: string;
+  specialty: string;
   licenseNumber: string;
+  educationalBackground: string;
   yearsOfExperience: number;
-  profilePicture?: string;
   status: string;
-  branches: { id: number; name: string }[]; // if needed
-  medicalServices: { id: number; name: string }[]; // if needed
+  profilePicture?: string;
+  requiresUserAccount: boolean;
+  medicalServices: { id: number; name: string }[];
+  branches: { id: number; name: string }[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 
 export const medicalProfessionalsService = {
   getAll: async (): Promise<MedicalProfessional[]> => {
-    const response = await apiClient.get<MedicalProfessional[]>('/api/MedicalProfessional');
-    return response.data;
+    const res = await apiClient.get("/api/MedicalProfessional");
+    return res.data;
   },
+
   getById: async (id: number): Promise<MedicalProfessional> => {
-    const response = await apiClient.get<MedicalProfessional>(`/api/MedicalProfessional/${id}`);
-    return response.data;
+    const res = await apiClient.get(`/api/MedicalProfessional/${id}`);
+    return res.data;
   },
-  create: async (data: AddMedicalProfessionalDTO): Promise<MedicalProfessional> => {
-    const response = await apiClient.post<MedicalProfessional>('/api/MedicalProfessional', data);
-    return response.data;
+
+  create: async (
+    data: CreateMedicalProfessionalDTO
+  ): Promise<MedicalProfessional> => {
+    const res = await apiClient.post("/api/MedicalProfessional", data);
+    return res.data;
   },
-  update: async (data: UpdateMedicalProfessionalDTO): Promise<MedicalProfessional> => {
-    const response = await apiClient.put<MedicalProfessional>('/api/MedicalProfessional', data);
-    return response.data;
+
+  update: async (
+    data: UpdateMedicalProfessionalDTO
+  ): Promise<MedicalProfessional> => {
+    const res = await apiClient.put("/api/MedicalProfessional", data);
+    return res.data;
   },
+
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/MedicalProfessional/${id}`);
   },

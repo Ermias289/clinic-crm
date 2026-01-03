@@ -1,5 +1,6 @@
 import apiClient from './client';
 
+/* ------------------ CARD ------------------ */
 export interface PaymentCard {
   id: number;
   cardNumber: string;
@@ -14,8 +15,10 @@ export interface PaymentCard {
   expiredAt: string;
   createdAt: string;
   updatedAt: string;
+  requestedBy?: PaymentUser;
 }
 
+/* ------------------ USER ------------------ */
 export interface PaymentUser {
   id: number;
   username: string;
@@ -24,27 +27,43 @@ export interface PaymentUser {
   lName: string;
   email?: string;
   phoneNumber?: string;
+  userRoleId?: number;
+  isEmailConfirmed?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
+/* ------------------ PAYMENT ------------------ */
 export interface Payment {
   id: number;
   reference: string;
-  status: 'Approved' | 'Pending' | 'Rejected' | 'UnderReview';
+  status: 'Auto-Prepared' | 'Requested' | 'Checked' | 'Approved' | 'Rejected';
   card: PaymentCard;
   cardId: number;
   expectedAmount: number;
   unPaidAmount: number;
   paidAmount: number;
+  requestedAmount: number;
   paymentProof?: string;
   isInsuranceCovered?: boolean;
-  requestedAmount: number;
   requestedBy: PaymentUser;
   requestedById: number;
   requestedAt: string;
+  checkedAt?: string;
+  checkedBy?: PaymentUser;
+  checkRemark?: string;
   approvedAt?: string;
   approvedBy?: PaymentUser;
+  approvalRemark?: string;
+  rejectedAt?: string;
+  rejectionRemark?: string;
+  canceledAt?: string;
+  canceledRemark?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
+/* ------------------ SERVICE ------------------ */
 export const paymentsService = {
   getAll: async (): Promise<Payment[]> => {
     const response = await apiClient.get<Payment[]>('/api/Payment');
@@ -60,23 +79,25 @@ export const paymentsService = {
     const response = await apiClient.post<Payment>('/api/Payment/paymentRequest', data);
     return response.data;
   },
-
-  checkPayment: async (paymentId: number): Promise<Payment> => {
-    const response = await apiClient.get<Payment>(`/api/Payment/checkPayment`, {
-      params: { paymentId },
-    });
+  // CHECK
+  checkPayment: async (data: { id: number; chekedAmount: number; checkRemark: string; paymentProof: string }): Promise<Payment> => {
+    const response = await apiClient.put<Payment>("/api/Payment/checkPayment", data);
     return response.data;
   },
 
-  approvePayment: async (paymentId: number): Promise<void> => {
-    await apiClient.put(`/api/Payment/approvePayment`, { paymentId });
+  // APPROVE
+  approvePayment: async (data: { id: number; approvedAmount: number; approvalRemark: string }): Promise<void> => {
+    await apiClient.put("/api/Payment/approvePayment", data);
   },
 
-  cancelPayment: async (paymentId: number): Promise<void> => {
-    await apiClient.put(`/api/Payment/cancelPayment`, { paymentId });
+  // REJECT
+  rejectPayment: async (data: { id: number; rejectionRemark: string }): Promise<void> => {
+    await apiClient.put("/api/Payment/rejectPayment", data);
   },
 
-  rejectPayment: async (paymentId: number): Promise<void> => {
-    await apiClient.put(`/api/Payment/rejectPayment`, { paymentId });
+  // CANCEL
+  cancelPayment: async (data: { id: number; canceledRemark: string }): Promise<void> => {
+    await apiClient.put("/api/Payment/cancelPayment", data);
   },
 };
+
