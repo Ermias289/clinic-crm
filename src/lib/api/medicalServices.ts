@@ -22,7 +22,6 @@ export interface MedicalService {
   medicalProfessionals: (MedicalProfessionalMini | null)[];
   createdAt: string;
   updatedAt: string;
-  branches?: number[];
 }
 
 /* ===== Create / Update DTO ===== */

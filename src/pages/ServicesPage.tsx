@@ -65,6 +65,7 @@ const ServicesPage = () => {
   const [services, setServices] = useState<MedicalService[]>([]);
   const [doctors, setDoctors] = useState<MedicalProfessional[]>([]);
   const [branches, setBranches] = useState<BranchSettingDTO[]>([]);
+  const [serviceBranches, setServiceBranches] = useState<{[key: number]: BranchSettingDTO[]}>({});
 
   const [searchQuery, setSearchQuery] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
@@ -111,9 +112,29 @@ const ServicesPage = () => {
         branchService.getAll(),
       ]);
 
+      console.log("Services:", srv); // Debug
+      console.log("Branches:", brs); // Debug
+
       setServices(srv);
       setDoctors(docs);
       setBranches(brs);
+
+      // Load branches for each service
+      const branchMap: {[key: number]: BranchSettingDTO[]} = {};
+      for (const service of srv) {
+        try {
+          const serviceDetails = await medicalServicesService.getById(service.id);
+          console.log(`Service ${service.id} details:`, serviceDetails); // Debug
+          
+          // if (serviceDetails.branches && Array.isArray(serviceDetails.branches)) {
+          //   branchMap[service.id] = serviceDetails.branches.filter(b => b !== null) as BranchSettingDTO[];
+          // }
+        } catch (error) {
+          console.error(`Error loading branches for service ${service.id}:`, error);
+        }
+      }
+      setServiceBranches(branchMap);
+
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -135,7 +156,7 @@ const ServicesPage = () => {
   /* -------------------- HELPERS -------------------- */
   const getImageUrl = (filename: string) => {
     if (!filename) return "";
-    return `/api/FileUpload/${filename}`;
+    return `https://crmgate.nexabusinessgroup.com/api/FileUpload/${filename}`;
   };
 
   /* CREATE FORM HANDLERS */
@@ -179,7 +200,7 @@ const ServicesPage = () => {
     }
   };
 
-  const setupEditForm = (service: MedicalService) => {
+  const setupEditForm = async (service: MedicalService) => {
     setEditingService(service);
     setEditForm({
       name: service.name,
@@ -188,6 +209,7 @@ const ServicesPage = () => {
       servicePicture: service.servicePicture || "",
     });
     
+    // Set image preview with FULL URL
     if (service.servicePicture) {
       setEditServicePicturePreview(getImageUrl(service.servicePicture));
     }
@@ -200,12 +222,22 @@ const ServicesPage = () => {
       setEditSelectedDoctorIds(doctorIds);
     }
     
-    if (service.branches) {
-      const branchIds = service.branches
-        .filter(branch => branch !== null)
-        .map(branch => (branch as any).id);
-      setEditSelectedBranchIds(branchIds);
-    }
+    // Load branches for this service
+    // try {
+    //   const serviceDetails = await medicalServicesService.getById(service.id);
+    //   if (serviceDetails.branches && Array.isArray(serviceDetails.branches)) {
+    //     const branchIds = serviceDetails.branches
+    //       .filter(branch => branch !== null)
+    //       .map(branch => (branch as BranchSettingDTO).id);
+    //     setEditSelectedBranchIds(branchIds);
+    //   }
+    // } catch (error) {
+    //   console.error("Error loading service branches:", error);
+    //   toast({
+    //     title: "Failed to load service branches",
+    //     variant: "destructive",
+    //   });
+    // }
     
     setOpenEdit(true);
   };
@@ -310,11 +342,11 @@ const ServicesPage = () => {
 
       setCreateServicePictureFile(file);
       
-     
+      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setCreateServicePicturePreview(previewUrl);
       
-
+      // Upload file immediately
       uploadServicePicture(file, true);
     }
   };
@@ -331,7 +363,7 @@ const ServicesPage = () => {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "File too large",
           description: "Please select an image smaller than 5MB",
@@ -342,11 +374,11 @@ const ServicesPage = () => {
 
       setEditServicePictureFile(file);
       
-     
+      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setEditServicePicturePreview(previewUrl);
       
-     
+      // Upload file immediately
       uploadServicePicture(file, false);
     }
   };
@@ -415,7 +447,6 @@ const ServicesPage = () => {
 
   /* FORM SUBMISSION */
   const handleCreate = async () => {
-
     if (!createForm.name || createForm.durationInMinutes <= 0) {
       toast({
         title: "Missing required fields",
@@ -435,8 +466,7 @@ const ServicesPage = () => {
     }
 
     try {
-
-      const serviceData: any = {
+      const serviceData = {
         name: createForm.name,
         description: createForm.description,
         durationInMinutes: createForm.durationInMinutes,
@@ -445,7 +475,7 @@ const ServicesPage = () => {
         branches: createSelectedBranchIds,
       };
 
-      console.log("Creating service with data:", serviceData); // Debug log
+      console.log("Creating service with data:", serviceData);
 
       const newService = await medicalServicesService.create(serviceData);
 
@@ -458,6 +488,7 @@ const ServicesPage = () => {
       
       resetCreateForm();
       setOpenCreate(false);
+      loadData(); // Reload data to get branches
     } catch (err: any) {
       console.error("Error adding service:", err);
       toast({
@@ -471,7 +502,6 @@ const ServicesPage = () => {
   const handleUpdate = async () => {
     if (!editingService) return;
 
-    // Validate required fields
     if (!editForm.name || editForm.durationInMinutes <= 0) {
       toast({
         title: "Missing required fields",
@@ -481,7 +511,6 @@ const ServicesPage = () => {
       return;
     }
 
-    // Validate that branches are selected
     if (editSelectedBranchIds.length === 0) {
       toast({
         title: "No branches selected",
@@ -492,8 +521,7 @@ const ServicesPage = () => {
     }
 
     try {
-      
-      const serviceData: any = {
+      const serviceData = {
         id: editingService.id,
         name: editForm.name,
         description: editForm.description,
@@ -503,7 +531,7 @@ const ServicesPage = () => {
         branches: editSelectedBranchIds,
       };
 
-      console.log("Updating service with data:", serviceData); // Debug log
+      console.log("Updating service with data:", serviceData);
 
       const updatedService = await medicalServicesService.update(serviceData);
 
@@ -518,6 +546,7 @@ const ServicesPage = () => {
       
       resetEditForm();
       setOpenEdit(false);
+      loadData(); // Reload data to get updated branches
     } catch (err: any) {
       console.error("Error updating service:", err);
       toast({
@@ -701,12 +730,26 @@ const ServicesPage = () => {
                           src={createServicePicturePreview} 
                           alt="Preview" 
                           className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent) {
+                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><ImageIcon class="w-8 h-8 text-muted-foreground" /></div>';
+                            }
+                          }}
                         />
                       ) : createForm.servicePicture ? (
                         <img 
                           src={getImageUrl(createForm.servicePicture)} 
                           alt="Service" 
                           className="w-full h-full object-cover rounded-lg"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent) {
+                              parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><ImageIcon class="w-8 h-8 text-muted-foreground" /></div>';
+                            }
+                          }}
                         />
                       ) : (
                         <ImageIcon className="w-8 h-8 text-muted-foreground" />
@@ -814,6 +857,13 @@ const ServicesPage = () => {
                   src={getImageUrl(service.servicePicture)} 
                   alt={service.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-primary/10"><ClipboardList class="w-12 h-12 text-primary/50" /></div>';
+                    }
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-primary/10">
@@ -837,32 +887,34 @@ const ServicesPage = () => {
                   <span className="font-medium">{service.durationInMinutes} minutes</span>
                 </div>
 
-                {/* BRANCHES - Display branches if they exist */}
-                {(service as any).branches && (service as any).branches.length > 0 && (
-                  <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm font-medium">Available at:</span>
-                    </div>
+                {/* BRANCHES - Display branches */}
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="w-4 h-4" />
+                    <span className="text-sm font-medium">Available at:</span>
+                  </div>
+                  {serviceBranches[service.id] && serviceBranches[service.id].length > 0 ? (
                     <div className="flex flex-wrap gap-1">
-                      {(service as any).branches.slice(0, 2).map((branch: any, index: number) => (
-                        branch && (
-                          <span
-                            key={branch.id || index}
-                            className="px-2 py-1 bg-secondary/20 rounded-full text-xs"
-                          >
-                            {branch.name}
-                          </span>
-                        )
+                      {serviceBranches[service.id].slice(0, 2).map((branch) => (
+                        <span
+                          key={branch.id}
+                          className="px-2 py-1 bg-secondary/20 rounded-full text-xs"
+                        >
+                          {branch.name}
+                        </span>
                       ))}
-                      {(service as any).branches.length > 2 && (
+                      {serviceBranches[service.id].length > 2 && (
                         <span className="px-2 py-1 bg-secondary/20 rounded-full text-xs">
-                          +{(service as any).branches.length - 2} more
+                          +{serviceBranches[service.id].length - 2} more
                         </span>
                       )}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <span className="text-xs text-red-500">
+                      No branches assigned
+                    </span>
+                  )}
+                </div>
 
                 {/* DOCTORS */}
                 <div className="mb-4">
@@ -1104,12 +1156,26 @@ const ServicesPage = () => {
                         src={editServicePicturePreview} 
                         alt="Preview" 
                         className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent) {
+                            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><ImageIcon class="w-8 h-8 text-muted-foreground" /></div>';
+                          }
+                        }}
                       />
                     ) : editForm.servicePicture ? (
                       <img 
                         src={getImageUrl(editForm.servicePicture)} 
                         alt="Service" 
                         className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent) {
+                            parent.innerHTML = '<div class="w-full h-full flex items-center justify-center"><ImageIcon class="w-8 h-8 text-muted-foreground" /></div>';
+                          }
+                        }}
                       />
                     ) : (
                       <ImageIcon className="w-8 h-8 text-muted-foreground" />

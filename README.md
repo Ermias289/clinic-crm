@@ -13,13 +13,16 @@
 // status drop dowm - done
 // but first like linkeden drop down selceting  - done 
 // be comma separate tedergo the ids will be sended - done 
-// conformation is added for deleting doctors - done 
+// conformation is added for deleting doctors - done
+// for services pic png bottom - done  
+// docters and branches also drop down for service - done 
 
 // To be done 
 // edit doctors - have some issues
-// for services pic png bottom - done 
-// docters and branches also drop down for service - done 
-// edit services - has some issues
+// edit services - has some issues line 551
+// branch issue - for service - not done
+
+//select patient for sending email only send ids , string emailsubject, emailbody
 
 
 
