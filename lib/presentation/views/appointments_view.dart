@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../config/app_routes.dart';
@@ -35,12 +36,35 @@ class AppointmentsView extends GetView<AppointmentController> {
               onRefresh: () => controller.fetchAppointments(),
               child: Column(
                 children: [
-                  // Credit Card Style Header - Larger
-                  Container(
-                    margin: const EdgeInsets.all(20),
-                    height: 220,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                  Obx(() {
+                    final userCard = controller.userCard.value;
+                    final cardTypeName = userCard?.cardType?.name ?? 'Standard';
+                    final isActive = userCard?.isActive ?? false;
+                    final expiryDate = userCard?.calculatedExpiryDate ?? userCard?.expiredAt;
+
+                    LinearGradient cardGradient;
+                    if (cardTypeName.toLowerCase() == 'platinum') {
+                      cardGradient = const LinearGradient(
+                        colors: [
+                          Color(0xFF1a1a1a),
+                          Color(0xFF333333),
+                          Color(0xFF4d4d4d)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      );
+                    } else if (cardTypeName.toLowerCase() == 'gold') {
+                      cardGradient = const LinearGradient(
+                        colors: [
+                          Color(0xFFFFD700),
+                          Color(0xFFFFB347),
+                          Color(0xFFFFA500)
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      );
+                    } else {
+                      cardGradient = const LinearGradient(
                         colors: [
                           AppColors.primaryBlue,
                           AppColors.primaryBlueLight,
@@ -48,183 +72,231 @@ class AppointmentsView extends GetView<AppointmentController> {
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
+                      );
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.all(20),
+                      height: 220,
+                      decoration: BoxDecoration(
+                        gradient: cardGradient,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryBlue.withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primaryBlue.withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        // Decorative circles
-                        Positioned(
-                          right: -30,
-                          top: -30,
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.1),
+                      child: Stack(
+                        children: [
+                          // Decorative circles
+                          Positioned(
+                            right: -30,
+                            top: -30,
+                            child: Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withOpacity(0.1),
+                              ),
                             ),
                           ),
-                        ),
-                        Positioned(
-                          left: -20,
-                          bottom: -20,
-                          child: Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white.withOpacity(0.05),
+                          Positioned(
+                            left: -20,
+                            bottom: -20,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withOpacity(0.05),
+                              ),
                             ),
                           ),
-                        ),
 
-                        // Content
-                        Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Top section
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Lucid Dental Clinic',
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: Colors.white.withOpacity(0.8),
-                                          letterSpacing: 1.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Patient Card',
-                                        style: AppTextStyles.h3.copyWith(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Icons.medical_services,
-                                      color: Colors.white,
-                                      size: 32,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              // Middle section - Patient Name
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'PATIENT NAME',
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: Colors.white.withOpacity(0.7),
-                                      fontSize: 10,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    userName.toUpperCase(),
-                                    style: AppTextStyles.h2.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              // Bottom section
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'APPOINTMENTS',
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: Colors.white.withOpacity(0.7),
-                                          fontSize: 10,
-                                          letterSpacing: 1.2,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Obx(
-                                        () => Text(
-                                          '${controller.appointments.length} Active',
-                                          style: AppTextStyles.bodyLarge
-                                              .copyWith(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Row(
+                          // Content
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Top section
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Icon(
-                                          Icons.verified_user,
-                                          color: Colors.white,
-                                          size: 16,
-                                        ),
-                                        const SizedBox(width: 4),
                                         Text(
-                                          'VERIFIED',
-                                          style: AppTextStyles.bodySmall
-                                              .copyWith(
+                                          'Lucid Dental Clinic',
+                                          style:
+                                              AppTextStyles.bodySmall.copyWith(
+                                            color:
+                                                Colors.white.withOpacity(0.9),
+                                            letterSpacing: 1.0,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          userCard != null
+                                              ? '$cardTypeName Member'
+                                              : 'Patient Card',
+                                          style: AppTextStyles.h3.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.medical_services,
+                                        color: Colors.white,
+                                        size: 32,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+
+                                // Middle section - Patient Name & Card Number
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      userName.toUpperCase(),
+                                      style: AppTextStyles.h2.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    if (userCard != null) ...[
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        userCard.cardNumber,
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                          color: Colors.white.withOpacity(0.9),
+                                          letterSpacing: 3,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ]
+                                  ],
+                                ),
+
+                                // Bottom section: Expiry & Status
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Show Expiry Date if card exists
+                                        if (userCard != null) ...[
+                                          Text(
+                                            'EXP ${expiryDate != null ? DateFormat('MM/yy').format(expiryDate) : 'N/A'}',
+                                            style: AppTextStyles.bodyMedium
+                                                .copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                        ],
+                                        // Show Active Appointments Count
+                                        Obx(
+                                          () => Text(
+                                            '${controller.appointments.length} Active Appts',
+                                            style: AppTextStyles.bodySmall
+                                                .copyWith(
+                                              color: Colors.white.withOpacity(0.8),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (userCard != null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isActive
+                                              ? Colors.white.withOpacity(0.2)
+                                              : Colors.orange.withOpacity(0.8),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isActive
+                                                  ? Icons.verified_user
+                                                  : userCard.status.toLowerCase() == 'pending'
+                                                      ? Icons.hourglass_empty
+                                                      : Icons.warning_amber_rounded,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              userCard.status.toUpperCase(),
+                                              style: AppTextStyles.bodySmall
+                                                  .copyWith(
                                                 color: Colors.white,
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 10,
                                               ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          'NO CARD',
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
+                        ],
+                      ),
+                    );
+                  }),
 
                   // Content
                   Expanded(
