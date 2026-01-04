@@ -1,6 +1,3 @@
-import 'package:get_storage/get_storage.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../../core/api_client.dart';
 import '../models/appointment_model.dart';
 
@@ -43,41 +40,34 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
         print('❌ Primary API call failed: ${response.statusCode} - ${response.statusText}');
         print('❌ Response body: ${response.body}');
         
-        // Strategy 2: Raw HTTP probe (Bypassing GetConnect)
-        print('🔄 Retrying with strategy 2: Raw HTTP Client Probe');
-        try {
-          final box = GetStorage();
-          final token = box.read('token');
-          final baseUrl = apiClient.baseUrl; // http://.../api
-          
-          // Try fetching ALL appointments (since bypatientId is broken)
-          final uri = Uri.parse('$baseUrl/Appointment'); 
-          print('🌐 Raw Requesting: $uri');
-          
-          final headers = {
-             'Authorization': 'Bearer $token',
-             // Intentionally OMITTING content-type: application/json to see if that helps
-          };
-          
-          final rawResponse = await http.get(uri, headers: headers);
-          
-          print('🛬 Raw Response: ${rawResponse.statusCode}');
-          print('🛬 Raw Body: ${rawResponse.body}');
-          
-          if (rawResponse.statusCode == 200) {
-             print('✅ Strategy 2 succeeded (Raw HTTP)');
-             final List<dynamic> body = json.decode(rawResponse.body);
-             final all = body.map((e) => AppointmentModel.fromJson(e)).toList();
-             final filtered = all.where((a) => a.patientId == id).toList();
-             print('🔍 Filtered ${all.length} to ${filtered.length} for patient $id');
-             return filtered;
-          }
-        } catch(e) {
-           print('❌ Strategy 2 failed: $e');
+        // Strategy 2: Try standard query parameter pattern
+        final url2 = '/Appointment?patientId=$id';
+        print('🔄 Retrying with strategy 2: $url2');
+        final response2 = await apiClient.get(url2);
+        
+        if (!response2.hasError) {
+           print('✅ Strategy 2 succeeded');
+           final List<dynamic> body = response2.body;
+           return body.map((e) => AppointmentModel.fromJson(e)).toList();
+        }
+
+        // Strategy 3: Try getting ALL appointments and filtering client-side
+        // This is a robust fallback if the specific filter endpoints are broken
+        print('🔄 Retrying with strategy 3: Fetch All & Filter');
+        final url3 = '/Appointment';
+        final response3 = await apiClient.get(url3);
+        
+        if (!response3.hasError) {
+           print('✅ Strategy 3 succeeded');
+           final List<dynamic> body = response3.body;
+           final all = body.map((e) => AppointmentModel.fromJson(e)).toList();
+           final filtered = all.where((a) => a.patientId == id).toList();
+           print('🔍 Filtered ${all.length} appointments to ${filtered.length} for patient $id');
+           return filtered;
         }
 
         throw Exception(
-          'Failed to fetch appointments: ${response.statusText} (${response.statusCode})',
+          'Failed to fetch appointments: ${response.statusText} (${response.statusCode}) - Server returned Id validation error on all endpoints.',
         );
       }
 

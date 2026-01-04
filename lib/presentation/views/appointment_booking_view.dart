@@ -33,29 +33,84 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   void initState() {
     super.initState();
     service = Get.arguments as MedicalService;
+    print('🚀 AppointmentBookingView initState loaded');
     _loadUserCard();
+  }
+
+  bool _hasLoadedOnce = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Auto-refresh when returning to this page
+    if (_hasLoadedOnce) {
+      print('🔄 User returned to AppointmentBookingView - Refreshing card status...');
+      _loadUserCard();
+    } else {
+      print('👋 AppointmentBookingView first dependency change');
+      _hasLoadedOnce = true;
+    }
   }
 
   Future<void> _loadUserCard() async {
     try {
+      print('📥 _loadUserCard started...');
       setState(() {
         isLoadingCard = true;
       });
 
       final apiClient = Get.find<ApiClient>();
-      final response = await apiClient.get('/Card/my-card');
+      
+      // Get current user ID
+      final box = GetStorage();
+      final userId = box.read('userId');
+      print('👤 Current UserId from storage: $userId');
+
+      if (userId == null) {
+        print('❌ No userId found in storage');
+        setState(() {
+          userCard = null;
+          isLoadingCard = false;
+        });
+        return;
+      }
+
+      // Call the new backend endpoint: /api/Card/cardByUserId/{UserId}
+      // Note: ApiClient base URL usually includes /api, so we might just need /Card/cardByUserId/$userId
+      // but let's check if ApiClient handles the prefix. Usually it does.
+      final endpoint = '/Card/cardByUserId/$userId';
+      print('🌐 Fetching card from $endpoint...');
+      
+      final response = await apiClient.get(endpoint);
+      print('📡 API Response Status: ${response.statusCode}');
 
       if (!response.hasError && response.body != null) {
+        print('✅ Card found for user!');
         setState(() {
           userCard = CardModel.fromJson(response.body as Map<String, dynamic>);
         });
+        print('🎉 Card details loaded: ID: ${userCard?.id}, Status: ${userCard?.status}');
+      } else {
+        // If 404 or other error, it likely means no card exists for this user
+        print('⚠️ No card found or error response: ${response.statusText} (Code: ${response.statusCode})');
+        print('   Response body: ${response.body}');
+        setState(() {
+          userCard = null;
+        });
       }
-    } catch (e) {
-      // User doesn't have a card yet, that's okay
+    } catch (e, stackTrace) {
+      print('💥 Error loading card: $e');
+      print('Stack trace: $stackTrace');
+      // User doesn't have a card yet, or network error
+      setState(() {
+        userCard = null;
+      });
     } finally {
       setState(() {
         isLoadingCard = false;
       });
+      print('🏁 _loadUserCard finished. isLoadingCard: $isLoadingCard');
     }
   }
 

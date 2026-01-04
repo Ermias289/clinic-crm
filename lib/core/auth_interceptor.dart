@@ -14,7 +14,6 @@ class AuthInterceptor {
         print('⚠️ No auth token found for request: ${request.url}');
       }
       print('🚀 Request URL: ${request.url}');
-      print('📨 Request Headers: ${request.headers}');
       return request;
     });
 
