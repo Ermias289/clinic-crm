@@ -1,13 +1,60 @@
 import apiClient from './client';
 
 export interface RequestCardDTO {
-  patientId: number;
-  cardTypeId: number;
+  patientId?: number;           
+  cardTypeId: number;         
+  requestRemark?: string;     
+  patient?: {                   
+    fName: string;
+    mName?: string;
+    lName: string;
+    email?: string;
+    phoneNumber?: string;
+    gender?: string;
+    alergies?: string;
+    chronicConditions?: string;
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+    address?: string;
+    subCity?: string;
+    country?: string;
+    city?: string;
+    userId?: number;
+    dateOfBirth?: string;
+    requiresUserAccount?: boolean;
+    createdAt?: string;
+  };
 }
 
 export interface UpdateCardDTO {
   id: number;
-  status: 'active' | 'expired' | 'pending' | 'suspended';
+  status: 'Active' | 'Expired' | 'Pending' | 'Suspended';
+  
+  patientId?: number;
+  cardTypeId?: number;
+  requestRemark?: string;
+  activationRemark?: string;
+  patientDTO?: {
+    id: number;
+    fName: string;
+    mName: string;
+    lName: string;
+    email: string;
+    phoneNumber: string;
+    gender: string;
+    alergies: string;
+    chronicConditions: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
+    address: string;
+    subCity: string;
+    country: string;
+    city: string;
+    userId: number;
+    dateOfBirth: string;
+    requiresUserAccount: boolean;
+    updatedAt: string;
+  };
 }
 
 export interface CardDTO {
@@ -26,7 +73,6 @@ export interface CardDTO {
   requestedById?: number;
   benefits?: string[];          
 }
-
 
 export const cardService = {
   getAll: async (): Promise<CardDTO[]> => {

@@ -22,6 +22,7 @@ export interface MedicalService {
   medicalProfessionals: (MedicalProfessionalMini | null)[];
   createdAt: string;
   updatedAt: string;
+  branches?: number[];
 }
 
 /* ===== Create / Update DTO ===== */
@@ -89,5 +90,22 @@ export const medicalServicesService = {
   // DELETE api/MedicalService/{id}
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/MedicalService/${id}`);
+  },
+
+  // Upload image
+  uploadImage: async (file: File): Promise<{ filename: string }> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const res = await apiClient.post<{ filename: string }>(
+      "/api/FileUpload/upload",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return res.data;
   },
 };

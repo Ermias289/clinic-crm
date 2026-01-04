@@ -64,12 +64,15 @@ export const medicalProfessionalsService = {
     return res.data;
   },
 
-  update: async (
-    data: UpdateMedicalProfessionalDTO
-  ): Promise<MedicalProfessional> => {
-    const res = await apiClient.put("/api/MedicalProfessional", data);
-    return res.data;
-  },
+update: async (
+  data: CreateMedicalProfessionalDTO & { id: number }
+): Promise<MedicalProfessional> => {
+  const response = await apiClient.put<MedicalProfessional>(
+    `/api/MedicalProfessional/${data.id}`,
+    data
+  );
+  return response.data;
+},
 
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/MedicalProfessional/${id}`);
