@@ -33,7 +33,8 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _cardService.RequestCard(dto));
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -51,7 +52,8 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _cardService.UpdateCard(dto));
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -68,7 +70,8 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _cardService.GetAllCards());
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -85,7 +88,8 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _cardService.GetCardByReference(reference));
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -102,7 +106,8 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _cardService.GetCardById(Id));
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -119,7 +124,24 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
 
                 return Ok(await _cardService.ReActivateCard(Id));
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+        [HttpGet("cardByUserId/{UserId}")]
+        public async Task<ActionResult> GetCardByUserId(int UserId)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewCard))
+                    throw new UnauthorizedAccessException();
+                return Ok(await _cardService.GetCardByUserId(UserId));
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }

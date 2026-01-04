@@ -12,5 +12,6 @@ namespace Clinic_CRM.Services.CardServices
         Task<List<Card>> GetAllCards();
         Task<Card> ReActivateCard(int Id);
         Task<string> AutoExpire();
+        Task<Card> GetCardByUserId(int UserId);
     }
 }

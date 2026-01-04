@@ -46,6 +46,11 @@ namespace Clinic_CRM.Services.CardServices
 
             if (patient == null)
                 throw new KeyNotFoundException("Patient Not Registered Yet.");
+            
+            var existingCard = await _context.Cards.Where(x => x.PatientId == dto.PatientId).FirstOrDefaultAsync();
+
+            if (existingCard != null)
+                throw new KeyNotFoundException("You already have a card.");
 
             var user = await _context.Users
              .Include(u => u.UserRole)
@@ -64,7 +69,7 @@ namespace Clinic_CRM.Services.CardServices
             card.RequestedById = _userService.GetCurrentUserNoInclude().Id;
             card.RequestRemark = "Requested By Patient.";
             card.Status = CARD_STATUS.PENDING;
-
+            card.RequestedAt = DateTime.UtcNow;
 
             _context.Cards.Add(card);
             await _context.SaveChangesAsync();
@@ -84,10 +89,7 @@ namespace Clinic_CRM.Services.CardServices
             if (user == null)
                 throw new KeyNotFoundException("User Not Found. Please try again later.");
 
-            var existingCard = await _context.Cards.Where(x => x.PatientId == dto.PatientId).FirstOrDefaultAsync();
-
-            if (existingCard != null)
-                throw new KeyNotFoundException("You already have a card.");
+           
 
             Console.WriteLine("Working...");
             
@@ -258,6 +260,21 @@ namespace Clinic_CRM.Services.CardServices
             await _context.SaveChangesAsync();
 
             return $"{expiredCount} cards expired successfully.";
+        }
+
+        public async Task<Card> GetCardByUserId(int UserId)
+        {
+            var patient = await _context.Patients.Where(x => x.UserId == UserId).FirstOrDefaultAsync();
+            
+            if (patient == null)
+                throw new KeyNotFoundException("User does not have a patient record.");
+           
+            var card = await _context.Cards.Where(x => x.PatientId == patient.Id).FirstOrDefaultAsync();
+            
+            if (card == null)
+                throw new KeyNotFoundException("Card Not Found.");
+
+            return card;
         }
     }
 }

@@ -119,33 +119,36 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .FirstOrDefaultAsync() ?? "";
             // Set status
             app.Status = APPOINTMENT_STATUS.SCHEDULED;
-            
+            app.ScheduledAt = DateTime.UtcNow;
+            app.ScheduledById = _userService.GetCurrentUserNoInclude().Id;
+
             // Add appointment
             _context.Appointments.Add(app);
             await _context.SaveChangesAsync();
             app.Reference = $"{prefix}/{PREFIX.APPOINTMENT}/{app.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{app.CreatedAt.Year}";
 
-            var medicalPro = await _context.MedicalProfessionals.Include(x => x.User).Where(x => x.Id == app.MedicalProfessionalId).FirstOrDefaultAsync();
-            var patientn = await _context.Patients.Include(x => x.User).Where(x => x.Id == app.PatientId).FirstOrDefaultAsync();
-            
+            var medicalPro = await _context.MedicalProfessionals.Include(x => x.User).Where(x => x.Id == app.MedicalProfessionalId).Select(x => x.UserId).FirstOrDefaultAsync();
+            var patientn = await _context.Patients.Include(x => x.User).Where(x => x.Id == app.PatientId).Select(x => x.UserId).FirstOrDefaultAsync();
 
-            if (patient != null)
+            var medicalUser = await _context.Users.FindAsync(medicalPro);
+            var patientUser = await _context.Users.FindAsync(patientn);
+            if (patientUser != null)
             {
                 await _notify.SendUserAsync(
                   $"Appointment for {app.Dentistry.Name} Service",
                   $"Dear {app.Patient.FName}, You have successfully made an appointment for {app.Day} at {app.ReservationTime}. Please arrive on time as scheduled. If you need to make any changes, contact the clinic in advance.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { patient.Id }
+                  new List<int> { patientUser.Id }
                   );
             }
 
-            if (medicalPro != null)
+            if (medicalUser != null)
             {
                 await _notify.SendUserAsync(
                   $"New Appointment",
                   $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, You have a new appointment for {app.Day} at {app.ReservationTime} with patient {app.Patient.FName}. If you need to make any changes, contact the clinic in advance.",
                   NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { medicalPro.Id }
+                  new List<int> { medicalUser.Id }
                   );
             }
 
@@ -253,24 +256,38 @@ namespace Clinic_CRM.Services.AppointmentServices
                         receptions
                         );
             }
-
+            await _context.SaveChangesAsync();
 
             return app;
         }
 
         public async Task<Appointment> GetAppointmentById(int Id)
         {
-            var app = await _context.Appointments.FindAsync(Id);
+            var app = await _context.Appointments
+                .Where(x => x.Id == Id)
+                .Include(x => x.Patient)
+                    .ThenInclude(x => x.User)
+                .FirstOrDefaultAsync();
+                
 
+          
             if (app == null)
                 throw new KeyNotFoundException("Appointment Not Found");
+
+            if (_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
+            {
+                if (app.Patient.UserId != _userService.GetCurrentUserNoInclude().Id)
+                    throw new UnauthorizedAccessException("You are not allowed to see the details of this Appointment.");
+            }
 
             return app;
         }
 
         public async Task<List<Appointment>> GetAllAppointment()
         {
-            return await _context.Appointments.ToListAsync();
+            return await _context.Appointments.Include(x => x.Patient).ThenInclude(x => x.User)
+                .Where(x => x.Patient.UserId == _userService.GetCurrentUserNoInclude().Id)
+                .ToListAsync();
         }
 
         public async Task<Appointment> DeleteAppointment(int Id)

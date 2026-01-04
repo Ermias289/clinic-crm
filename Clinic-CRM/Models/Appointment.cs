@@ -21,6 +21,10 @@ namespace Clinic_CRM.Models
 
         public string Status { get; set; } = string.Empty;
 
+        public User ScheduledBy { get; set; }
+        public int? ScheduledById { get; set; }
+        public DateTime ScheduledAt { get; set; }
+
         public User CompletedBy { get; set; }
         public int? CompletedById { get; set; }
         public DateTime CompletedAt { get; set; }
