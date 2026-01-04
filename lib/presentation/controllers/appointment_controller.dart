@@ -71,13 +71,13 @@ class AppointmentController extends GetxController {
       isLoading.value = false;
     }
   }
-}
 
-void refreshAppointments() {
-  fetchAppointments();
-}
+  Future<void> refreshAppointments() async {
+    await fetchAppointments();
+  }
 
-void clearErrorAndRetry() {
-  error.value = '';
-  fetchAppointments();
+  void clearErrorAndRetry() {
+    error.value = '';
+    fetchAppointments();
+  }
 }

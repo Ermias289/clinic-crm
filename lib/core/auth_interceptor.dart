@@ -8,11 +8,13 @@ class AuthInterceptor {
     client.addRequestModifier<dynamic>((request) {
       final token = box.read('token');
       if (token != null) {
-        request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Authorization'] = 'Bearer $token';
         print('🔑 Auth token added to request: ${request.url}');
       } else {
         print('⚠️ No auth token found for request: ${request.url}');
       }
+      print('🚀 Request URL: ${request.url}');
+      print('📨 Request Headers: ${request.headers}');
       return request;
     });
 

@@ -135,11 +135,11 @@ class PaymentModel {
     };
   }
 
-  bool get isAutoPrepared => status.toLowerCase() == 'autoprepared';
+  bool get isAutoPrepared => status.toLowerCase() == 'auto-prepared';
   bool get isRequested => status.toLowerCase() == 'requested';
   bool get isChecked => status.toLowerCase() == 'checked';
   bool get isApproved => status.toLowerCase() == 'approved';
-  bool get isPartiallyPaid => status.toLowerCase() == 'partiallypaid';
+  bool get isPartiallyPaid => status.toLowerCase() == 'partially-paid';
   bool get isRejected => status.toLowerCase() == 'rejected';
   bool get isCanceled => status.toLowerCase() == 'canceled';
 }
