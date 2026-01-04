@@ -134,20 +134,18 @@ class AppointmentsView extends GetView<AppointmentController> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Lucid Dental Clinic',
+                                          'Patient Card',
                                           style:
                                               AppTextStyles.bodySmall.copyWith(
                                             color:
                                                 Colors.white.withOpacity(0.9),
                                             letterSpacing: 1.0,
-                                            fontWeight: FontWeight.w900,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          userCard != null
-                                              ? '$cardTypeName Member'
-                                              : 'Patient Card',
+                                          'Lucid Dental Clinic',
                                           style: AppTextStyles.h3.copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
