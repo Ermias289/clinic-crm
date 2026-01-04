@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/image_utils.dart';
 import '../../data/models/company_setting_model.dart';
 import '../controllers/contact_us_controller.dart';
 
@@ -44,7 +45,7 @@ class ContactUsView extends GetView<ContactUsController> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryBlue.withOpacity(0.3),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -61,7 +62,7 @@ class ContactUsView extends GetView<ContactUsController> {
                     height: 150,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                 ),
@@ -73,7 +74,7 @@ class ContactUsView extends GetView<ContactUsController> {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
                 ),
@@ -105,7 +106,7 @@ class ContactUsView extends GetView<ContactUsController> {
                                 Text(
                                   'Get in touch with our clinic',
                                   style: AppTextStyles.bodyMedium.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -114,7 +115,7 @@ class ContactUsView extends GetView<ContactUsController> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
@@ -179,6 +180,13 @@ class ContactUsView extends GetView<ContactUsController> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
+                    // Company Logo and Name Card
+                    if (setting.name?.isNotEmpty == true)
+                      _buildCompanyInfoCard(setting),
+
+                    if (setting.name?.isNotEmpty == true)
+                      const SizedBox(height: 16),
+
                     // Phone Card
                     if (setting.phoneNumber?.isNotEmpty == true)
                       _buildContactCard(
@@ -205,6 +213,35 @@ class ContactUsView extends GetView<ContactUsController> {
                       ),
 
                     if (setting.phoneNumber?.isNotEmpty == true)
+                      const SizedBox(height: 8),
+
+                    // Emergency Phone Card (separate from regular phone if available)
+                    if (setting.emergencyPhoneNumber?.isNotEmpty == true)
+                      _buildContactCard(
+                        icon: Icons.emergency_outlined,
+                        title: 'Emergency Contact',
+                        subtitle: setting.emergencyPhoneNumber!,
+                        isEmergency: true,
+                        onTap: () async {
+                          final Uri launchUri = Uri(
+                            scheme: 'tel',
+                            path: setting.emergencyPhoneNumber!.replaceAll(
+                              RegExp(r'[^\d+]'),
+                              '',
+                            ),
+                          );
+                          if (await canLaunchUrl(launchUri)) {
+                            await launchUrl(launchUri);
+                          } else {
+                            Get.snackbar(
+                              'Error',
+                              'Could not launch phone dialer',
+                            );
+                          }
+                        },
+                      ),
+
+                    if (setting.emergencyPhoneNumber?.isNotEmpty == true)
                       const SizedBox(height: 8),
 
                     // Email Card
@@ -236,9 +273,24 @@ class ContactUsView extends GetView<ContactUsController> {
                         icon: Icons.location_on_outlined,
                         title: 'Address',
                         subtitle: _buildFullAddress(setting),
-                        onTap: () {
-                          Get.snackbar('Info', 'Maps integration coming soon');
-                        },
+                        onTap: setting.locationOnMap?.isNotEmpty == true
+                            ? () async {
+                                // Try to open location in maps
+                                final Uri mapsUri = Uri.parse(
+                                  'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(_buildFullAddress(setting))}',
+                                );
+                                if (await canLaunchUrl(mapsUri)) {
+                                  await launchUrl(mapsUri);
+                                } else {
+                                  Get.snackbar('Error', 'Could not open maps');
+                                }
+                              }
+                            : () {
+                                Get.snackbar(
+                                  'Info',
+                                  'Maps integration coming soon',
+                                );
+                              },
                       ),
 
                     if (setting.address?.isNotEmpty == true)
@@ -254,8 +306,9 @@ class ContactUsView extends GetView<ContactUsController> {
 
                     const Spacer(),
 
-                    // Emergency Contact (using same phone number with different styling)
-                    if (setting.phoneNumber?.isNotEmpty == true)
+                    // Emergency Contact fallback (using regular phone if no emergency number)
+                    if (setting.emergencyPhoneNumber?.isEmpty == true &&
+                        setting.phoneNumber?.isNotEmpty == true)
                       _buildContactCard(
                         icon: Icons.emergency_outlined,
                         title: 'Emergency Contact',
@@ -291,6 +344,98 @@ class ContactUsView extends GetView<ContactUsController> {
     );
   }
 
+  Widget _buildCompanyInfoCard(CompanySettingModel setting) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppColors.softShadow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            // Company Logo
+            if (setting.logo?.isNotEmpty == true)
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    ImageUtils.buildImageUrl(setting.logo!),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.business,
+                        size: 30,
+                        color: AppColors.primaryBlue,
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primaryBlue,
+                          strokeWidth: 2,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              )
+            else
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                ),
+                child: Icon(
+                  Icons.business,
+                  size: 30,
+                  color: AppColors.primaryBlue,
+                ),
+              ),
+
+            const SizedBox(width: 16),
+
+            // Company Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    setting.name ?? 'Clinic',
+                    style: AppTextStyles.h2.copyWith(
+                      fontSize: 20,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (setting.prefix?.isNotEmpty == true) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      setting.prefix!,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildContactCard({
     required IconData icon,
     required String title,
@@ -303,7 +448,7 @@ class ContactUsView extends GetView<ContactUsController> {
         : AppColors.primaryBlue;
     final iconBgColor = isEmergency
         ? Colors.red.shade50
-        : AppColors.primaryBlue.withOpacity(0.05);
+        : AppColors.primaryBlue.withValues(alpha: 0.05);
 
     return Container(
       decoration: BoxDecoration(
@@ -438,7 +583,7 @@ class ContactUsView extends GetView<ContactUsController> {
     if (timeString == null || timeString.isEmpty) return '';
 
     try {
-      // Handle TimeOnly format from backend (e.g., "09:00:00")
+      // Handle TimeOnly format from backend (e.g., "2:30" or "12:30")
       final parts = timeString.split(':');
       if (parts.length >= 2) {
         final hour = int.parse(parts[0]);

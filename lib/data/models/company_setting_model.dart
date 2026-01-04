@@ -7,11 +7,13 @@ class CompanySettingModel {
   final String? logo;
   final String? prefix;
   final String? email;
+  final String? emergencyPhoneNumber;
   final String? phoneNumber;
   final String? address;
   final String? city;
   final String? country;
   final String? subCity;
+  final String? locationOnMap;
   final String? createdAt;
   final String? updatedAt;
   final List<BranchSettingModel>? branches;
@@ -23,11 +25,13 @@ class CompanySettingModel {
     this.logo,
     this.prefix,
     this.email,
+    this.emergencyPhoneNumber,
     this.phoneNumber,
     this.address,
     this.city,
     this.country,
     this.subCity,
+    this.locationOnMap,
     this.createdAt,
     this.updatedAt,
     this.branches,
@@ -41,11 +45,13 @@ class CompanySettingModel {
       logo: json['logo'],
       prefix: json['prefix'],
       email: json['email'],
+      emergencyPhoneNumber: json['emergencyPhoneNumber'],
       phoneNumber: json['phoneNumber'],
       address: json['address'],
       city: json['city'],
       country: json['country'],
       subCity: json['subCity'],
+      locationOnMap: json['locationOnMap'],
       createdAt: json['createdAt'],
       updatedAt: json['updatedAt'],
       branches: json['branches'] != null
@@ -68,11 +74,13 @@ class CompanySettingModel {
       'logo': logo,
       'prefix': prefix,
       'email': email,
+      'emergencyPhoneNumber': emergencyPhoneNumber,
       'phoneNumber': phoneNumber,
       'address': address,
       'city': city,
       'country': country,
       'subCity': subCity,
+      'locationOnMap': locationOnMap,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       'branches': branches?.map((branch) => branch.toJson()).toList(),

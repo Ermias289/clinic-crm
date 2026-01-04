@@ -30,11 +30,24 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
 
   @override
   Future<List<AppointmentModel>> getAppointmentsByPatientId(int id) async {
-    final response = await apiClient.get('/Appointment/bypatientId/$id');
-    if (response.hasError) {
-      throw Exception(response.statusText ?? 'Failed to fetch appointments');
+    try {
+      print('🔍 Fetching appointments for patient ID: $id');
+      final response = await apiClient.get('/Appointment/bypatientId/$id');
+
+      if (response.hasError) {
+        print('❌ API Error: ${response.statusCode} - ${response.statusText}');
+        print('❌ Response body: ${response.body}');
+        throw Exception(
+          'Failed to fetch appointments: ${response.statusText} (${response.statusCode})',
+        );
+      }
+
+      final List<dynamic> body = response.body;
+      print('✅ Successfully fetched ${body.length} appointments');
+      return body.map((e) => AppointmentModel.fromJson(e)).toList();
+    } catch (e) {
+      print('❌ Exception in getAppointmentsByPatientId: $e');
+      rethrow;
     }
-    final List<dynamic> body = response.body;
-    return body.map((e) => AppointmentModel.fromJson(e)).toList();
   }
 }
