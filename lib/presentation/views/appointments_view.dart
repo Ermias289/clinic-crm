@@ -7,6 +7,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../config/app_routes.dart';
 import '../controllers/appointment_controller.dart';
 import '../controllers/profile_controller.dart';
+import '../widgets/notification_badge.dart';
 
 class AppointmentsView extends GetView<AppointmentController> {
   const AppointmentsView({super.key});
@@ -40,7 +41,8 @@ class AppointmentsView extends GetView<AppointmentController> {
                     final userCard = controller.userCard.value;
                     final cardTypeName = userCard?.cardType?.name ?? 'Standard';
                     final isActive = userCard?.isActive ?? false;
-                    final expiryDate = userCard?.calculatedExpiryDate ?? userCard?.expiredAt;
+                    final expiryDate =
+                        userCard?.calculatedExpiryDate ?? userCard?.expiredAt;
 
                     LinearGradient cardGradient;
                     if (cardTypeName.toLowerCase() == 'platinum') {
@@ -48,7 +50,7 @@ class AppointmentsView extends GetView<AppointmentController> {
                         colors: [
                           Color(0xFF1a1a1a),
                           Color(0xFF333333),
-                          Color(0xFF4d4d4d)
+                          Color(0xFF4d4d4d),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -58,7 +60,7 @@ class AppointmentsView extends GetView<AppointmentController> {
                         colors: [
                           Color(0xFFFFD700),
                           Color(0xFFFFB347),
-                          Color(0xFFFFA500)
+                          Color(0xFFFFA500),
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -135,13 +137,14 @@ class AppointmentsView extends GetView<AppointmentController> {
                                       children: [
                                         Text(
                                           'Patient Card',
-                                          style:
-                                              AppTextStyles.bodySmall.copyWith(
-                                            color:
-                                                Colors.white.withOpacity(0.9),
-                                            letterSpacing: 1.0,
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: Colors.white.withOpacity(
+                                                  0.9,
+                                                ),
+                                                letterSpacing: 1.0,
+                                                fontWeight: FontWeight.w500,
+                                              ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
@@ -153,18 +156,8 @@ class AppointmentsView extends GetView<AppointmentController> {
                                         ),
                                       ],
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.medical_services,
-                                        color: Colors.white,
-                                        size: 32,
-                                      ),
-                                    ),
+                                    // Notification Icon
+                                    const NotificationBadge(iconSize: 32),
                                   ],
                                 ),
 
@@ -186,12 +179,14 @@ class AppointmentsView extends GetView<AppointmentController> {
                                         userCard.cardNumber,
                                         style: AppTextStyles.bodyMedium
                                             .copyWith(
-                                          color: Colors.white.withOpacity(0.9),
-                                          letterSpacing: 3,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                              color: Colors.white.withOpacity(
+                                                0.9,
+                                              ),
+                                              letterSpacing: 3,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                       ),
-                                    ]
+                                    ],
                                   ],
                                 ),
 
@@ -210,9 +205,9 @@ class AppointmentsView extends GetView<AppointmentController> {
                                             'EXP ${expiryDate != null ? DateFormat('MM/yy').format(expiryDate) : 'N/A'}',
                                             style: AppTextStyles.bodyMedium
                                                 .copyWith(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
                                           const SizedBox(height: 4),
                                         ],
@@ -222,8 +217,9 @@ class AppointmentsView extends GetView<AppointmentController> {
                                             '${controller.appointments.length} Active Appts',
                                             style: AppTextStyles.bodySmall
                                                 .copyWith(
-                                              color: Colors.white.withOpacity(0.8),
-                                            ),
+                                                  color: Colors.white
+                                                      .withOpacity(0.8),
+                                                ),
                                           ),
                                         ),
                                       ],
@@ -238,17 +234,20 @@ class AppointmentsView extends GetView<AppointmentController> {
                                           color: isActive
                                               ? Colors.white.withOpacity(0.2)
                                               : Colors.orange.withOpacity(0.8),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Row(
                                           children: [
                                             Icon(
                                               isActive
                                                   ? Icons.verified_user
-                                                  : userCard.status.toLowerCase() == 'pending'
-                                                      ? Icons.hourglass_empty
-                                                      : Icons.warning_amber_rounded,
+                                                  : userCard.status
+                                                            .toLowerCase() ==
+                                                        'pending'
+                                                  ? Icons.hourglass_empty
+                                                  : Icons.warning_amber_rounded,
                                               color: Colors.white,
                                               size: 16,
                                             ),
@@ -257,10 +256,10 @@ class AppointmentsView extends GetView<AppointmentController> {
                                               userCard.status.toUpperCase(),
                                               style: AppTextStyles.bodySmall
                                                   .copyWith(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 10,
-                                              ),
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 10,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -273,17 +272,18 @@ class AppointmentsView extends GetView<AppointmentController> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: Colors.white.withOpacity(0.2),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Text(
                                           'NO CARD',
                                           style: AppTextStyles.bodySmall
                                               .copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 10,
-                                          ),
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 10,
+                                              ),
                                         ),
                                       ),
                                   ],

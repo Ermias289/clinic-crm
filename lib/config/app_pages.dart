@@ -3,11 +3,13 @@ import 'app_routes.dart';
 import '../presentation/bindings/auth_binding.dart';
 import '../presentation/bindings/onboarding_binding.dart';
 import '../presentation/bindings/main_navigation_binding.dart';
+import '../presentation/bindings/notification_binding.dart';
 import '../presentation/views/login_view.dart';
 import '../presentation/views/register_view.dart';
 import '../presentation/views/main_navigation_view.dart';
 import '../presentation/views/onboarding_view.dart';
 import '../presentation/views/card_selection_view.dart';
+import '../presentation/views/notifications_view.dart';
 import '../presentation/bindings/card_binding.dart';
 import '../presentation/views/services_list_view.dart';
 import '../presentation/views/service_detail_view.dart';
@@ -97,6 +99,11 @@ class AppPages {
       name: Routes.OTP_VERIFICATION,
       page: () => const OTPVerificationView(),
       binding: OTPVerificationBinding(),
+    ),
+    GetPage(
+      name: Routes.NOTIFICATIONS,
+      page: () => const NotificationsView(),
+      binding: NotificationBinding(),
     ),
   ];
 }

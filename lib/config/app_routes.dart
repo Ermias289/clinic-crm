@@ -14,4 +14,5 @@ abstract class Routes {
   static const OTP_VERIFICATION = '/otp-verification';
   static const BOOK_APPOINTMENT = '/book-appointment';
   static const DOCTOR_SCHEDULE_PICKER = '/doctor-schedule-picker';
+  static const NOTIFICATIONS = '/notifications';
 }

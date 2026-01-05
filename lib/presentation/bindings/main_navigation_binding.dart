@@ -2,11 +2,15 @@ import 'package:get/get.dart';
 import '../controllers/main_navigation_controller.dart';
 import '../controllers/profile_controller.dart';
 import '../controllers/contact_us_controller.dart';
+import '../controllers/notification_controller.dart';
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/datasources/bank_remote_datasource.dart';
 import '../../data/datasources/company_setting_remote_datasource.dart';
+import '../../data/datasources/notification_remote_data_source.dart';
 import '../../data/repositories/bank_repository_impl.dart';
 import '../../data/repositories/company_setting_repository_impl.dart';
+import '../../data/repositories/notification_repository_impl.dart';
+import '../../domain/repositories/notification_repository.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';
 import '../../core/api_client.dart';
 import '../controllers/card_controller.dart';
@@ -93,6 +97,21 @@ class MainNavigationBinding extends Bindings {
     Get.lazyPut<AppointmentController>(
       () => AppointmentController(
         repository: Get.find<AppointmentRepositoryImpl>(),
+      ),
+    );
+
+    // Notification Dependencies
+    Get.lazyPut<NotificationRemoteDataSource>(
+      () => NotificationRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
+    );
+    Get.lazyPut<NotificationRepository>(
+      () => NotificationRepositoryImpl(
+        remoteDataSource: Get.find<NotificationRemoteDataSource>(),
+      ),
+    );
+    Get.lazyPut<NotificationController>(
+      () => NotificationController(
+        repository: Get.find<NotificationRepository>(),
       ),
     );
   }
