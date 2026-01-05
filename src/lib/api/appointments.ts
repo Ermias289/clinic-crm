@@ -2,13 +2,41 @@ import apiClient from './client';
 
 export interface AppointmentDTO {
   id: number;
-  medicalProfessionalId: number;
+  reference: string;
   dentistryId: number;
-  branchId: number;
+  medicalProfessionalId: number;
   patientId: number;
-  day: string;
+  patient: {
+    id: number;
+    fName: string;
+    mName: string;
+    lName: string;
+    email: string;
+    phoneNumber: string;
+    gender: string;
+    dateOfBirth: string;
+    address: string;
+    city: string;
+    subCity: string;
+  };
   reservationTime: string;
+  day: string;
   status: string;
+  scheduledBy: {
+    id: number;
+    username: string;
+    fName: string;
+    lName: string;
+    email: string;
+  };
+  scheduledById: number;
+  scheduledAt: string;
+  completedAt: string;
+  canceledAt: string;
+  cancelReason: string;
+  createdAt: string;
+  updateAt: string;
+  // Additional fields for UI
   doctorName?: string;
   serviceName?: string;
   branchName?: string;
@@ -16,12 +44,25 @@ export interface AppointmentDTO {
 }
 
 export interface CreateAppointmentDTO {
-  dentistryId: number;        // This is the service/treatment ID
+  dentistryId: number;
   medicalProfessionalId: number;
   patientId: number;
   branchId: number;
   reservationTime: string;
   day: string;
+}
+
+export interface CancelAppointmentDTO {
+  Id: number;
+  reason: string;
+}
+
+export interface AppointmentFilters {
+  doctorId?: number;
+  patientId?: number;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export const appointmentService = {
@@ -35,19 +76,18 @@ export const appointmentService = {
     return response.data;
   },
 
+  getByPatientId: async (patientId: number): Promise<AppointmentDTO[]> => {
+    const response = await apiClient.get<AppointmentDTO[]>(`/api/Appointment/bypatientId/${patientId}`);
+    return response.data;
+  },
+
+  getByUserId: async (userId: number): Promise<AppointmentDTO[]> => {
+    const response = await apiClient.get<AppointmentDTO[]>(`/api/Appointment/byuserId/${userId}`);
+    return response.data;
+  },
+
   create: async (data: CreateAppointmentDTO): Promise<AppointmentDTO> => {
-    // Ensure the data structure matches the API exactly
-    const requestData = {
-      dentistryId: data.dentistryId,
-      medicalProfessionalId: data.medicalProfessionalId,
-      patientId: data.patientId,
-      branchId: data.branchId,
-      reservationTime: data.reservationTime,
-      day: data.day,
-    };
-    
-    console.log("Sending appointment data:", requestData);
-    const response = await apiClient.post<AppointmentDTO>('/api/Appointment', requestData);
+    const response = await apiClient.post<AppointmentDTO>('/api/Appointment', data);
     return response.data;
   },
 
@@ -60,8 +100,13 @@ export const appointmentService = {
       params: { Id: id, reason },
     });
   },
-  
-  // Optional: Update appointment
+
+  complete: async (id: number): Promise<void> => {
+    await apiClient.put('/api/Appointment/completeAppointments', null, {
+      params: { Id: id },
+    });
+  },
+
   update: async (id: number, data: Partial<CreateAppointmentDTO>): Promise<AppointmentDTO> => {
     const response = await apiClient.put<AppointmentDTO>(`/api/Appointment/${id}`, data);
     return response.data;
