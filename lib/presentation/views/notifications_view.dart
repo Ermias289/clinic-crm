@@ -11,19 +11,16 @@ class NotificationsView extends GetView<NotificationController> {
 
   @override
   Widget build(BuildContext context) {
-    // Set status bar to be visible
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-      ),
-    );
-
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.backgroundLight,
         elevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Get.back(),
@@ -314,6 +311,14 @@ class NotificationsView extends GetView<NotificationController> {
             );
           }),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          print('🔄 Manual refresh triggered');
+          controller.refreshNotifications();
+        },
+        backgroundColor: AppColors.primaryBlue,
+        child: const Icon(Icons.refresh, color: Colors.white),
       ),
     );
   }

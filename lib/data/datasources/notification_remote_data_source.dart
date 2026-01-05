@@ -18,6 +18,10 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       print('🔔 Fetching notifications for user ID: $userId');
       final response = await apiClient.get('/Notification?userId=$userId');
 
+      print('🔔 Raw API response: ${response.body}');
+      print('🔔 Response status: ${response.statusCode}');
+      print('🔔 Response hasError: ${response.hasError}');
+
       if (response.hasError) {
         print('❌ Failed to fetch notifications: ${response.statusText}');
         throw Exception(
@@ -27,7 +31,24 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
 
       final List<dynamic> body = response.body;
       print('✅ Successfully fetched ${body.length} notifications');
-      return body.map((e) => UserNotificationModel.fromJson(e)).toList();
+
+      // Debug: Print each notification
+      for (int i = 0; i < body.length; i++) {
+        print('🔔 Notification $i: ${body[i]}');
+      }
+
+      final notifications = body
+          .map((e) => UserNotificationModel.fromJson(e))
+          .toList();
+
+      // Debug: Print parsed notifications
+      for (var notification in notifications) {
+        print(
+          '🔔 Parsed notification: ${notification.notification?.title} - ${notification.notification?.message}',
+        );
+      }
+
+      return notifications;
     } catch (e) {
       print('❌ Exception in getUserNotifications: $e');
       rethrow;
