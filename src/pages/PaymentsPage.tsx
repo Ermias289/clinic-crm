@@ -352,7 +352,7 @@ const PaymentsPage = () => {
             </div>
 
             <div className="w-full md:w-auto">
-              <Label htmlFor="status-filter">Filter by Status</Label>
+              {/* <Label htmlFor="status-filter">Filter by Status</Label> */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="All Statuses" />
