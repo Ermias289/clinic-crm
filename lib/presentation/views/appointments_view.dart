@@ -368,24 +368,95 @@ class AppointmentsView extends GetView<AppointmentController> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          appointment.dentistryService?.name ??
-                                              'Service',
-                                          style: AppTextStyles.bodyLarge
-                                              .copyWith(
-                                                fontWeight: FontWeight.bold,
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Flexible(
+                                              child: Builder(
+                                                builder: (context) {
+                                                  final serviceName =
+                                                      appointment
+                                                          .dentistryService
+                                                          ?.name ??
+                                                      'Service';
+                                                  print(
+                                                    '🎯 Displaying service name: "$serviceName"',
+                                                  );
+                                                  print(
+                                                    '🎯 dentistryService object: ${appointment.dentistryService}',
+                                                  );
+                                                  return Text(
+                                                    serviceName,
+                                                    style: AppTextStyles
+                                                        .bodyLarge
+                                                        .copyWith(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                  );
+                                                },
                                               ),
+                                            ),
+                                            if (appointment.reference !=
+                                                null) ...[
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      AppColors.backgroundLight,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: AppColors.textHint
+                                                        .withValues(alpha: 0.3),
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  appointment.reference!,
+                                                  style: AppTextStyles.bodySmall
+                                                      .copyWith(
+                                                        color: AppColors
+                                                            .textSecondary,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        fontSize: 10,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
+                                        const SizedBox(height: 4),
                                         if (appointment.medicalProfessional !=
-                                            null)
+                                            null) ...[
                                           Text(
-                                            '${appointment.medicalProfessional!.prefix} ${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
+                                            '${appointment.medicalProfessional!.prefix.isNotEmpty ? '${appointment.medicalProfessional!.prefix} ' : ''}${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
                                             style: AppTextStyles.bodyMedium
                                                 .copyWith(
                                                   color:
                                                       AppColors.textSecondary,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
                                           ),
+                                          if (appointment
+                                              .medicalProfessional!
+                                              .specialty
+                                              .isNotEmpty)
+                                            Text(
+                                              appointment
+                                                  .medicalProfessional!
+                                                  .specialty,
+                                              style: AppTextStyles.bodySmall
+                                                  .copyWith(
+                                                    color: AppColors.textHint,
+                                                  ),
+                                            ),
+                                        ],
                                       ],
                                     ),
                                     Container(
@@ -445,6 +516,26 @@ class AppointmentsView extends GetView<AppointmentController> {
                                       appointment.reservationTime,
                                       style: AppTextStyles.bodyMedium,
                                     ),
+                                    if (appointment
+                                                .dentistryService
+                                                ?.durationInMinutes !=
+                                            null &&
+                                        appointment
+                                                .dentistryService!
+                                                .durationInMinutes >
+                                            0) ...[
+                                      const SizedBox(width: 24),
+                                      Icon(
+                                        Icons.timer_outlined,
+                                        size: 16,
+                                        color: AppColors.textHint,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${appointment.dentistryService!.durationInMinutes} min',
+                                        style: AppTextStyles.bodyMedium,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ],

@@ -106,7 +106,21 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       print(
         '✅ Successfully fetched ${body.length} appointments for user $userId',
       );
-      return body.map((e) => AppointmentModel.fromJson(e)).toList();
+      final appointments = body
+          .map((e) => AppointmentModel.fromJson(e))
+          .toList();
+
+      // Debug: Print parsed appointment details
+      for (var appointment in appointments) {
+        print('🔍 Parsed appointment:');
+        print('  - Service: ${appointment.dentistryService?.name ?? 'NULL'}');
+        print(
+          '  - Doctor: ${appointment.medicalProfessional?.fName ?? 'NULL'} ${appointment.medicalProfessional?.lName ?? 'NULL'}',
+        );
+        print('  - Reference: ${appointment.reference ?? 'NULL'}');
+      }
+
+      return appointments;
     } catch (e) {
       print('❌ Exception in getAppointmentsByUserId: $e');
       rethrow;

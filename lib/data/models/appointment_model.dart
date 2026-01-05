@@ -3,6 +3,7 @@ import 'medical_service_model.dart';
 
 class AppointmentModel {
   final int? id;
+  final String? reference;
   final int dentistryId;
   final int medicalProfessionalId;
   final int? patientId;
@@ -16,6 +17,7 @@ class AppointmentModel {
 
   AppointmentModel({
     this.id,
+    this.reference,
     required this.dentistryId,
     required this.medicalProfessionalId,
     this.patientId,
@@ -31,6 +33,7 @@ class AppointmentModel {
   factory AppointmentModel.fromJson(Map<String, dynamic> json) {
     return AppointmentModel(
       id: json['id'],
+      reference: json['reference'],
       dentistryId: json['dentistryId'] ?? 0,
       medicalProfessionalId: json['medicalProfessionalId'] ?? 0,
       patientId: json['patientId'],
@@ -42,7 +45,9 @@ class AppointmentModel {
       medicalProfessional: json['medicalProfessional'] != null
           ? MedicalProfessionalModel.fromJson(json['medicalProfessional'])
           : null,
-      dentistryService: json['dentistryService'] != null
+      dentistryService: json['dentistry'] != null
+          ? MedicalServiceModel.fromJson(json['dentistry'])
+          : json['dentistryService'] != null
           ? MedicalServiceModel.fromJson(json['dentistryService'])
           : null,
     );
