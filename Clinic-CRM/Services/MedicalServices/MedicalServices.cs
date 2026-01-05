@@ -28,7 +28,7 @@ namespace Clinic_CRM.Services.MedicalServices
 
         public async Task<MedicalService> GetMedicalServiceAsync(int Id)
         {
-            var medicalService = await _context.MedicalServices.Include(x => x.MedicalProfessionals).FirstOrDefaultAsync(x => x.Id == Id);
+            var medicalService = await _context.MedicalServices.Include(x => x.MedicalProfessionals).Include(x => x.Branches).FirstOrDefaultAsync(x => x.Id == Id);
 
             if (medicalService == null)
                 throw new KeyNotFoundException("Medical Service Not Found");
@@ -39,7 +39,7 @@ namespace Clinic_CRM.Services.MedicalServices
 
         public async Task<List<MedicalService>> GetAllMedicalervices()
         {
-            return await _context.MedicalServices.Include(x => x.MedicalProfessionals).ToListAsync();
+            return await _context.MedicalServices.Include(x => x.MedicalProfessionals).Include(x => x.Branches).ToListAsync();
         }
 
         public async Task<MedicalService> AddMedicalService(AddMedicalServiceDTO dto)
