@@ -25,7 +25,6 @@
 //select patient for sending email only send ids , string emailsubject, emailbody
 
 
-
 // appointments ?
 // when are they available how and where is the schedule listed 
 
@@ -38,3 +37,6 @@
 
 //services?
 // put end point has a problem it says allowed only get url 
+
+//Patient ?
+671 i commented out updatedAt because there is no updated at 

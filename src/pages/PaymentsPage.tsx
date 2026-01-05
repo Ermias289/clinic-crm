@@ -1,9 +1,13 @@
+// PaymentsPage.tsx
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -19,333 +23,888 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Eye, CheckCircle, XCircle, DollarSign, User } from "lucide-react";
+import {
+  Search,
+  Eye,
+  CheckCircle,
+  XCircle,
+  DollarSign,
+  User,
+  FileText,
+  ShieldCheck,
+  ShieldX,
+  Check,
+  X,
+  CreditCard,
+  AlertCircle,
+  CalendarDays,
+  RefreshCw,
+  Clock,
+  Calendar,
+  FileCheck,
+  Ban,
+} from "lucide-react";
 
 import { paymentsService, Payment } from "@/lib/api/payments";
 import { toast } from "@/hooks/use-toast";
-
-const statusMap: Record<string, "auto-prepared" | "partially-paid" | "requested" | "checked" | "approved" | "rejected" > = {
-  "Auto-Prepared": "auto-prepared",
-  "Partially-Paid": "partially-paid",
-  Requested: "requested",
-  Checked: "checked",
-  Approved: "approved",
-  Rejected: "rejected",
-};
+import { cn } from "@/lib/utils";
+import { 
+  statusColors, 
+  formatDate, 
+  getAvailableActions 
+} from "@/lib/utils/payment-status";
 
 const PaymentsPage = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-
-  // Remarks / inputs for actions
-  const [remark, setRemark] = useState("");
-  const [amount, setAmount] = useState<number | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Modal states
+  const [showCheckModal, setShowCheckModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  
+  // Form states
+  const [checkedAmount, setCheckedAmount] = useState<number>(0);
+  const [checkRemark, setCheckRemark] = useState("");
   const [paymentProof, setPaymentProof] = useState("");
+  const [approvedAmount, setApprovedAmount] = useState<number>(0);
+  const [approvalRemark, setApprovalRemark] = useState("");
+  const [rejectionRemark, setRejectionRemark] = useState("");
+  const [cancelRemark, setCancelRemark] = useState("");
 
   // Fetch payments
   const fetchPayments = async () => {
+    setIsLoading(true);
     try {
       const data = await paymentsService.getAll();
       setPayments(data);
+      applyFilters(data, searchQuery, statusFilter);
     } catch (err) {
       console.error("Failed to fetch payments", err);
+      toast({
+        title: "Error",
+        description: "Failed to load payments",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Apply filters
+  const applyFilters = (data: Payment[], query: string, status: string) => {
+    let filtered = [...data];
+
+    // Apply search filter
+    if (query) {
+      filtered = filtered.filter((payment) => {
+        const patientName = payment.requestedBy
+          ? `${payment.requestedBy.fName} ${payment.requestedBy.lName}`.toLowerCase()
+          : "";
+        const cardRef = payment.card?.cardNumber?.toLowerCase() ?? "";
+        const reference = payment.reference?.toLowerCase() ?? "";
+        
+        return (
+          patientName.includes(query.toLowerCase()) ||
+          cardRef.includes(query.toLowerCase()) ||
+          reference.includes(query.toLowerCase())
+        );
+      });
+    }
+
+    // Apply status filter
+    if (status !== "all") {
+      filtered = filtered.filter(
+        (payment) => payment.status.toLowerCase() === status.toLowerCase()
+      );
+    }
+
+    setFilteredPayments(filtered);
   };
 
   useEffect(() => {
     fetchPayments();
   }, []);
 
-  // Filter payments
-  const filteredPayments = payments.filter((payment) => {
-    const patientName = payment.requestedBy
-      ? `${payment.requestedBy.fName} ${payment.requestedBy.lName}`
-      : "";
-    const cardRef = payment.card?.cardNumber ?? "";
-    const matchesSearch =
-      patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      cardRef.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || payment.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    applyFilters(payments, searchQuery, statusFilter);
+  }, [searchQuery, statusFilter, payments]);
+
+  // Reset form states when payment is selected
+  const resetFormStates = () => {
+    setCheckedAmount(0);
+    setCheckRemark("");
+    setPaymentProof("");
+    setApprovedAmount(0);
+    setApprovalRemark("");
+    setRejectionRemark("");
+    setCancelRemark("");
+  };
+
+  // Open details dialog
+  const handleOpenDetails = (payment: Payment) => {
+    setSelectedPayment(payment);
+    resetFormStates();
+    if (payment.status === "Requested") {
+      setCheckedAmount(payment.requestedAmount);
+    }
+    if (payment.status === "Checked") {
+      setApprovedAmount(payment.requestedAmount);
+    }
+  };
+
+  // Close all modals
+  const closeAllModals = () => {
+    setShowCheckModal(false);
+    setShowApproveModal(false);
+    setShowRejectModal(false);
+    setShowCancelModal(false);
+  };
 
   // Action handlers
-  const handleCheck = async () => {
+  const handleCheckPayment = async () => {
     if (!selectedPayment) return;
+    
+    if (!checkedAmount || checkedAmount <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid checked amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!checkRemark.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a check remark",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await paymentsService.checkPayment({
         id: selectedPayment.id,
-        chekedAmount: amount || selectedPayment.requestedAmount,
-        checkRemark: remark,
-        paymentProof,
+        chekedAmount: checkedAmount,
+        checkRemark: checkRemark,
+        paymentProof: paymentProof,
       });
-      toast({ title: "Payment checked" });
+      toast({
+        title: "Success",
+        description: "Payment has been checked successfully",
+      });
+      closeAllModals();
       setSelectedPayment(null);
       fetchPayments();
-    } catch {
-      toast({ title: "Failed to check payment", variant: "destructive" });
+    } catch (error) {
+      toast({
+        title: "Failed to check payment",
+        description: "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleApprove = async () => {
+  const handleApprovePayment = async () => {
     if (!selectedPayment) return;
+    
+    if (!approvedAmount || approvedAmount <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid approved amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!approvalRemark.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide an approval remark",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await paymentsService.approvePayment({
         id: selectedPayment.id,
-        approvedAmount: amount || selectedPayment.requestedAmount,
-        approvalRemark: remark,
+        approvedAmount: approvedAmount,
+        approvalRemark: approvalRemark,
       });
-      toast({ title: "Payment approved" });
+      toast({
+        title: "Success",
+        description: "Payment has been approved successfully",
+      });
+      closeAllModals();
       setSelectedPayment(null);
       fetchPayments();
-    } catch {
-      toast({ title: "Failed to approve payment", variant: "destructive" });
+    } catch (error) {
+      toast({
+        title: "Failed to approve payment",
+        description: "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleReject = async () => {
+  const handleRejectPayment = async () => {
     if (!selectedPayment) return;
+    
+    if (!rejectionRemark.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a rejection reason",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await paymentsService.rejectPayment({
         id: selectedPayment.id,
-        rejectionRemark: remark,
+        rejectionRemark: rejectionRemark,
       });
-      toast({ title: "Payment rejected", variant: "destructive" });
+      toast({
+        title: "Payment Rejected",
+        description: "The payment has been rejected",
+        variant: "destructive",
+      });
+      closeAllModals();
       setSelectedPayment(null);
       fetchPayments();
-    } catch {
-      toast({ title: "Failed to reject payment", variant: "destructive" });
+    } catch (error) {
+      toast({
+        title: "Failed to reject payment",
+        description: "Please try again",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleCancel = async () => {
+  const handleCancelPayment = async () => {
     if (!selectedPayment) return;
+    
+    if (!cancelRemark.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a cancellation reason",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await paymentsService.cancelPayment({
         id: selectedPayment.id,
-        canceledRemark: remark,
+        canceledRemark: cancelRemark,
       });
-      toast({ title: "Payment canceled", variant: "destructive" });
+      toast({
+        title: "Payment Canceled",
+        description: "The payment has been canceled",
+        variant: "destructive",
+      });
+      closeAllModals();
       setSelectedPayment(null);
       fetchPayments();
-    } catch {
-      toast({ title: "Failed to cancel payment", variant: "destructive" });
+    } catch (error) {
+      toast({
+        title: "Failed to cancel payment",
+        description: "Please try again",
+        variant: "destructive",
+      });
     }
+  };
+
+  // Render status badge
+  const renderStatusBadge = (status: string) => {
+    return (
+      <Badge variant="outline" className={cn("capitalize", statusColors[status])}>
+        {status}
+      </Badge>
+    );
   };
 
   return (
     <DashboardLayout title="Payments" subtitle="Review and manage patient card payments">
       {/* FILTERS */}
       <Card className="mb-6">
-        <CardContent className="p-4 flex gap-4 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by patient or card reference..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <Label htmlFor="search" className="sr-only">Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search by patient name, card number, or reference..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="Auto-Prepared">Auto-Prepared</SelectItem>
-              <SelectItem value="Requested">Requested</SelectItem>
-              <SelectItem value="Checked">Checked</SelectItem>
-              <SelectItem value="Approved">Approved</SelectItem>
-              <SelectItem value="Rejected">Rejected</SelectItem>
-              <SelectItem value="Partially-Paid">Partially-Paid</SelectItem>
-            </SelectContent>
-          </Select>
+            <div className="w-full md:w-auto">
+              <Label htmlFor="status-filter">Filter by Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Auto-Prepared">Auto-Prepared</SelectItem>
+                  <SelectItem value="Partially-Paid">Partially-Paid</SelectItem>
+                  <SelectItem value="Requested">Requested</SelectItem>
+                  <SelectItem value="Checked">Checked</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              variant="outline"
+              onClick={fetchPayments}
+              className="mt-auto"
+              disabled={isLoading}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+              Refresh
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       {/* PAYMENTS TABLE */}
       <Card>
         <CardHeader>
-          <CardTitle>Payments ({filteredPayments.length})</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle>Payment Requests ({filteredPayments.length})</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredPayments.length} of {payments.length} payments
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Patient</th>
-                  <th>Card</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((payment) => (
-                  <tr key={payment.id}>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                        {payment.requestedBy
-                          ? `${payment.requestedBy.fName} ${payment.requestedBy.lName}`
-                          : "N/A"}
-                      </div>
-                    </td>
-                    <td className="font-mono">{payment.card?.cardNumber ?? "N/A"}</td>
-                    <td>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        {payment.requestedAmount}
-                      </div>
-                    </td>
-                    <td>
-                      <StatusBadge status={statusMap[payment.status]} />
-                    </td>
-                    <td>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => {
-                            setSelectedPayment(payment);
-                            setRemark("");
-                            setAmount(undefined);
-                            setPaymentProof("");
-                          }}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : filteredPayments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-center">
+              <FileText className="w-12 h-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium">No payments found</h3>
+              <p className="text-muted-foreground mt-2">
+                {searchQuery || statusFilter !== "all" 
+                  ? "Try adjusting your filters" 
+                  : "No payment requests available"}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left p-4 font-medium">Reference</th>
+                    <th className="text-left p-4 font-medium">Patient</th>
+                    <th className="text-left p-4 font-medium">Card</th>
+                    <th className="text-left p-4 font-medium">Amount</th>
+                    <th className="text-left p-4 font-medium">Status</th>
+                    <th className="text-left p-4 font-medium">Requested</th>
+                    <th className="text-left p-4 font-medium">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredPayments.map((payment) => (
+                    <tr key={payment.id} className="border-b hover:bg-muted/50">
+                      <td className="p-4">
+                        <div className="font-mono text-sm">{payment.reference}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <span>
+                            {payment.requestedBy
+                              ? `${payment.requestedBy.fName} ${payment.requestedBy.lName}`
+                              : "N/A"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-mono text-sm">
+                            {payment.card?.cardNumber ?? "N/A"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-1 font-medium">
+                          <DollarSign className="w-4 h-4" />
+                          {payment.requestedAmount.toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        {renderStatusBadge(payment.status)}
+                      </td>
+                      <td className="p-4">
+                        <div className="text-sm text-muted-foreground">
+                          {formatDate(payment.requestedAt)}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenDetails(payment)}
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span className="sr-only">View</span>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* DETAILS DIALOG */}
-      <Dialog open={!!selectedPayment} onOpenChange={() => setSelectedPayment(null)}>
-        <DialogContent className="max-w-4xl w-full">
-          <DialogHeader>
-            <DialogTitle>Payment Details</DialogTitle>
-            <DialogDescription>All payment information in one view</DialogDescription>
-          </DialogHeader>
-
+      {/* PAYMENT DETAILS DIALOG */}
+      <Dialog open={!!selectedPayment} onOpenChange={(open) => !open && setSelectedPayment(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedPayment && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 text-sm">
-                {/* Left Column */}
-                <div className="space-y-2">
-                  <p><b>Reference:</b> {selectedPayment.reference}</p>
-                  <p><b>Card:</b> {selectedPayment.card?.cardNumber ?? "N/A"}</p>
-                  <p><b>Card Status:</b> {selectedPayment.card?.status ?? "N/A"}</p>
-                  <p><b>Requested Amount:</b> {selectedPayment.requestedAmount}</p>
-                  <p><b>Paid Amount:</b> {selectedPayment.paidAmount}</p>
-                  <p><b>Unpaid Amount:</b> {selectedPayment.unPaidAmount}</p>
-                  <p><b>Insurance Covered:</b> {selectedPayment.isInsuranceCovered ? "Yes" : "No"}</p>
-                  <p><b>Requested By:</b> {selectedPayment.requestedBy?.fName} {selectedPayment.requestedBy?.lName}</p>
-                  <p><b>Requested At:</b> {selectedPayment.requestedAt ? new Date(selectedPayment.requestedAt).toLocaleString() : "N/A"}</p>
-                  <p><b>Request Remark:</b> {selectedPayment.card?.requestRemark ?? "N/A"}</p>
+              <DialogHeader>
+                <DialogTitle className="text-2xl flex items-center gap-3">
+                  <FileCheck className="w-6 h-6 text-primary" />
+                  Payment Details
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedPayment.reference}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column - Basic Information */}
+                <div className="space-y-6">
+                  {/* Payment Summary */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <DollarSign className="w-5 h-5" />
+                        Payment Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Reference</p>
+                          <p className="font-mono text-sm">{selectedPayment.reference}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Status</p>
+                          <div className="mt-1">
+                            {renderStatusBadge(selectedPayment.status)}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Requested Amount</p>
+                          <p className="font-semibold">${selectedPayment.requestedAmount.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Paid Amount</p>
+                          <p className="font-semibold">${selectedPayment.paidAmount.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Unpaid Amount</p>
+                          <p className="font-semibold">${selectedPayment.unPaidAmount.toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Insurance</p>
+                          <Badge variant={selectedPayment.isInsuranceCovered ? "default" : "secondary"}>
+                            {selectedPayment.isInsuranceCovered ? "Covered" : "Not Covered"}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Card Information */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <CreditCard className="w-5 h-5" />
+                        Card Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Card Number</p>
+                        <p className="font-mono">{selectedPayment.card?.cardNumber}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Card Status</p>
+                          <Badge variant="outline">{selectedPayment.card?.status}</Badge>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Expires</p>
+                          <p className="text-sm">{formatDate(selectedPayment.card?.expiredAt || "")}</p>
+                        </div>
+                      </div>
+                      {selectedPayment.card?.requestRemark && (
+                        <div>
+                          <p className="text-sm text-muted-foreground">Request Remark</p>
+                          <p className="text-sm">{selectedPayment.card.requestRemark}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* Right Column */}
-                <div className="space-y-2">
-                  {selectedPayment.checkedBy && (
-                    <>
-                      <p><b>Checked By:</b> {selectedPayment.checkedBy?.fName} {selectedPayment.checkedBy?.lName}</p>
-                      <p><b>Checked At:</b> {selectedPayment.checkedAt ? new Date(selectedPayment.checkedAt).toLocaleString() : "N/A"}</p>
-                      <p><b>Check Remark:</b> {selectedPayment.checkRemark ?? "N/A"}</p>
-                    </>
-                  )}
-                  {selectedPayment.approvedBy && (
-                    <>
-                      <p><b>Approved By:</b> {selectedPayment.approvedBy?.fName} {selectedPayment.approvedBy?.lName}</p>
-                      <p><b>Approved At:</b> {selectedPayment.approvedAt ? new Date(selectedPayment.approvedAt).toLocaleString() : "N/A"}</p>
-                      <p><b>Approval Remark:</b> {selectedPayment.approvalRemark ?? "N/A"}</p>
-                    </>
-                  )}
-                  {selectedPayment.rejectedAt && selectedPayment.rejectedAt !== "0001-01-01T00:00:00" && (
-                    <>
-                      <p><b>Rejected At:</b> {new Date(selectedPayment.rejectedAt).toLocaleString()}</p>
-                      <p><b>Rejection Remark:</b> {selectedPayment.rejectionRemark ?? "N/A"}</p>
-                    </>
-                  )}
-                  <p><b>Status:</b> <StatusBadge status={statusMap[selectedPayment.status]} /></p>
+                {/* Right Column - Timeline & Actions */}
+                <div className="space-y-6">
+                  {/* Request Information */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <User className="w-5 h-5" />
+                        Request Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Requested By</p>
+                        <p>
+                          {selectedPayment.requestedBy?.fName} {selectedPayment.requestedBy?.lName}
+                        </p>
+                        {selectedPayment.requestedBy?.email && (
+                          <p className="text-sm text-muted-foreground">{selectedPayment.requestedBy.email}</p>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Requested At</p>
+                        <p className="text-sm">{formatDate(selectedPayment.requestedAt)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Created At</p>
+                        <p className="text-sm">{formatDate(selectedPayment.createdAt)}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Status Timeline */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <CalendarDays className="w-5 h-5" />
+                        Status History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {selectedPayment.checkedAt && selectedPayment.checkedAt !== "0001-01-01T00:00:00" && (
+                        <div className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="font-medium">Checked</p>
+                            <p className="text-sm text-muted-foreground">
+                              By {selectedPayment.checkedBy?.fName} {selectedPayment.checkedBy?.lName}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{formatDate(selectedPayment.checkedAt)}</p>
+                            {selectedPayment.checkRemark && (
+                              <p className="text-sm mt-2 p-2 bg-muted rounded">{selectedPayment.checkRemark}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedPayment.approvedAt && selectedPayment.approvedAt !== "0001-01-01T00:00:00" && (
+                        <div className="flex items-start gap-3">
+                          <ShieldCheck className="w-5 h-5 text-green-500 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="font-medium">Approved</p>
+                            <p className="text-sm text-muted-foreground">
+                              By {selectedPayment.approvedBy?.fName} {selectedPayment.approvedBy?.lName}
+                            </p>
+                            <p className="text-xs text-muted-foreground">{formatDate(selectedPayment.approvedAt)}</p>
+                            {selectedPayment.approvalRemark && (
+                              <p className="text-sm mt-2 p-2 bg-muted rounded">{selectedPayment.approvalRemark}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedPayment.rejectedAt && selectedPayment.rejectedAt !== "0001-01-01T00:00:00" && (
+                        <div className="flex items-start gap-3">
+                          <ShieldX className="w-5 h-5 text-red-500 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="font-medium">Rejected</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(selectedPayment.rejectedAt)}</p>
+                            {selectedPayment.rejectionRemark && (
+                              <p className="text-sm mt-2 p-2 bg-muted rounded">{selectedPayment.rejectionRemark}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedPayment.canceledAt && selectedPayment.canceledAt !== "0001-01-01T00:00:00" && (
+                        <div className="flex items-start gap-3">
+                          <Ban className="w-5 h-5 text-red-500 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="font-medium">Canceled</p>
+                            <p className="text-xs text-muted-foreground">{formatDate(selectedPayment.canceledAt)}</p>
+                            {selectedPayment.canceledRemark && (
+                              <p className="text-sm mt-2 p-2 bg-muted rounded">{selectedPayment.canceledRemark}</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Action Buttons */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg">Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        {getAvailableActions(selectedPayment.status).map((action) => (
+                          <Button
+                            key={action}
+                            variant={action === "cancel" || action === "reject" ? "destructive" : "default"}
+                            size="sm"
+                            onClick={() => {
+                              if (action === "check") setShowCheckModal(true);
+                              if (action === "approve") setShowApproveModal(true);
+                              if (action === "reject") setShowRejectModal(true);
+                              if (action === "cancel") setShowCancelModal(true);
+                            }}
+                            className="capitalize"
+                          >
+                            {action === "check" && <CheckCircle className="w-4 h-4 mr-2" />}
+                            {action === "approve" && <ShieldCheck className="w-4 h-4 mr-2" />}
+                            {action === "reject" && <ShieldX className="w-4 h-4 mr-2" />}
+                            {action === "cancel" && <Ban className="w-4 h-4 mr-2" />}
+                            {action}
+                          </Button>
+                        ))}
+                        
+                        {getAvailableActions(selectedPayment.status).length === 0 && (
+                          <p className="text-sm text-muted-foreground italic">
+                            No actions available for this status
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 
-              {/* Action Inputs */}
-              {(selectedPayment.status === "Requested" || selectedPayment.status === "Checked") && (
-                <div className="mt-4 space-y-2">
-                  {(selectedPayment.status === "Requested") && (
-                    <>
-                      <Input
-                        placeholder="Check Remark"
-                        value={remark}
-                        onChange={(e) => setRemark(e.target.value)}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Checked Amount"
-                        value={amount || ""}
-                        onChange={(e) => setAmount(Number(e.target.value))}
-                      />
-                      <Input
-                        placeholder="Payment Proof URL"
-                        value={paymentProof}
-                        onChange={(e) => setPaymentProof(e.target.value)}
-                      />
-                    </>
-                  )}
-                  {(selectedPayment.status === "Checked") && (
-                    <>
-                      <Input
-                        placeholder="Approval Remark"
-                        value={remark}
-                        onChange={(e) => setRemark(e.target.value)}
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Approved Amount"
-                        value={amount || ""}
-                        onChange={(e) => setAmount(Number(e.target.value))}
-                      />
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="mt-4 flex gap-2">
-                {selectedPayment.status === "Requested" && (
-                  <>
-                    <Button variant="success" onClick={handleCheck}>Check</Button>
-                    <Button variant="destructive" onClick={handleReject}>Reject</Button>
-                  </>
-                )}
-                {selectedPayment.status === "Checked" && (
-                  <>
-                    <Button variant="success" onClick={handleApprove}>Approve</Button>
-                    <Button variant="destructive" onClick={handleReject}>Reject</Button>
-                  </>
-                )}
-                {/* Optional cancel button if needed */}
-                {selectedPayment.status !== "Approved" && selectedPayment.status !== "Rejected" && (
-                  <Button variant="destructive" onClick={handleCancel}>Cancel</Button>
-                )}
-              </div>
+              <DialogFooter className="mt-6">
+                <Button variant="outline" onClick={() => setSelectedPayment(null)}>
+                  Close
+                </Button>
+              </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
 
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setSelectedPayment(null)}>Close</Button>
+      {/* CHECK PAYMENT MODAL */}
+      <Dialog open={showCheckModal} onOpenChange={setShowCheckModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              Check Payment
+            </DialogTitle>
+            <DialogDescription>
+              Verify the payment details for {selectedPayment?.reference}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="checkedAmount">Checked Amount *</Label>
+              <Input
+                id="checkedAmount"
+                type="number"
+                value={checkedAmount}
+                onChange={(e) => setCheckedAmount(Number(e.target.value))}
+                min="0"
+              />
+              <p className="text-sm text-muted-foreground">
+                Original requested: ${selectedPayment?.requestedAmount.toLocaleString()}
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="paymentProof">Payment Proof URL (Optional)</Label>
+              <Input
+                id="paymentProof"
+                placeholder="https://example.com/proof.jpg"
+                value={paymentProof}
+                onChange={(e) => setPaymentProof(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="checkRemark">Check Remark *</Label>
+              <Textarea
+                id="checkRemark"
+                placeholder="Enter verification notes..."
+                value={checkRemark}
+                onChange={(e) => setCheckRemark(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCheckModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCheckPayment}>
+              <Check className="w-4 h-4 mr-2" />
+              Check Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* APPROVE PAYMENT MODAL */}
+      <Dialog open={showApproveModal} onOpenChange={setShowApproveModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5" />
+              Approve Payment
+            </DialogTitle>
+            <DialogDescription>
+              Approve the payment for {selectedPayment?.reference}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="approvedAmount">Approved Amount *</Label>
+              <Input
+                id="approvedAmount"
+                type="number"
+                value={approvedAmount}
+                onChange={(e) => setApprovedAmount(Number(e.target.value))}
+                min="0"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="approvalRemark">Approval Remark *</Label>
+              <Textarea
+                id="approvalRemark"
+                placeholder="Enter approval notes..."
+                value={approvalRemark}
+                onChange={(e) => setApprovalRemark(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowApproveModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleApprovePayment} className="bg-green-600 hover:bg-green-700">
+              <ShieldCheck className="w-4 h-4 mr-2" />
+              Approve Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* REJECT PAYMENT MODAL */}
+      <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldX className="w-5 h-5" />
+              Reject Payment
+            </DialogTitle>
+            <DialogDescription>
+              Reject the payment for {selectedPayment?.reference}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejectionRemark">Rejection Reason *</Label>
+              <Textarea
+                id="rejectionRemark"
+                placeholder="Enter reason for rejection..."
+                value={rejectionRemark}
+                onChange={(e) => setRejectionRemark(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRejectModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleRejectPayment} variant="destructive">
+              <X className="w-4 h-4 mr-2" />
+              Reject Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CANCEL PAYMENT MODAL */}
+      <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ban className="w-5 h-5" />
+              Cancel Payment
+            </DialogTitle>
+            <DialogDescription>
+              Cancel the payment for {selectedPayment?.reference}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="cancelRemark">Cancellation Reason *</Label>
+              <Textarea
+                id="cancelRemark"
+                placeholder="Enter reason for cancellation..."
+                value={cancelRemark}
+                onChange={(e) => setCancelRemark(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCancelModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCancelPayment} variant="destructive">
+              <X className="w-4 h-4 mr-2" />
+              Cancel Payment
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
