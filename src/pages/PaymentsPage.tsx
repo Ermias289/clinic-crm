@@ -1,4 +1,4 @@
-// PaymentsPage.tsx
+// PaymentsPage.tsx 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +43,7 @@ import {
   Calendar,
   FileCheck,
   Ban,
+  Image as ImageIcon,
 } from "lucide-react";
 
 import { paymentsService, Payment } from "@/lib/api/payments";
@@ -71,7 +72,6 @@ const PaymentsPage = () => {
   // Form states
   const [checkedAmount, setCheckedAmount] = useState<number>(0);
   const [checkRemark, setCheckRemark] = useState("");
-  const [paymentProof, setPaymentProof] = useState("");
   const [approvedAmount, setApprovedAmount] = useState<number>(0);
   const [approvalRemark, setApprovalRemark] = useState("");
   const [rejectionRemark, setRejectionRemark] = useState("");
@@ -135,11 +135,18 @@ const PaymentsPage = () => {
     applyFilters(payments, searchQuery, statusFilter);
   }, [searchQuery, statusFilter, payments]);
 
+  // Get image URL for payment proof
+  const getPaymentProofUrl = (filename?: string): string | null => {
+    if (!filename) return null;
+    // Clean the filename in case it already contains the full URL
+    const cleanFilename = filename.replace('https://crmgate.nexabusinessgroup.com/api/FileUpload/', '');
+    return `https://crmgate.nexabusinessgroup.com/api/FileUpload/${cleanFilename}`;
+  };
+
   // Reset form states when payment is selected
   const resetFormStates = () => {
     setCheckedAmount(0);
     setCheckRemark("");
-    setPaymentProof("");
     setApprovedAmount(0);
     setApprovalRemark("");
     setRejectionRemark("");
@@ -193,7 +200,7 @@ const PaymentsPage = () => {
         id: selectedPayment.id,
         chekedAmount: checkedAmount,
         checkRemark: checkRemark,
-        paymentProof: paymentProof,
+        paymentProof: selectedPayment.paymentProof || "", // Pass the existing payment proof from backend
       });
       toast({
         title: "Success",
@@ -352,7 +359,6 @@ const PaymentsPage = () => {
             </div>
 
             <div className="w-full md:w-auto">
-              {/* <Label htmlFor="status-filter">Filter by Status</Label> */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px]">
                   <SelectValue placeholder="All Statuses" />
@@ -539,6 +545,48 @@ const PaymentsPage = () => {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Payment Proof Image */}
+                  {selectedPayment.paymentProof && (
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <ImageIcon className="w-5 h-5" />
+                          Payment Proof
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="border rounded-lg p-4 bg-muted/30">
+                          <div className="flex justify-center">
+                            <img 
+                              src={getPaymentProofUrl(selectedPayment.paymentProof) || ""}
+                              alt="Payment proof"
+                              className="max-w-full h-auto max-h-96 object-contain rounded"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = `
+                                    <div class="flex flex-col items-center justify-center p-8 text-center">
+                                      <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
+                                      <p class="text-muted-foreground">Unable to load payment proof image</p>
+                                      <p class="text-sm text-muted-foreground mt-2">Filename: ${selectedPayment.paymentProof}</p>
+                                    </div>
+                                  `;
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="mt-4 text-center">
+                            <p className="text-sm text-muted-foreground break-all">
+                              {selectedPayment.paymentProof}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Card Information */}
                   <Card>
@@ -748,16 +796,6 @@ const PaymentsPage = () => {
               <p className="text-sm text-muted-foreground">
                 Original requested: ${selectedPayment?.requestedAmount.toLocaleString()}
               </p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="paymentProof">Payment Proof URL (Optional)</Label>
-              <Input
-                id="paymentProof"
-                placeholder="https://example.com/proof.jpg"
-                value={paymentProof}
-                onChange={(e) => setPaymentProof(e.target.value)}
-              />
             </div>
             
             <div className="space-y-2">

@@ -354,18 +354,19 @@ const PatientsPage = () => {
                       <th className="text-left p-4 font-medium">Patient Information</th>
                       <th className="text-left p-4 font-medium">Contact</th>
                       <th className="text-left p-4 font-medium">Health Info</th>
+                      <th className="text-left p-4 font-medium">Location</th>
                       <th className="text-left p-4 font-medium">Registered</th>
                       <th className="text-left p-4 font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {currentPatients.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                          No patients found
-                        </td>
-                      </tr>
-                    ) : (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                            No patients found
+                          </td>
+                        </tr>
+                      ) : (
                       currentPatients.map((patient) => (
                         <tr key={patient.id} className="border-b hover:bg-muted/25">
                           {/* Patient Information */}
@@ -428,6 +429,23 @@ const PatientsPage = () => {
                                 </div>
                               ) : (
                                 <span className="text-xs text-muted-foreground">No conditions</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* New Location Column */}
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-sm truncate max-w-[150px]">
+                                  {patient.city || patient.subCity || "-"}
+                                </span>
+                              </div>
+                              {patient.country && (
+                                <span className="text-xs text-muted-foreground">
+                                  {patient.country}
+                                </span>
                               )}
                             </div>
                           </td>

@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -21,7 +22,17 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Plus,
   Search,
@@ -35,12 +46,19 @@ import {
   Phone,
   MapPin,
   AlertCircle,
+  Bell,
+  BellOff,
+  Check,
+  CheckCheck,
+  AlertTriangle,
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 
 import { cardService, CardDTO, UpdateCardDTO } from "@/lib/api/cards";
 import { cardTypeService, CardTypeDTO } from "@/lib/api/cardTypes";
 import { patientsService, Patient } from "@/lib/api/patients";
+import { notificationsService, Notification } from "@/lib/api/notifications";
 
 /* ================= TYPES ================= */
 
@@ -86,6 +104,200 @@ const mapUIToApiStatus = (uiStatus: CardStatus): "Active" | "Expired" | "Pending
   }
 };
 
+/* ================= NOTIFICATION ICONS ================= */
+
+const getNotificationIcon = (category: string) => {
+  switch (category.toLowerCase()) {
+    case "appointment":
+      return <Calendar className="h-4 w-4 text-blue-500" />;
+    case "payment":
+      return <CreditCard className="h-4 w-4 text-green-500" />;
+    case "alert":
+    case "warning":
+      return <AlertTriangle className="h-4 w-4 text-red-500" />;
+    default:
+      return <Bell className="h-4 w-4 text-gray-500" />;
+  }
+};
+
+/* ================= NOTIFICATIONS BUTTON COMPONENT ================= */
+
+interface NotificationsButtonProps {
+  userId: number;
+}
+
+const NotificationsButton = ({ userId }: NotificationsButtonProps) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (userId && open) {
+      fetchNotifications();
+    }
+  }, [userId, open]);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const data = await notificationsService.getByUserId(userId);
+      setNotifications(data);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await notificationsService.markAsRead(userId, notificationId);
+      setNotifications(prev =>
+        prev.map(notif =>
+          notif.id === notificationId ? { ...notif, isRead: true } : notif
+        )
+      );
+    } catch (error) {
+      console.error("Failed to mark as read:", error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationsService.markAllAsRead(userId);
+      setNotifications(prev =>
+        prev.map(notif => ({ ...notif, isRead: true }))
+      );
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative hover:bg-muted"
+        >
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </Badge>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-96 mr-4" align="end">
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notifications</span>
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs"
+              onClick={handleMarkAllAsRead}
+            >
+              <CheckCheck className="h-3 w-3 mr-1" />
+              Mark all as read
+            </Button>
+          )}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        
+        <ScrollArea className="h-80">
+          <DropdownMenuGroup>
+            {loading ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                Loading notifications...
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                <BellOff className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                No notifications yet
+              </div>
+            ) : (
+              notifications.map((notification) => (
+                <DropdownMenuItem
+                  key={notification.id}
+                  className="flex flex-col items-start p-4 cursor-pointer hover:bg-muted/50"
+                  onClick={() => !notification.isRead && handleMarkAsRead(notification.id)}
+                >
+                  <div className="flex w-full items-start gap-3">
+                    <div className="mt-0.5">
+                      {getNotificationIcon(notification.notification.category)}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className={`text-sm font-medium ${notification.isRead ? 'text-muted-foreground' : ''}`}>
+                          {notification.notification.title}
+                        </p>
+                        {!notification.isRead && (
+                          <Badge variant="outline" className="h-5 text-xs">
+                            New
+                          </Badge>
+                        )}
+                      </div>
+                      <p className={`text-sm ${notification.isRead ? 'text-muted-foreground' : ''}`}>
+                        {notification.notification.message}
+                      </p>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(parseISO(notification.notification.createdAt), { 
+                            addSuffix: true 
+                          })}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="h-5 text-xs capitalize">
+                            {notification.notification.category}
+                          </Badge>
+                          {!notification.isRead && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={(e) => handleMarkAsRead(notification.id, e)}
+                            >
+                              <Check className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuGroup>
+        </ScrollArea>
+        
+        <DropdownMenuSeparator />
+        <div className="p-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-center text-sm"
+            onClick={() => {
+              // You can navigate to a full notifications page here
+              setOpen(false);
+            }}
+          >
+            View all notifications
+          </Button>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+/* ================= MAIN COMPONENT ================= */
+
 const CardsPage = () => {
   const [cards, setCards] = useState<CardDTO[]>([]);
   const [cardTypes, setCardTypes] = useState<CardTypeDTO[]>([]);
@@ -109,7 +321,9 @@ const CardsPage = () => {
   const [selectedCardTypeId, setSelectedCardTypeId] = useState<number | null>(null);
   const [requestRemark, setRequestRemark] = useState("");
 
-  
+  // User ID for notifications (replace with actual user from auth)
+  const userId = 1; // Hardcoded for now, replace with actual user ID
+
   /* ================= FETCH DATA ================= */
 
   useEffect(() => {
@@ -258,81 +472,84 @@ const CardsPage = () => {
       title="Patient Cards"
       subtitle="Manage patient membership cards"
       actions={
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button variant="dental">
-              <Plus className="w-4 h-4" />
-              Add Card
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Issue New Card</DialogTitle>
-              <DialogDescription>
-                Assign a membership card to a patient
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label>Patient</Label>
-                <Select
-                  value={selectedPatientId?.toString()}
-                  onValueChange={(v) => setSelectedPatientId(Number(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients.map(p => (
-                      <SelectItem key={p.id} value={p.id.toString()}>
-                        {p.fName} {p.lName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Card Type</Label>
-                <Select
-                  value={selectedCardTypeId?.toString()}
-                  onValueChange={(v) => setSelectedCardTypeId(Number(v))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select card type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cardTypes.map(ct => (
-                      <SelectItem key={ct.id} value={ct.id.toString()}>
-                        {ct.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid gap-2">
-                <Label>Request Remark</Label>
-                <Input
-                  placeholder="Optional remark"
-                  value={requestRemark}
-                  onChange={(e) => setRequestRemark(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                Cancel
+        <div className="flex items-center gap-2">
+          <NotificationsButton userId={userId} />
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button variant="dental">
+                <Plus className="w-4 h-4" />
+                Add Card
               </Button>
-              <Button variant="dental" onClick={handleCreateCard}>
-                Issue Card
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Issue New Card</DialogTitle>
+                <DialogDescription>
+                  Assign a membership card to a patient
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label>Patient</Label>
+                  <Select
+                    value={selectedPatientId?.toString()}
+                    onValueChange={(v) => setSelectedPatientId(Number(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select patient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patients.map(p => (
+                        <SelectItem key={p.id} value={p.id.toString()}>
+                          {p.fName} {p.lName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Card Type</Label>
+                  <Select
+                    value={selectedCardTypeId?.toString()}
+                    onValueChange={(v) => setSelectedCardTypeId(Number(v))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select card type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cardTypes.map(ct => (
+                        <SelectItem key={ct.id} value={ct.id.toString()}>
+                          {ct.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Request Remark</Label>
+                  <Input
+                    placeholder="Optional remark"
+                    value={requestRemark}
+                    onChange={(e) => setRequestRemark(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                  Cancel
+                </Button>
+                <Button variant="dental" onClick={handleCreateCard}>
+                  Issue Card
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       }
     >
       {/* Summary */}
