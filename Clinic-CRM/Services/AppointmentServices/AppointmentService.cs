@@ -461,5 +461,21 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .Where(x => x.PatientId == Id)
                 .ToListAsync();
         }
+
+        public async Task<List<Appointment>> GetAppointmentByUserId(int userId)
+        {
+            var patient = await _context.Patients.Where(x => x.UserId == userId).FirstOrDefaultAsync();
+           
+            if (patient == null)
+                throw new KeyNotFoundException("Patient Not Found");
+
+            return await _context.Appointments
+                .Include(x => x.Patient)
+                .Include(x => x.MedicalProfessional)
+                .Include(x => x.Dentistry)
+                .Include(x => x.BranchSetting)
+                .Where(x => x.PatientId == patient.Id)
+                .ToListAsync();
+        }
     }
 }

@@ -14,7 +14,7 @@ namespace Clinic_CRM.Controllers
     {
         private readonly IAppointmentService _appointmentService;
         private readonly IUserService _userService;
- 
+
         public AppointmentController(IUserService userService, IAppointmentService appointmentService)
         {
             _appointmentService = appointmentService;
@@ -32,7 +32,8 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
                 return Ok(await _appointmentService.GetAllAppointment());
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -49,12 +50,13 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
                 return Ok(await _appointmentService.GetAppointmentById(Id));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
         }
-    
+
         [HttpGet("bypatientId/{Id}")]
         public async Task<ActionResult> GetAppointmentByPatientId(int Id)
         {
@@ -66,12 +68,13 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
                 return Ok(await _appointmentService.GetAppointmentsByPatientId(Id));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
         }
-    
+
         [HttpDelete("{Id}")]
         public async Task<ActionResult> DeleteAppointmentById(int Id)
         {
@@ -83,12 +86,13 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
                 return Ok(await _appointmentService.DeleteAppointment(Id));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
         }
-    
+
         [HttpPost]
         public async Task<ActionResult> MakeAppointment(AddAppointmentDTO dto)
         {
@@ -100,7 +104,8 @@ namespace Clinic_CRM.Controllers
                     throw new UnauthorizedAccessException();
                 return Ok(await _appointmentService.MakeAppointment(dto));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -118,7 +123,8 @@ namespace Clinic_CRM.Controllers
 
                 return Ok(await _appointmentService.CancelAppointment(Id, reason));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }
@@ -136,7 +142,26 @@ namespace Clinic_CRM.Controllers
 
                 return Ok(await _appointmentService.CompleteAppointment(Id));
 
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+        [HttpGet("byuserId/{userId}")]
+        public async Task<ActionResult> GetAppointmentByUserId(int userId)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewAppointment))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _appointmentService.GetAppointmentByUserId(userId));
+            }
+            catch (Exception ex)
             {
                 return this.ParseException(ex);
             }

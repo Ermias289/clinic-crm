@@ -271,7 +271,7 @@ namespace Clinic_CRM.Services.PaymentServices
             if (payment.Status != PAYMENT_STATUS.CHECKED)
                 throw new KeyNotFoundException("Payment should be checked first to be approved.");
 
-            var card = await _context.Cards.FindAsync(payment.CardId);
+            var card = await _context.Cards.Include(x => x.CardType).Where(x => x.Id == payment.CardId).FirstOrDefaultAsync();
 
             payment.ApprovedById = _userService.GetCurrentUserNoInclude().Id;
             payment.ApprovedAt = DateTime.UtcNow;
@@ -288,9 +288,15 @@ namespace Clinic_CRM.Services.PaymentServices
                 if (card == null)
                     throw new KeyNotFoundException("Card Not Found.");
 
+                var cardType = await _context.CardSettings.Where(x => x.CardTypeId == card.CardTypeId).FirstOrDefaultAsync();
+
+                if (cardType == null)
+                    throw new KeyNotFoundException("Card Type Does not exist.");
+
                 payment.Status = PAYMENT_STATUS.APPROVED;
                 card.Status = CARD_STATUS.ACTIVE;
                 card.ActivatedAt = DateTime.UtcNow;
+                card.ExpiredAt = payment.ApprovedAt.AddDays(cardType.ExpirationDuration);
             }
 
             _context.Payments.Update(payment);
