@@ -285,9 +285,7 @@ namespace Clinic_CRM.Services.AppointmentServices
 
         public async Task<List<Appointment>> GetAllAppointment()
         {
-            return await _context.Appointments.Include(x => x.Patient).ThenInclude(x => x.User)
-                .Where(x => x.Patient.UserId == _userService.GetCurrentUserNoInclude().Id)
-                .ToListAsync();
+            return await _context.Appointments.Include(x => x.Patient).ThenInclude(x => x.User).ToListAsync();
         }
 
         public async Task<Appointment> DeleteAppointment(int Id)

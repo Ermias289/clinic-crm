@@ -11,5 +11,6 @@ namespace Clinic_CRM.Services.PatientServices
         Task<Patient> GetPatientById(int Id);
         Task<List<Patient>> GetAllPatients();
         //string GenerateTemporaryPassword(int length = 10);
+        Task<Patient> GetPatientByUserId(int UserId);
     }
 }

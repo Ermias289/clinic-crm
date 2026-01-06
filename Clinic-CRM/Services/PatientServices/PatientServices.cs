@@ -151,5 +151,13 @@ namespace Clinic_CRM.Services.PatientServices
         {
             return await _context.Patients.Include(x => x.User).ToListAsync();
         }
+
+        public async Task<Patient> GetPatientByUserId(int UserId)
+        {
+            var patient = await _context.Patients.Include(x => x.User).Where(x => x.UserId == UserId).FirstOrDefaultAsync();
+            if (patient == null)
+                throw new KeyNotFoundException("Patient Data Not Found.");
+            return patient;
+        }
     }
 }

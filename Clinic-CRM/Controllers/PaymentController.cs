@@ -167,7 +167,7 @@ namespace Clinic_CRM.Controllers
         }
       
 
-        [HttpGet("bypatientId")]
+        [HttpGet("bypatientId{patientId}")]
 
         public async Task<ActionResult> GetPaymentByPatientId(int patientId)
         {
@@ -186,7 +186,7 @@ namespace Clinic_CRM.Controllers
             }
         }
 
-        [HttpGet("bycardId")]
+        [HttpGet("bycardId{cardId}")]
 
         public async Task<ActionResult> GetPaymentByCardId(int cardId)
         {

@@ -113,5 +113,21 @@ namespace Clinic_CRM.Controllers
             }
         }
 
+
+        [HttpGet("byUserId/{Id}")]
+        public async Task<ActionResult> GetPatientByUserId(int Id)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewPatient))
+                    throw new UnauthorizedAccessException();
+                return Ok(await _patientService.GetPatientByUserId(Id));
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
     }
 }
