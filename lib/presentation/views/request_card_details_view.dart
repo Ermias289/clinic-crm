@@ -5,6 +5,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/date_input_formatter.dart';
 import '../controllers/card_controller.dart';
+import '../../data/models/card_model.dart';
+import '../../data/models/patient_model.dart';
 
 class RequestCardDetailsView extends GetView<CardController> {
   RequestCardDetailsView({super.key});
@@ -277,376 +279,585 @@ class RequestCardDetailsView extends GetView<CardController> {
       child: Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              Container(
-                margin: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: AppColors.cardShadow,
+          child: Obx(() {
+            if (controller.isCheckingCard.value) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            return Column(
+              children: [
+                // Header
+                _buildHeader(),
+
+                // Content based on patient ID status
+                Expanded(
+                  child: controller.hasPatientId.value
+                      ? _buildCardDetailsView()
+                      : _buildPatientFormView(),
                 ),
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => Get.back(),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: Colors.white,
-                        ),
-                      ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: AppColors.primaryGradient,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppColors.cardShadow,
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Get.back(),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.arrow_back, color: Colors.white),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Request Details',
+                  style: AppTextStyles.h2.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: 4),
+                Obx(
+                  () => Text(
+                    controller.hasPatientId.value
+                        ? 'Your Card Information'
+                        : 'Step 1: Patient Information',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Request Details',
-                          style: AppTextStyles.h2.copyWith(color: Colors.white),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Step 1: Patient Information',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                      ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardDetailsView() {
+    return Obx(() {
+      final card = controller.existingCard.value;
+      if (card == null) {
+        return const Center(child: Text('No card found'));
+      }
+
+      final statusInfo = controller.cardStatusInfo;
+      final statusColor = statusInfo['color'] as Color;
+      final showReactivateButton = statusInfo['showReactivateButton'] as bool;
+
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Card Status
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    statusInfo['icon'] as IconData,
+                    color: statusColor,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    statusInfo['title'] as String,
+                    style: AppTextStyles.h3.copyWith(color: statusColor),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    statusInfo['message'] as String,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: statusColor.withValues(alpha: 0.8),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Card Details
+            _buildCardInfoSection(card),
+
+            const SizedBox(height: 24),
+
+            // Patient Details
+            _buildPatientInfoSection(card.patient),
+
+            const SizedBox(height: 32),
+
+            // Action Button
+            if (showReactivateButton)
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: controller.isLoading.value
+                      ? null
+                      : controller.reactivateCard,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 4,
+                  ),
+                  child: controller.isLoading.value
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          'Reactivate Card',
+                          style: AppTextStyles.h3.copyWith(color: Colors.white),
+                        ),
                 ),
               ),
 
-              // Form Content
-              Expanded(
-                child: Form(
-                  key: _formKey,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildSectionTitle('Personal Details'),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'First Name',
-                          hint: 'Enter first name',
-                          icon: Icons.person,
-                          controller: controller.fNameController,
-                          validator: _validateName,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[a-zA-Z\s]'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Middle Name',
-                          hint: 'Enter middle name',
-                          icon: Icons.person_outline,
-                          controller: controller.mNameController,
-                          validator: _validateOptionalName,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[a-zA-Z\s]'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Last Name',
-                          hint: 'Enter last name',
-                          icon: Icons.person,
-                          controller: controller.lNameController,
-                          validator: _validateName,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[a-zA-Z\s]'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Date of Birth',
-                          hint: 'YYYY-MM-DD',
-                          icon: Icons.calendar_today,
-                          controller: controller.dobController,
-                          keyboardType: TextInputType.number,
-                          validator: _validateDateOfBirth,
-                          inputFormatters: [DateInputFormatter()],
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: DropdownButtonFormField<String>(
-                            value: controller.genderController.text.isEmpty
-                                ? null
-                                : controller.genderController.text,
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'Male',
-                                child: Text('Male'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'Female',
-                                child: Text('Female'),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              controller.genderController.text = value ?? '';
-                            },
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Gender is required'
-                                : null,
-                            decoration: InputDecoration(
-                              labelText: 'Gender',
-                              hintText: 'Select gender',
-                              prefixIcon: const Icon(
-                                Icons.wc,
-                                color: AppColors.primaryBlue,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: AppColors.primaryBlue,
-                                  width: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      );
+    });
+  }
 
-                        const SizedBox(height: 32),
-                        _buildSectionTitle('Contact Information'),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Email',
-                          hint: 'email@example.com',
-                          icon: Icons.email,
-                          controller: controller.emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: _validateEmail,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Phone Number',
-                          hint: '+251...',
-                          icon: Icons.phone,
-                          controller: controller.phoneController,
-                          keyboardType: TextInputType.phone,
-                          validator: _validatePhone,
-                        ),
+  Widget _buildCardInfoSection(CardModel card) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Card Information',
+            style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow('Card Number', card.cardNumber),
+          _buildInfoRow('Status', card.status),
+          _buildInfoRow('Card Type', card.cardType?.name ?? 'N/A'),
+          if (card.activatedAt != null)
+            _buildInfoRow('Activated', _formatDate(card.activatedAt!)),
+          if (card.expiredAt != null)
+            _buildInfoRow('Expires', _formatDate(card.expiredAt!)),
+        ],
+      ),
+    );
+  }
 
-                        const SizedBox(height: 32),
-                        _buildSectionTitle('Address'),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: DropdownButtonFormField<String>(
-                            value: controller.countryController.text.isEmpty
-                                ? 'Ethiopia'
-                                : controller.countryController.text,
-                            items: countries
-                                .map(
-                                  (country) => DropdownMenuItem(
-                                    value: country,
-                                    child: Text(country),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              controller.countryController.text = value ?? '';
-                            },
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Country is required'
-                                : null,
-                            decoration: InputDecoration(
-                              labelText: 'Country',
-                              hintText: 'Select country',
-                              prefixIcon: const Icon(
-                                Icons.public,
-                                color: AppColors.primaryBlue,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: const BorderSide(
-                                  color: AppColors.primaryBlue,
-                                  width: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'City',
-                          hint: 'Enter city',
-                          icon: Icons.location_city,
-                          controller: controller.cityController,
-                          validator: _validateRequired,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'SubCity',
-                          hint: 'Enter sub-city',
-                          icon: Icons.map,
-                          controller: controller.subCityController,
-                          validator: _validateRequired,
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Address/House No.',
-                          hint: 'specific address',
-                          icon: Icons.home,
-                          controller: controller.addressController,
-                          validator: _validateRequired,
-                        ),
+  Widget _buildPatientInfoSection(PatientModel? patient) {
+    if (patient == null) return const SizedBox.shrink();
 
-                        const SizedBox(height: 32),
-                        _buildSectionTitle('Emergency Contact'),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Contact Name',
-                          hint: 'Emergency contact name',
-                          icon: Icons.person_add,
-                          controller: controller.emergencyNameController,
-                          validator: _validateName,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'[a-zA-Z\s]'),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Contact Phone',
-                          hint: 'Emergency contact phone',
-                          icon: Icons.phone_callback,
-                          controller: controller.emergencyPhoneController,
-                          keyboardType: TextInputType.phone,
-                          validator: _validatePhone,
-                        ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Patient Information',
+            style: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow(
+            'Name',
+            '${patient.fName} ${patient.mName} ${patient.lName}',
+          ),
+          _buildInfoRow('Email', patient.email),
+          _buildInfoRow('Phone', patient.phoneNumber),
+          _buildInfoRow('Gender', patient.gender),
+          _buildInfoRow('Date of Birth', patient.dateOfBirth),
+          _buildInfoRow(
+            'Address',
+            '${patient.address}, ${patient.subCity}, ${patient.city}',
+          ),
+          if (patient.emergencyContactName.isNotEmpty)
+            _buildInfoRow(
+              'Emergency Contact',
+              '${patient.emergencyContactName} (${patient.emergencyContactPhone})',
+            ),
+        ],
+      ),
+    );
+  }
 
-                        const SizedBox(height: 32),
-                        _buildSectionTitle('Medical Information'),
-                        const SizedBox(height: 16),
-                        _buildTextField(
-                          label: 'Allergies',
-                          hint: 'List any allergies',
-                          icon: Icons.warning_amber,
-                          controller: controller.allergiesController,
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: TextFormField(
-                            controller: controller.chronicConditionsController,
-                            maxLines: 3,
-                            decoration: InputDecoration(
-                              labelText: 'Chronic Conditions',
-                              hintText: 'List any chronic conditions',
-                              prefixIcon: const Icon(
-                                Icons.medical_services,
-                                color: AppColors.primaryBlue,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.all(16),
-                            ),
-                          ),
-                        ),
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                controller.validateAndProceed();
-                              }
-                            }, // Validated navigation
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryBlue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 4,
-                            ),
-                            child: Text(
-                              'Next Step',
-                              style: AppTextStyles.h3.copyWith(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
+  }
+
+  Widget _buildPatientFormView() {
+    return Form(
+      key: _formKey,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSectionTitle('Personal Details'),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'First Name',
+              hint: 'Enter first name',
+              icon: Icons.person,
+              controller: controller.fNameController,
+              validator: _validateName,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Middle Name',
+              hint: 'Enter middle name',
+              icon: Icons.person_outline,
+              controller: controller.mNameController,
+              validator: _validateOptionalName,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Last Name',
+              hint: 'Enter last name',
+              icon: Icons.person,
+              controller: controller.lNameController,
+              validator: _validateName,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Date of Birth',
+              hint: 'YYYY-MM-DD',
+              icon: Icons.calendar_today,
+              controller: controller.dobController,
+              keyboardType: TextInputType.number,
+              validator: _validateDateOfBirth,
+              inputFormatters: [DateInputFormatter()],
+            ),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: DropdownButtonFormField<String>(
+                initialValue: controller.genderController.text.isEmpty
+                    ? null
+                    : controller.genderController.text,
+                items: const [
+                  DropdownMenuItem(value: 'Male', child: Text('Male')),
+                  DropdownMenuItem(value: 'Female', child: Text('Female')),
+                ],
+                onChanged: (value) {
+                  controller.genderController.text = value ?? '';
+                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Gender is required'
+                    : null,
+                decoration: InputDecoration(
+                  labelText: 'Gender',
+                  hintText: 'Select gender',
+                  prefixIcon: const Icon(
+                    Icons.wc,
+                    color: AppColors.primaryBlue,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryBlue,
+                      width: 1,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+
+            const SizedBox(height: 32),
+            _buildSectionTitle('Contact Information'),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Email',
+              hint: 'email@example.com',
+              icon: Icons.email,
+              controller: controller.emailController,
+              keyboardType: TextInputType.emailAddress,
+              validator: _validateEmail,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Phone Number',
+              hint: '+251...',
+              icon: Icons.phone,
+              controller: controller.phoneController,
+              keyboardType: TextInputType.phone,
+              validator: _validatePhone,
+            ),
+
+            const SizedBox(height: 32),
+            _buildSectionTitle('Address'),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: DropdownButtonFormField<String>(
+                initialValue: controller.countryController.text.isEmpty
+                    ? 'Ethiopia'
+                    : controller.countryController.text,
+                items: countries
+                    .map(
+                      (country) => DropdownMenuItem(
+                        value: country,
+                        child: Text(country),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  controller.countryController.text = value ?? '';
+                },
+                validator: (value) => value == null || value.isEmpty
+                    ? 'Country is required'
+                    : null,
+                decoration: InputDecoration(
+                  labelText: 'Country',
+                  hintText: 'Select country',
+                  prefixIcon: const Icon(
+                    Icons.public,
+                    color: AppColors.primaryBlue,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: AppColors.primaryBlue,
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'City',
+              hint: 'Enter city',
+              icon: Icons.location_city,
+              controller: controller.cityController,
+              validator: _validateRequired,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'SubCity',
+              hint: 'Enter sub-city',
+              icon: Icons.map,
+              controller: controller.subCityController,
+              validator: _validateRequired,
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Address/House No.',
+              hint: 'specific address',
+              icon: Icons.home,
+              controller: controller.addressController,
+              validator: _validateRequired,
+            ),
+
+            const SizedBox(height: 32),
+            _buildSectionTitle('Emergency Contact'),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Contact Name',
+              hint: 'Emergency contact name',
+              icon: Icons.person_add,
+              controller: controller.emergencyNameController,
+              validator: _validateName,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Contact Phone',
+              hint: 'Emergency contact phone',
+              icon: Icons.phone_callback,
+              controller: controller.emergencyPhoneController,
+              keyboardType: TextInputType.phone,
+              validator: _validatePhone,
+            ),
+
+            const SizedBox(height: 32),
+            _buildSectionTitle('Medical Information'),
+            const SizedBox(height: 16),
+            _buildTextField(
+              label: 'Allergies',
+              hint: 'List any allergies',
+              icon: Icons.warning_amber,
+              controller: controller.allergiesController,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(4),
+              child: TextFormField(
+                controller: controller.chronicConditionsController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Chronic Conditions',
+                  hintText: 'List any chronic conditions',
+                  prefixIcon: const Icon(
+                    Icons.medical_services,
+                    color: AppColors.primaryBlue,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    controller.validateAndProceed();
+                  }
+                }, // Validated navigation
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
+                ),
+                child: Text(
+                  'Next Step',
+                  style: AppTextStyles.h3.copyWith(color: Colors.white),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -674,7 +885,7 @@ class RequestCardDetailsView extends GetView<CardController> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -706,6 +917,6 @@ class RequestCardDetailsView extends GetView<CardController> {
           ),
         ),
       ),
-    ); // Scaffold
-  } // build
+    );
+  }
 }

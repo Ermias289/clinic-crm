@@ -1,3 +1,6 @@
+import 'card_model.dart';
+import 'user_model.dart';
+
 class PaymentModel {
   final int id;
   final String reference;
@@ -167,72 +170,4 @@ class PaymentModel {
 
   // Helper getter for checking if payment is auto-prepared
   bool get isAutoPrepared => status.toLowerCase() == 'auto-prepared';
-}
-
-class UserModel {
-  final int id;
-  final String username;
-  final String fName;
-  final String mName;
-  final String lName;
-  final String email;
-  final String phoneNumber;
-  final int userRoleId;
-
-  UserModel({
-    required this.id,
-    required this.username,
-    required this.fName,
-    required this.mName,
-    required this.lName,
-    required this.email,
-    required this.phoneNumber,
-    required this.userRoleId,
-  });
-
-  factory UserModel.fromJson(Map<String, dynamic> json) {
-    return UserModel(
-      id: json['id'] ?? 0,
-      username: json['username'] ?? '',
-      fName: json['fName'] ?? '',
-      mName: json['mName'] ?? '',
-      lName: json['lName'] ?? '',
-      email: json['email'] ?? '',
-      phoneNumber: json['phoneNumber'] ?? '',
-      userRoleId: json['userRoleId'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'username': username,
-      'fName': fName,
-      'mName': mName,
-      'lName': lName,
-      'email': email,
-      'phoneNumber': phoneNumber,
-      'userRoleId': userRoleId,
-    };
-  }
-}
-
-class CardModel {
-  final int id;
-  final String cardNumber;
-  final String status;
-
-  CardModel({required this.id, required this.cardNumber, required this.status});
-
-  factory CardModel.fromJson(Map<String, dynamic> json) {
-    return CardModel(
-      id: json['id'] ?? 0,
-      cardNumber: json['cardNumber'] ?? '',
-      status: json['status'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {'id': id, 'cardNumber': cardNumber, 'status': status};
-  }
 }

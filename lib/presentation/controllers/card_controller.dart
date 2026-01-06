@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../data/models/card_setting_model.dart';
+import '../../data/models/card_model.dart';
 import '../../data/models/request_card_model.dart';
 import '../../data/models/patient_model.dart';
 import '../../data/models/payment_model.dart';
@@ -12,6 +13,7 @@ import '../../data/repositories/card_repository_impl.dart';
 import '../../data/repositories/patient_repository_impl.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';
 import '../../config/app_routes.dart';
+import '../../core/theme/app_colors.dart';
 import 'package:get_storage/get_storage.dart';
 import 'profile_controller.dart';
 
@@ -32,6 +34,9 @@ class CardController extends GetxController {
   final RxList<BankAccount> bankAccounts = <BankAccount>[].obs;
   final RxBool isLoading = false.obs;
   final RxBool isBankLoading = false.obs;
+  final RxBool isCheckingCard = false.obs;
+  final Rx<CardModel?> existingCard = Rx<CardModel?>(null);
+  final RxBool hasPatientId = false.obs;
 
   // Request Flow State
   final Rx<CardSettingModel?> selectedCard = Rx<CardSettingModel?>(null);
@@ -72,6 +77,161 @@ class CardController extends GetxController {
     super.onInit();
     fetchCardSettings();
     fetchBankDetails();
+    checkExistingCard();
+  }
+
+  Future<void> checkExistingCard() async {
+    try {
+      isCheckingCard.value = true;
+      final cardData = await cardRepository.getMyCard();
+
+      if (cardData != null) {
+        existingCard.value = CardModel.fromJson(cardData);
+        hasPatientId.value = true;
+      } else {
+        existingCard.value = null;
+        hasPatientId.value = false;
+      }
+    } catch (e) {
+      existingCard.value = null;
+      hasPatientId.value = false;
+      print('Error checking existing card: $e');
+    } finally {
+      isCheckingCard.value = false;
+    }
+  }
+
+  bool get isCardExpired {
+    if (existingCard.value == null) return false;
+    return existingCard.value!.expiredAt != null &&
+        existingCard.value!.expiredAt!.isBefore(DateTime.now());
+  }
+
+  // Get card status display information
+  Map<String, dynamic> get cardStatusInfo {
+    if (existingCard.value == null) {
+      return {
+        'title': 'No Card',
+        'message': 'No card found',
+        'color': Colors.grey,
+        'icon': Icons.credit_card_off,
+        'showReactivateButton': false,
+      };
+    }
+
+    final card = existingCard.value!;
+    final status = card.status.toLowerCase();
+
+    switch (status) {
+      case 'active':
+        return {
+          'title': 'Card Active',
+          'message': 'Your card is active and ready to use.',
+          'color': Colors.green,
+          'icon': Icons.check_circle,
+          'showReactivateButton': false,
+        };
+      case 'pending':
+        return {
+          'title': 'Pending Approval',
+          'message':
+              'Your card request is pending approval. You will be notified once it\'s approved.',
+          'color': Colors.orange,
+          'icon': Icons.schedule,
+          'showReactivateButton': false,
+        };
+      case 'expired':
+        return {
+          'title': 'Card Expired',
+          'message':
+              'Your card has expired. Please reactivate it to continue using our services.',
+          'color': Colors.red,
+          'icon': Icons.error,
+          'showReactivateButton': true,
+        };
+      case 'inactive':
+        return {
+          'title': 'Card Inactive',
+          'message':
+              'Your card is inactive. Please contact support for assistance.',
+          'color': Colors.grey,
+          'icon': Icons.block,
+          'showReactivateButton': false,
+        };
+      default:
+        return {
+          'title': 'Card Status: ${card.status}',
+          'message': 'Your card status is ${card.status}.',
+          'color': Colors.blue,
+          'icon': Icons.info,
+          'showReactivateButton': false,
+        };
+    }
+  }
+
+  Future<void> reactivateCard() async {
+    if (existingCard.value == null) return;
+
+    try {
+      isLoading.value = true;
+      await cardRepository.reactivateCard(existingCard.value!.id);
+
+      // Refresh card data
+      await checkExistingCard();
+
+      Get.snackbar(
+        'Success',
+        'Your card has been reactivated successfully!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } catch (e) {
+      String errorMessage = 'Failed to reactivate card: $e';
+
+      // Handle specific error cases
+      if (e.toString().contains('pending payment')) {
+        errorMessage =
+            'You have a pending payment. Please complete your payment first before reactivating your card.';
+
+        // Show dialog with option to go to payment history
+        Get.dialog(
+          AlertDialog(
+            title: const Text('Pending Payment'),
+            content: const Text(
+              'You have a pending payment that needs to be completed before you can reactivate your card. Would you like to view your payment history?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                  Get.toNamed(Routes.PAYMENT_HISTORY);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('View Payments'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        Get.snackbar(
+          'Error',
+          errorMessage,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> fetchCardSettings() async {

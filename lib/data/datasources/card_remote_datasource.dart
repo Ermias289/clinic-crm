@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:get/get.dart'; // Needed for FormData & MultipartFile
+import 'package:get_storage/get_storage.dart';
 import '../../core/api_client.dart';
 import '../models/card_setting_model.dart';
 import '../models/request_card_model.dart';
@@ -17,6 +18,7 @@ abstract class CardRemoteDataSource {
   Future<String> uploadPaymentProof(
     String imagePath,
   ); // New method for just uploading image
+  Future<void> reactivateCard(int cardId);
 }
 
 class CardRemoteDataSourceImpl implements CardRemoteDataSource {
@@ -31,7 +33,9 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
 
       if (response.hasError) {
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to fetch card settings'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to fetch card settings'} - ${response.bodyString}',
+        );
       }
 
       final List<dynamic> data = response.body;
@@ -48,7 +52,9 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
 
       if (response.hasError) {
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to request card'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to request card'} - ${response.bodyString}',
+        );
       }
 
       return response.body
@@ -61,7 +67,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   @override
   Future<List<PaymentModel>> getPaymentsByCardId(int cardId) async {
     try {
-      final response = await apiClient.get('/Payment/bycardId$cardId');
+      final response = await apiClient.get('/Payment/bycardId/$cardId');
 
       if (response.hasError) {
         // Handle 404 as empty list (no payments found)
@@ -69,7 +75,9 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
           return [];
         }
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to fetch payments'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to fetch payments'} - ${response.bodyString}',
+        );
       }
 
       final List<dynamic> data = response.body;
@@ -142,7 +150,15 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
   @override
   Future<Map<String, dynamic>?> getMyCard() async {
     try {
-      final response = await apiClient.get('/Card/my-card');
+      // Get current user ID from storage
+      final _box = GetStorage();
+      final currentUserId = _box.read('userId') ?? 0;
+
+      if (currentUserId == 0) {
+        throw Exception('User not logged in');
+      }
+
+      final response = await apiClient.get('/Card/cardByUserId/$currentUserId');
 
       if (response.hasError) {
         if (response.statusCode == 404) {
@@ -150,13 +166,43 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
         }
         if (response.statusCode == 401) throw Exception("Unauthorized");
 
-        throw Exception('${response.statusText ?? 'Failed to get my card'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to get my card'} - ${response.bodyString}',
+        );
       }
 
       return response.body as Map<String, dynamic>;
     } catch (e) {
       if (e.toString().contains("404")) return null;
       rethrow;
+    }
+  }
+
+  @override
+  Future<void> reactivateCard(int cardId) async {
+    try {
+      final response = await apiClient.put('/Card/$cardId', {});
+
+      if (response.hasError) {
+        // Extract error message from response body if available
+        String errorMessage =
+            response.statusText ?? 'Failed to reactivate card';
+
+        if (response.body != null && response.body is Map) {
+          final body = response.body as Map<String, dynamic>;
+          if (body.containsKey('message')) {
+            errorMessage = body['message'];
+          }
+        }
+
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      // Re-throw the exception to preserve the original error message
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Error reactivating card: $e');
     }
   }
 }

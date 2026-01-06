@@ -14,7 +14,7 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
   Future<List<PaymentModel>> getPaymentsByPatientId(int patientId) async {
     try {
       print('🔍 Fetching payments for patient ID: $patientId');
-      final url = '/Payment/bypatientId$patientId';
+      final url = '/Payment/bypatientId/$patientId';
       print('🌐 Requesting: $url');
 
       final response = await apiClient.get(url);

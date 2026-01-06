@@ -10,7 +10,8 @@ abstract class CardRepository {
   Future<List<PaymentModel>> getPaymentsByCardId(int cardId);
   Future<PaymentModel> createPaymentRequest(CreatePaymentRequest request);
   Future<Map<String, dynamic>?> getMyCard();
-  Future<String> uploadPaymentProof(String imagePath); // New method
+  Future<String> uploadPaymentProof(String imagePath);
+  Future<void> reactivateCard(int cardId);
 }
 
 class CardRepositoryImpl implements CardRepository {
@@ -48,5 +49,10 @@ class CardRepositoryImpl implements CardRepository {
   @override
   Future<String> uploadPaymentProof(String imagePath) async {
     return await remoteDataSource.uploadPaymentProof(imagePath);
+  }
+
+  @override
+  Future<void> reactivateCard(int cardId) async {
+    return await remoteDataSource.reactivateCard(cardId);
   }
 }

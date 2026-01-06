@@ -4,6 +4,7 @@ import '../models/patient_model.dart';
 abstract class PatientRemoteDataSource {
   Future<PatientModel> createPatient(CreatePatientRequest request);
   Future<PatientModel> getPatientById(int id);
+  Future<PatientModel> getPatientByUserId(int userId);
   Future<List<PatientModel>> getAllPatients();
   Future<PatientModel> updatePatient(int id, CreatePatientRequest request);
   Future<bool> deletePatient(int id);
@@ -21,7 +22,9 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
 
       if (response.hasError) {
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to create patient'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to create patient'} - ${response.bodyString}',
+        );
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
@@ -37,12 +40,32 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
 
       if (response.hasError) {
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to get patient'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to get patient'} - ${response.bodyString}',
+        );
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
     } catch (e) {
       throw Exception('Error getting patient: $e');
+    }
+  }
+
+  @override
+  Future<PatientModel> getPatientByUserId(int userId) async {
+    try {
+      final response = await apiClient.get('/Patient/byUserId/$userId');
+
+      if (response.hasError) {
+        print('❌ Error Body: ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to get patient by user ID'} - ${response.bodyString}',
+        );
+      }
+
+      return PatientModel.fromJson(response.body as Map<String, dynamic>);
+    } catch (e) {
+      throw Exception('Error getting patient by user ID: $e');
     }
   }
 
@@ -53,7 +76,9 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
 
       if (response.hasError) {
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to get patients'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to get patients'} - ${response.bodyString}',
+        );
       }
 
       final List<dynamic> data = response.body;
@@ -73,7 +98,9 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
 
       if (response.hasError) {
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to update patient'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to update patient'} - ${response.bodyString}',
+        );
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
@@ -89,7 +116,9 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
 
       if (response.hasError) {
         print('❌ Error Body: ${response.bodyString}');
-        throw Exception('${response.statusText ?? 'Failed to delete patient'} - ${response.bodyString}');
+        throw Exception(
+          '${response.statusText ?? 'Failed to delete patient'} - ${response.bodyString}',
+        );
       }
 
       return true;

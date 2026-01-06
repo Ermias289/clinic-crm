@@ -85,13 +85,36 @@ class PaymentController extends GetxController {
 
       print('🔍 Getting patient ID for current user: $userId');
 
-      // Fetch user's card to get patient ID
+      // Try the new Patient/byUserId endpoint first (more direct)
       if (!Get.isRegistered<ApiClient>()) {
         print('❌ ApiClient not registered');
         return null;
       }
 
       final apiClient = Get.find<ApiClient>();
+
+      try {
+        // First try the direct patient endpoint
+        final patientResponse = await apiClient.get(
+          '/Patient/byUserId/$userId',
+        );
+
+        if (!patientResponse.hasError) {
+          final patientData = patientResponse.body;
+          final patientId = patientData['id'];
+
+          if (patientId != null) {
+            print(
+              '✅ Found patient ID $patientId for user $userId via Patient endpoint',
+            );
+            return patientId;
+          }
+        }
+      } catch (e) {
+        print('⚠️ Patient endpoint failed, trying Card endpoint: $e');
+      }
+
+      // Fallback to card endpoint if patient endpoint fails
       final response = await apiClient.get('/Card/cardByUserId/$userId');
 
       if (response.hasError) {
@@ -108,7 +131,9 @@ class PaymentController extends GetxController {
       final patientId = cardData['patient']?['id'];
 
       if (patientId != null) {
-        print('✅ Found patient ID $patientId for user $userId');
+        print(
+          '✅ Found patient ID $patientId for user $userId via Card endpoint',
+        );
         return patientId;
       }
 
