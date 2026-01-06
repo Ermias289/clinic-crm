@@ -17,7 +17,15 @@ class PaymentController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // Clear any cached patient data to ensure we get current user's data
+    _clearCachedPatientData();
     fetchPayments();
+  }
+
+  void _clearCachedPatientData() {
+    // Remove any cached patient ID to ensure we fetch fresh data
+    _box.remove('patientId');
+    print('🧹 Cleared cached patient data');
   }
 
   Future<void> fetchPayments() async {
@@ -29,7 +37,7 @@ class PaymentController extends GetxController {
       final patientId = await _getPatientId();
       if (patientId == null) {
         error.value =
-            'Unable to find patient information. Please try logging in again.';
+            'No patient record found for this user. Please contact support to create a patient profile.';
         return;
       }
 
@@ -52,18 +60,13 @@ class PaymentController extends GetxController {
 
   Future<int?> _getPatientId() async {
     try {
-      // First try to get patient ID from stored data
-      final storedPatientId = _box.read('patientId');
-      if (storedPatientId != null) {
-        return storedPatientId is int
-            ? storedPatientId
-            : int.parse(storedPatientId.toString());
-      }
-
-      // If not stored, we need to fetch it from the user's card data
-      // This follows the same pattern as appointment_controller.dart
+      // Always get the current user's patient ID dynamically
+      // Don't use cached patientId as it might belong to a different user
       final userIdRaw = _box.read('userId');
-      if (userIdRaw == null) return null;
+      if (userIdRaw == null) {
+        print('❌ No userId found in storage');
+        return null;
+      }
 
       int userId;
       if (userIdRaw is int) {
@@ -80,6 +83,8 @@ class PaymentController extends GetxController {
         return null;
       }
 
+      print('🔍 Getting patient ID for current user: $userId');
+
       // Fetch user's card to get patient ID
       if (!Get.isRegistered<ApiClient>()) {
         print('❌ ApiClient not registered');
@@ -90,7 +95,12 @@ class PaymentController extends GetxController {
       final response = await apiClient.get('/Card/cardByUserId/$userId');
 
       if (response.hasError) {
-        print('❌ Error fetching card: ${response.statusText}');
+        print('❌ Error fetching card for user $userId: ${response.statusText}');
+        // If user doesn't have a card/patient record, return null
+        if (response.statusCode == 404) {
+          print('ℹ️ User $userId does not have a patient record');
+          return null;
+        }
         return null;
       }
 
@@ -98,11 +108,11 @@ class PaymentController extends GetxController {
       final patientId = cardData['patient']?['id'];
 
       if (patientId != null) {
-        // Store for future use
-        _box.write('patientId', patientId);
+        print('✅ Found patient ID $patientId for user $userId');
         return patientId;
       }
 
+      print('❌ No patient ID found in card data for user $userId');
       return null;
     } catch (e) {
       print('❌ Error getting patient ID: $e');
