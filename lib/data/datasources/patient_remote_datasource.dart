@@ -20,7 +20,8 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.post('/Patient', request.toJson());
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to create patient');
+        print('❌ Error Body: ${response.bodyString}');
+        throw Exception('${response.statusText ?? 'Failed to create patient'} - ${response.bodyString}');
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
@@ -35,7 +36,8 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient/$id');
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to get patient');
+        print('❌ Error Body: ${response.bodyString}');
+        throw Exception('${response.statusText ?? 'Failed to get patient'} - ${response.bodyString}');
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
@@ -50,7 +52,8 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient');
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to get patients');
+        print('❌ Error Body: ${response.bodyString}');
+        throw Exception('${response.statusText ?? 'Failed to get patients'} - ${response.bodyString}');
       }
 
       final List<dynamic> data = response.body;
@@ -69,7 +72,8 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.put('/Patient/$id', request.toJson());
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to update patient');
+        print('❌ Error Body: ${response.bodyString}');
+        throw Exception('${response.statusText ?? 'Failed to update patient'} - ${response.bodyString}');
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
@@ -84,7 +88,8 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.delete('/Patient/$id');
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to delete patient');
+        print('❌ Error Body: ${response.bodyString}');
+        throw Exception('${response.statusText ?? 'Failed to delete patient'} - ${response.bodyString}');
       }
 
       return true;

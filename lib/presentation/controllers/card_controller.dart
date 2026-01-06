@@ -331,7 +331,9 @@ class CardController extends GetxController {
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
+        duration: const Duration(seconds: 5),
       );
+      print('❌ Submit Card Request Error: $e');
     } finally {
       isLoading.value = false;
     }
