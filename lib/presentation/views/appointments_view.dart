@@ -550,10 +550,10 @@ class AppointmentsView extends GetView<AppointmentController> {
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Get.toNamed(Routes.SERVICES),
+            onPressed: () => Get.toNamed(Routes.PAYMENT_HISTORY),
             backgroundColor: AppColors.primaryBlue,
-            icon: const Icon(Icons.add),
-            label: const Text('Book Appointment'),
+            icon: const Icon(Icons.payment),
+            label: const Text('Payment History'),
           ),
         );
       },

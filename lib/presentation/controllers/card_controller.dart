@@ -7,6 +7,7 @@ import '../../data/models/request_card_model.dart';
 import '../../data/models/patient_model.dart';
 import '../../data/models/payment_model.dart';
 import '../../data/models/bank_model.dart';
+import '../../data/models/create_payment_request_model.dart';
 import '../../data/repositories/card_repository_impl.dart';
 import '../../data/repositories/patient_repository_impl.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';

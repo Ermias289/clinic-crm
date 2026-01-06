@@ -2,6 +2,7 @@ import '../datasources/card_remote_datasource.dart';
 import '../models/card_setting_model.dart';
 import '../models/request_card_model.dart';
 import '../models/payment_model.dart';
+import '../models/create_payment_request_model.dart';
 
 abstract class CardRepository {
   Future<List<CardSettingModel>> getCardSettings();

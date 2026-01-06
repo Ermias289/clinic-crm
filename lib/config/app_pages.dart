@@ -26,6 +26,8 @@ import '../presentation/views/doctor_schedule_picker_view.dart';
 import '../presentation/bindings/doctor_schedule_picker_binding.dart';
 import '../presentation/views/request_card_details_view.dart';
 import '../presentation/views/request_card_payment_view.dart';
+import '../presentation/views/payment_history_view.dart';
+import '../presentation/bindings/payment_binding.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -104,6 +106,11 @@ class AppPages {
       name: Routes.NOTIFICATIONS,
       page: () => const NotificationsView(),
       binding: NotificationBinding(),
+    ),
+    GetPage(
+      name: Routes.PAYMENT_HISTORY,
+      page: () => const PaymentHistoryView(),
+      binding: PaymentBinding(),
     ),
   ];
 }

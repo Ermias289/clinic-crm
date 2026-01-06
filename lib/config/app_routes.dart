@@ -15,4 +15,5 @@ abstract class Routes {
   static const BOOK_APPOINTMENT = '/book-appointment';
   static const DOCTOR_SCHEDULE_PICKER = '/doctor-schedule-picker';
   static const NOTIFICATIONS = '/notifications';
+  static const PAYMENT_HISTORY = '/payment-history';
 }

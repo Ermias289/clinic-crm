@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../models/card_setting_model.dart';
 import '../models/request_card_model.dart';
 import '../models/payment_model.dart';
+import '../models/create_payment_request_model.dart';
 
 abstract class CardRemoteDataSource {
   Future<List<CardSettingModel>> getCardSettings();
