@@ -171,7 +171,9 @@ namespace Clinic_CRM.Services.CardServices
             if (price == null)
                 throw new KeyNotFoundException("Card Price Not Found");
 
-            var payment = await _context.Payments.Where(x => x.CardId == card.Id && (x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status != PAYMENT_STATUS.REJECTED)).FirstOrDefaultAsync();
+            var payment = await _context.Payments.Where(x => x.CardId == card.Id 
+            && 
+            (x.Status != PAYMENT_STATUS.APPROVED && x.Status != PAYMENT_STATUS.CANCELED && x.Status != PAYMENT_STATUS.REJECTED)).FirstOrDefaultAsync();
 
             if (payment != null)
                 throw new KeyNotFoundException("You have a pending payment. Please complete that first.");
@@ -181,6 +183,7 @@ namespace Clinic_CRM.Services.CardServices
                 RequestedAmount = price.Price,
                 CardId = card.Id,
             };
+
             await _paymentService.AutoPrepare(payCard);
 
             var users = await _context.Users.Where(x => x.Id == card.Patient.UserId || x.UserRole.Name == USER_ROLES.RECEPTIONIST).Select(x => x.Id).ToListAsync();
