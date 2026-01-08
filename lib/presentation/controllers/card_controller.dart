@@ -23,6 +23,9 @@ class CardController extends GetxController {
   final GetBankDetailsUseCase getBankDetailsUseCase;
   final _box = GetStorage();
 
+  // Add disposal tracking
+  bool _isDisposed = false;
+
   CardController({
     required this.cardRepository,
     required this.patientRepository,
@@ -73,6 +76,32 @@ class CardController extends GetxController {
   final ImagePicker _picker = ImagePicker();
 
   @override
+  void onClose() {
+    // Mark as disposed to prevent further operations
+    _isDisposed = true;
+
+    // Dispose all text controllers to prevent memory leaks
+    fNameController.dispose();
+    mNameController.dispose();
+    lNameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    genderController.dispose();
+    allergiesController.dispose();
+    chronicConditionsController.dispose();
+    emergencyNameController.dispose();
+    emergencyPhoneController.dispose();
+    addressController.dispose();
+    subCityController.dispose();
+    countryController.dispose();
+    cityController.dispose();
+    dobController.dispose();
+    requestRemarkController.dispose();
+
+    super.onClose();
+  }
+
+  @override
   void onInit() {
     super.onInit();
     fetchCardSettings();
@@ -82,8 +111,11 @@ class CardController extends GetxController {
 
   Future<void> checkExistingCard() async {
     try {
-      isCheckingCard.value = true;
+      if (!_isDisposed) isCheckingCard.value = true;
       final cardData = await cardRepository.getMyCard();
+
+      // Check if disposed during async operation
+      if (_isDisposed) return;
 
       if (cardData != null) {
         existingCard.value = CardModel.fromJson(cardData);
@@ -93,11 +125,16 @@ class CardController extends GetxController {
         hasPatientId.value = false;
       }
     } catch (e) {
-      existingCard.value = null;
-      hasPatientId.value = false;
+      if (!_isDisposed) {
+        existingCard.value = null;
+        hasPatientId.value = false;
+      }
       print('Error checking existing card: $e');
     } finally {
-      isCheckingCard.value = false;
+      // Check if controller was disposed before setting loading state
+      if (!_isDisposed) {
+        isCheckingCard.value = false;
+      }
     }
   }
 
@@ -269,8 +306,10 @@ class CardController extends GetxController {
 
       await cardRepository.createPaymentRequest(paymentRequest);
 
-      // Step 3: Refresh card data to get updated status
-      await checkExistingCard();
+      // Step 3: Only refresh card data if controller is still active
+      if (Get.isRegistered<CardController>()) {
+        await checkExistingCard();
+      }
 
       // Step 4: Navigate back to dashboard
       Get.offAllNamed(Routes.DASHBOARD, arguments: {'initialTab': 2});
@@ -399,10 +438,17 @@ class CardController extends GetxController {
       final profileController = Get.find<ProfileController>();
 
       if (profileController.currentUser.value == null) {
-        isLoading.value = true;
+        if (!_isDisposed) isLoading.value = true;
         await profileController.loadUserProfile();
+
+        // Check if controller was disposed during async operation
+        if (_isDisposed) return;
+
         isLoading.value = false;
       }
+
+      // Check if controller was disposed before accessing text controllers
+      if (_isDisposed) return;
 
       fNameController.text = profileController.fNameController.text;
       mNameController.text = profileController.mNameController.text;
@@ -411,6 +457,7 @@ class CardController extends GetxController {
       phoneController.text = profileController.phoneController.text;
     } catch (e) {
       // ProfileController not found or not initialized, skip pre-filling
+      // Also catches any disposal-related errors
     }
   }
 
@@ -537,7 +584,7 @@ class CardController extends GetxController {
 
       await cardRepository.createPaymentRequest(paymentRequest);
 
-      // Success - Navigate to dashboard
+      // Success - Navigate to dashboard (don't refresh card data to avoid disposal issues)
       Get.offAllNamed(Routes.DASHBOARD, arguments: {'initialTab': 2});
 
       Get.snackbar(
