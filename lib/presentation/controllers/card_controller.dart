@@ -174,61 +174,125 @@ class CardController extends GetxController {
 
     try {
       isLoading.value = true;
-      await cardRepository.reactivateCard(existingCard.value!.id);
 
-      // Refresh card data
-      await checkExistingCard();
+      // Since auto-prepared payment is created automatically when card expires,
+      // we just need to find it and use it for payment submission
+
+      // Step 1: Get payments for the existing expired card
+      final payments = await cardRepository.getPaymentsByCardId(
+        existingCard.value!.id,
+      );
+      cardPayments.assignAll(payments);
+
+      // Step 2: Find the auto-prepared payment (created automatically on expiration)
+      final foundAutoPreparedPayment = payments
+          .where((p) => p.isAutoPrepared)
+          .firstOrNull;
+
+      if (foundAutoPreparedPayment == null) {
+        throw Exception(
+          'No auto-prepared payment found for this expired card. Please contact support.',
+        );
+      }
+
+      // Step 3: Set up reactivation state with existing card and auto-prepared payment
+      autoPreparedPayment.value = foundAutoPreparedPayment;
+      selectedPaymentProof.value = null; // Clear any previous proof
+
+      // Step 4: Navigate to reactivation payment view
+      Get.toNamed(Routes.CARD_REACTIVATION_PAYMENT);
 
       Get.snackbar(
-        'Success',
-        'Your card has been reactivated successfully!',
+        'Payment Required',
+        'Complete the payment to reactivate your expired card.',
         snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.primaryBlue,
         colorText: Colors.white,
       );
     } catch (e) {
-      String errorMessage = 'Failed to reactivate card: $e';
+      String errorMessage = 'Failed to find payment for reactivation: $e';
 
       // Handle specific error cases
-      if (e.toString().contains('pending payment')) {
+      if (e.toString().contains('No auto-prepared payment found')) {
         errorMessage =
-            'You have a pending payment. Please complete your payment first before reactivating your card.';
-
-        // Show dialog with option to go to payment history
-        Get.dialog(
-          AlertDialog(
-            title: const Text('Pending Payment'),
-            content: const Text(
-              'You have a pending payment that needs to be completed before you can reactivate your card. Would you like to view your payment history?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Get.back(),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                  Get.toNamed(Routes.PAYMENT_HISTORY);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('View Payments'),
-              ),
-            ],
-          ),
-        );
-      } else {
-        Get.snackbar(
-          'Error',
-          errorMessage,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+            'No payment found for card reactivation. The auto-prepared payment may not have been created yet. Please contact support.';
       }
+
+      Get.snackbar(
+        'Error',
+        errorMessage,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Complete card reactivation payment (reactivates existing expired card)
+  Future<void> submitReactivationPayment() async {
+    if (selectedPaymentProof.value == null) {
+      Get.snackbar(
+        'Required',
+        'Please upload a payment receipt.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (autoPreparedPayment.value == null) {
+      Get.snackbar(
+        'Error',
+        'No payment found for reactivation.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      // Step 1: Upload payment proof
+      final uploadedFileName = await cardRepository.uploadPaymentProof(
+        selectedPaymentProof.value!.path,
+      );
+
+      // Step 2: Create payment request using PUT /api/Payment/paymentRequest
+      // This uses the auto-prepared payment that was created when the card expired
+      final paymentRequest = CreatePaymentRequest(
+        id: autoPreparedPayment.value!.id,
+        requestedAmount: autoPreparedPayment.value!.expectedAmount,
+        paymentProof: uploadedFileName,
+        isInsuranceCovered: false,
+      );
+
+      await cardRepository.createPaymentRequest(paymentRequest);
+
+      // Step 3: Refresh card data to get updated status
+      await checkExistingCard();
+
+      // Step 4: Navigate back to dashboard
+      Get.offAllNamed(Routes.DASHBOARD, arguments: {'initialTab': 2});
+
+      Get.snackbar(
+        'Reactivation Payment Submitted',
+        'Your reactivation payment has been submitted successfully! Your card will be reactivated once the payment is approved.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to submit reactivation payment: $e',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 5),
+      );
+      print('❌ Submit Reactivation Payment Error: $e');
     } finally {
       isLoading.value = false;
     }

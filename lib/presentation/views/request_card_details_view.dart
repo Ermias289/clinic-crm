@@ -299,6 +299,39 @@ class RequestCardDetailsView extends GetView<CardController> {
             );
           }),
         ),
+        floatingActionButton: Obx(() {
+          final statusInfo = controller.cardStatusInfo;
+          final showReactivateButton =
+              statusInfo['showReactivateButton'] as bool;
+
+          if (!showReactivateButton) return const SizedBox.shrink();
+
+          return FloatingActionButton.extended(
+            onPressed: controller.isLoading.value
+                ? null
+                : controller.reactivateCard,
+            backgroundColor: AppColors.primaryBlue,
+            elevation: 8,
+            icon: controller.isLoading.value
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.refresh, color: Colors.white),
+            label: Text(
+              controller.isLoading.value ? 'Processing...' : 'Reactivate Card',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          );
+        }),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }
@@ -414,30 +447,8 @@ class RequestCardDetailsView extends GetView<CardController> {
 
             const SizedBox(height: 32),
 
-            // Action Button
-            if (showReactivateButton)
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: controller.isLoading.value
-                      ? null
-                      : controller.reactivateCard,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 4,
-                  ),
-                  child: controller.isLoading.value
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          'Reactivate Card',
-                          style: AppTextStyles.h3.copyWith(color: Colors.white),
-                        ),
-                ),
-              ),
+            // Space for floating button
+            if (showReactivateButton) const SizedBox(height: 80),
 
             const SizedBox(height: 24),
           ],

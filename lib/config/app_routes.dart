@@ -9,6 +9,7 @@ abstract class Routes {
   static const CARDS = '/cards';
   static const REQUEST_CARD_DETAILS = '/request-card-details';
   static const REQUEST_CARD_PAYMENT = '/request-card-payment';
+  static const CARD_REACTIVATION_PAYMENT = '/card-reactivation-payment';
   static const SERVICES = '/services';
   static const SERVICE_DETAIL = '/service-detail';
   static const OTP_VERIFICATION = '/otp-verification';
