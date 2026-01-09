@@ -41,28 +41,35 @@ class AppointmentDetailView extends GetView<AppointmentDetailController> {
           ],
         ),
       ),
-      floatingActionButton: Obx(() {
-        final status = (controller.appointment.status ?? '').toLowerCase();
-        final canCancel = status != 'completed' && status != 'cancelled';
-        
-        if (!canCancel) return const SizedBox.shrink();
-        
-        return FloatingActionButton.extended(
-          onPressed: controller.isLoading.value ? null : () => _showCancelDialog(context),
-          backgroundColor: Colors.redAccent,
-          icon: controller.isLoading.value 
-            ? const SizedBox(
-                width: 20, 
-                height: 20, 
-                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-              )
-            : const Icon(Icons.cancel_outlined, color: Colors.white),
-          label: Text(
-            controller.isLoading.value ? 'Processing...' : 'Cancel Appointment',
-            style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-        );
-      }),
+      floatingActionButton: Builder(
+        builder: (context) {
+          final rawStatus = controller.appointment.status;
+          final status = (rawStatus ?? '').trim().toLowerCase();
+          
+          // Check for various completion/cancellation states
+          final isCompleted = status == 'completed';
+          final isCancelled = status == 'cancelled' || status == 'canceled';
+          final canCancel = !isCompleted && !isCancelled && status.isNotEmpty;
+          
+          if (!canCancel) return const SizedBox.shrink();
+
+          return Obx(() => FloatingActionButton.extended(
+            onPressed: controller.isLoading.value ? null : () => _showCancelDialog(context),
+            backgroundColor: Colors.redAccent,
+            icon: controller.isLoading.value 
+              ? const SizedBox(
+                  width: 20, 
+                  height: 20, 
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                )
+              : const Icon(Icons.cancel_outlined, color: Colors.white),
+            label: Text(
+              controller.isLoading.value ? 'Processing...' : 'Cancel Appointment',
+              style: AppTextStyles.bodyMedium.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ));
+        }
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -114,9 +121,12 @@ class AppointmentDetailView extends GetView<AppointmentDetailController> {
   }
 
   Widget _buildStatusSection() {
-    final status = controller.appointment.status ?? 'Scheduled';
-    final isCompleted = status.toLowerCase() == 'completed';
-    final isCancelled = status.toLowerCase() == 'cancelled';
+    final rawStatus = controller.appointment.status;
+    final status = (rawStatus ?? 'Scheduled').trim();
+    final statusLower = status.toLowerCase();
+    
+    final isCompleted = statusLower == 'completed';
+    final isCancelled = statusLower == 'cancelled' || statusLower == 'canceled';
     
     Color statusColor = AppColors.primaryBlue;
     IconData statusIcon = Icons.calendar_today;
