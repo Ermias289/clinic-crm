@@ -1,0 +1,33 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# .NET Core generated files
+project.lock.json
+project.fragment.lock.json
+
+# Visual Studio cache
+.vs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+appsettings.Development.json
+appsettings.Local.json
+.env
+*.secret.json
+
+# NuGet packages
+*.nupkg
+packages/
