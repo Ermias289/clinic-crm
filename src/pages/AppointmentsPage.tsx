@@ -293,7 +293,7 @@ const AppointmentsPage = () => {
 
     setIsProcessing(true);
     try {
-      await appointmentService.complete(selectedAppointment.id);
+      await appointmentService.complete([selectedAppointment.id]);
       
       // Update local state
       setAppointments(prev => prev.map(apt => 
