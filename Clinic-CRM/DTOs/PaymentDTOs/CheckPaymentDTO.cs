@@ -7,6 +7,6 @@ namespace Clinic_CRM.DTOs.PaymentDTOs
         public int Id { get; set; }
         public decimal ChekedAmount { get; set; }
         public string CheckRemark { get; set; } = string.Empty;
-        public string PaymentProof { get; set; } = string.Empty;
+        //public string PaymentProof { get; set; } = string.Empty;
     }
 }

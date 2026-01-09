@@ -129,12 +129,12 @@ namespace Clinic_CRM.Services.MedicalServices
         public async Task<List<MedicalService>> GetMedicalServicesForAppointment(int? serviceId, int? branchId,  int? docId)
         {
             var service = await _context.MedicalServices
-                .Include(x => x.Branches)
-                .Include(x => x.MedicalProfessionals)
-                .Where(x => (serviceId == null || x.Id == serviceId) &&
+                 .Where(x => (serviceId == null || x.Id == serviceId) &&
                         (branchId == null || x.Id == branchId) &&
                         (docId == null || x.Id == docId)
-                )
+                 )
+                .Include(x => x.Branches)
+                .Include(x => x.MedicalProfessionals)
                 .ToListAsync();
 
             return service;

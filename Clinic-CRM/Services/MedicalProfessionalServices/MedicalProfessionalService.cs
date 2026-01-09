@@ -132,6 +132,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
             if (doc == null)
                 throw new KeyNotFoundException("Medical Professional Not Found");
+
             return doc;
         }
 
