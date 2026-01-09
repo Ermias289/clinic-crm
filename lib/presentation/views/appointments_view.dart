@@ -383,202 +383,221 @@ class _AppointmentsViewState extends State<AppointmentsView>
                         itemCount: controller.appointments.length,
                         itemBuilder: (context, index) {
                           final appointment = controller.appointments[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Flexible(
-                                              child: Builder(
-                                                builder: (context) {
-                                                  final serviceName =
-                                                      appointment
-                                                          .dentistryService
-                                                          ?.name ??
-                                                      'Service';
-                                                  print(
-                                                    '🎯 Displaying service name: "$serviceName"',
-                                                  );
-                                                  print(
-                                                    '🎯 dentistryService object: ${appointment.dentistryService}',
-                                                  );
-                                                  return Text(
-                                                    serviceName,
-                                                    style: AppTextStyles
-                                                        .bodyLarge
-                                                        .copyWith(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                        ),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                            if (appointment.reference !=
-                                                null) ...[
-                                              const SizedBox(width: 8),
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      AppColors.backgroundLight,
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  border: Border.all(
-                                                    color: AppColors.textHint
-                                                        .withValues(alpha: 0.3),
-                                                  ),
+                          return GestureDetector(
+                            onTap: () async {
+                              final result = await Get.toNamed(
+                                Routes.APPOINTMENT_DETAILS,
+                                arguments: appointment,
+                              );
+                              if (result == true) {
+                                Get.snackbar(
+                                  'Success',
+                                  'Appointment cancelled successfully',
+                                  backgroundColor: Colors.green,
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.BOTTOM,
+                                );
+                                // Ensure list is refreshed
+                                controller.refreshAppointments();
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Flexible(
+                                                child: Builder(
+                                                  builder: (context) {
+                                                    final serviceName =
+                                                        appointment
+                                                            .dentistryService
+                                                            ?.name ??
+                                                        'Service';
+                                                    print(
+                                                      '🎯 Displaying service name: "$serviceName"',
+                                                    );
+                                                    print(
+                                                      '🎯 dentistryService object: ${appointment.dentistryService}',
+                                                    );
+                                                    return Text(
+                                                      serviceName,
+                                                      style: AppTextStyles
+                                                          .bodyLarge
+                                                          .copyWith(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                    );
+                                                  },
                                                 ),
-                                                child: Text(
-                                                  appointment.reference!,
-                                                  style: AppTextStyles.bodySmall
-                                                      .copyWith(
-                                                        color: AppColors
-                                                            .textSecondary,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        fontSize: 10,
+                                              ),
+                                              if (appointment.reference !=
+                                                  null) ...[
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
                                                       ),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        AppColors.backgroundLight,
+                                                    borderRadius:
+                                                        BorderRadius.circular(8),
+                                                    border: Border.all(
+                                                      color: AppColors.textHint
+                                                          .withValues(alpha: 0.3),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    appointment.reference!,
+                                                    style: AppTextStyles.bodySmall
+                                                        .copyWith(
+                                                          color: AppColors
+                                                              .textSecondary,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 10,
+                                                        ),
+                                                  ),
                                                 ),
-                                              ),
+                                              ],
                                             ],
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        if (appointment.medicalProfessional !=
-                                            null) ...[
-                                          Text(
-                                            '${appointment.medicalProfessional!.prefix.isNotEmpty ? '${appointment.medicalProfessional!.prefix} ' : ''}${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
-                                            style: AppTextStyles.bodyMedium
-                                                .copyWith(
-                                                  color:
-                                                      AppColors.textSecondary,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
                                           ),
-                                          if (appointment
-                                              .medicalProfessional!
-                                              .specialty
-                                              .isNotEmpty)
+                                          const SizedBox(height: 4),
+                                          if (appointment.medicalProfessional !=
+                                              null) ...[
                                             Text(
-                                              appointment
-                                                  .medicalProfessional!
-                                                  .specialty,
-                                              style: AppTextStyles.bodySmall
+                                              '${appointment.medicalProfessional!.prefix.isNotEmpty ? '${appointment.medicalProfessional!.prefix} ' : ''}${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
+                                              style: AppTextStyles.bodyMedium
                                                   .copyWith(
-                                                    color: AppColors.textHint,
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                    fontWeight: FontWeight.w600,
                                                   ),
                                             ),
-                                        ],
-                                      ],
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            (appointment.status ?? '')
-                                                    .toLowerCase() ==
-                                                'completed'
-                                            ? Colors.green.withOpacity(0.1)
-                                            : AppColors.primaryBlue.withOpacity(
-                                                0.1,
+                                            if (appointment
+                                                .medicalProfessional!
+                                                .specialty
+                                                .isNotEmpty)
+                                              Text(
+                                                appointment
+                                                    .medicalProfessional!
+                                                    .specialty,
+                                                style: AppTextStyles.bodySmall
+                                                    .copyWith(
+                                                      color: AppColors.textHint,
+                                                    ),
                                               ),
-                                        borderRadius: BorderRadius.circular(20),
+                                          ],
+                                        ],
                                       ),
-                                      child: Text(
-                                        appointment.status ?? 'Scheduled',
-                                        style: AppTextStyles.bodySmall.copyWith(
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
                                           color:
                                               (appointment.status ?? '')
                                                       .toLowerCase() ==
                                                   'completed'
-                                              ? Colors.green
-                                              : AppColors.primaryBlue,
-                                          fontWeight: FontWeight.bold,
+                                              ? Colors.green.withOpacity(0.1)
+                                              : AppColors.primaryBlue.withOpacity(
+                                                  0.1,
+                                                ),
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          appointment.status ?? 'Scheduled',
+                                          style: AppTextStyles.bodySmall.copyWith(
+                                            color:
+                                                (appointment.status ?? '')
+                                                        .toLowerCase() ==
+                                                    'completed'
+                                                ? Colors.green
+                                                : AppColors.primaryBlue,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                const Divider(),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.calendar_today,
-                                      size: 16,
-                                      color: AppColors.textHint,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      appointment.day,
-                                      style: AppTextStyles.bodyMedium,
-                                    ),
-                                    const SizedBox(width: 24),
-                                    Icon(
-                                      Icons.access_time,
-                                      size: 16,
-                                      color: AppColors.textHint,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      appointment.reservationTime,
-                                      style: AppTextStyles.bodyMedium,
-                                    ),
-                                    if (appointment
-                                                .dentistryService
-                                                ?.durationInMinutes !=
-                                            null &&
-                                        appointment
-                                                .dentistryService!
-                                                .durationInMinutes >
-                                            0) ...[
-                                      const SizedBox(width: 24),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Divider(),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
                                       Icon(
-                                        Icons.timer_outlined,
+                                        Icons.calendar_today,
                                         size: 16,
                                         color: AppColors.textHint,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        '${appointment.dentistryService!.durationInMinutes} min',
+                                        appointment.day,
                                         style: AppTextStyles.bodyMedium,
                                       ),
+                                      const SizedBox(width: 24),
+                                      Icon(
+                                        Icons.access_time,
+                                        size: 16,
+                                        color: AppColors.textHint,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        appointment.reservationTime,
+                                        style: AppTextStyles.bodyMedium,
+                                      ),
+                                      if (appointment
+                                                  .dentistryService
+                                                  ?.durationInMinutes !=
+                                              null &&
+                                          appointment
+                                                  .dentistryService!
+                                                  .durationInMinutes >
+                                              0) ...[
+                                        const SizedBox(width: 24),
+                                        Icon(
+                                          Icons.timer_outlined,
+                                          size: 16,
+                                          color: AppColors.textHint,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '${appointment.dentistryService!.durationInMinutes} min',
+                                          style: AppTextStyles.bodyMedium,
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },

@@ -29,6 +29,8 @@ import '../presentation/views/request_card_payment_view.dart';
 import '../presentation/views/card_reactivation_payment_view.dart';
 import '../presentation/views/payment_history_view.dart';
 import '../presentation/bindings/payment_binding.dart';
+import '../presentation/views/appointment_detail_view.dart';
+import '../presentation/bindings/appointment_detail_binding.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -117,6 +119,11 @@ class AppPages {
       name: Routes.PAYMENT_HISTORY,
       page: () => const PaymentHistoryView(),
       binding: PaymentBinding(),
+    ),
+    GetPage(
+      name: Routes.APPOINTMENT_DETAILS,
+      page: () => const AppointmentDetailView(),
+      binding: AppointmentDetailBinding(),
     ),
   ];
 }

@@ -5,6 +5,7 @@ abstract class AppointmentRemoteDataSource {
   Future<AppointmentModel> bookAppointment(AppointmentModel appointment);
   Future<List<AppointmentModel>> getAppointmentsByPatientId(int id);
   Future<List<AppointmentModel>> getAppointmentsByUserId(int userId);
+  Future<bool> cancelAppointment(int id, String reason);
 }
 
 class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
@@ -123,6 +124,26 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       return appointments;
     } catch (e) {
       print('❌ Exception in getAppointmentsByUserId: $e');
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> cancelAppointment(int id, String reason) async {
+    try {
+      final url = '/Appointment/cancelAppointment?Id=$id&reason=${Uri.encodeComponent(reason)}';
+      print('🌐 Cancelling appointment: $url');
+      final response = await apiClient.put(url, {});
+
+      if (response.hasError) {
+        print('❌ Cancel failed: ${response.statusCode} - ${response.statusText}');
+        throw Exception(response.statusText ?? 'Failed to cancel appointment');
+      }
+
+      print('✅ Appointment cancelled successfully');
+      return true;
+    } catch (e) {
+      print('❌ Exception in cancelAppointment: $e');
       rethrow;
     }
   }

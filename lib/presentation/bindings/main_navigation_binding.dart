@@ -21,6 +21,7 @@ import '../../data/repositories/patient_repository_impl.dart';
 import '../controllers/appointment_controller.dart';
 import '../../data/datasources/appointment_remote_data_source.dart';
 import '../../data/repositories/appointment_repository_impl.dart';
+import '../../domain/repositories/appointment_repository.dart';
 import '../../core/services/appointment_event_service.dart';
 
 class MainNavigationBinding extends Bindings {
@@ -93,14 +94,14 @@ class MainNavigationBinding extends Bindings {
     Get.lazyPut<AppointmentRemoteDataSourceImpl>(
       () => AppointmentRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
     );
-    Get.lazyPut<AppointmentRepositoryImpl>(
+    Get.lazyPut<AppointmentRepository>(
       () => AppointmentRepositoryImpl(
         remoteDataSource: Get.find<AppointmentRemoteDataSourceImpl>(),
       ),
     );
     Get.lazyPut<AppointmentController>(
       () => AppointmentController(
-        repository: Get.find<AppointmentRepositoryImpl>(),
+        repository: Get.find<AppointmentRepository>(),
       ),
     );
 
