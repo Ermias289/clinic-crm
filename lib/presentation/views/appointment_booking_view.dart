@@ -8,6 +8,8 @@ import '../../core/theme/app_text_styles.dart';
 import '../../config/app_routes.dart';
 import '../../core/api_client.dart';
 import '../../data/models/card_model.dart';
+import '../controllers/appointment_controller.dart';
+import '../../core/services/appointment_event_service.dart';
 
 class AppointmentBookingView extends StatefulWidget {
   const AppointmentBookingView({super.key});
@@ -42,10 +44,12 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Auto-refresh when returning to this page
     if (_hasLoadedOnce) {
-      print('🔄 User returned to AppointmentBookingView - Refreshing card status...');
+      print(
+        '🔄 User returned to AppointmentBookingView - Refreshing card status...',
+      );
       _loadUserCard();
     } else {
       print('👋 AppointmentBookingView first dependency change');
@@ -61,7 +65,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       });
 
       final apiClient = Get.find<ApiClient>();
-      
+
       // Get current user ID
       final box = GetStorage();
       final userId = box.read('userId');
@@ -81,7 +85,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       // but let's check if ApiClient handles the prefix. Usually it does.
       final endpoint = '/Card/cardByUserId/$userId';
       print('🌐 Fetching card from $endpoint...');
-      
+
       final response = await apiClient.get(endpoint);
       print('📡 API Response Status: ${response.statusCode}');
 
@@ -90,10 +94,14 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         setState(() {
           userCard = CardModel.fromJson(response.body as Map<String, dynamic>);
         });
-        print('🎉 Card details loaded: ID: ${userCard?.id}, Status: ${userCard?.status}');
+        print(
+          '🎉 Card details loaded: ID: ${userCard?.id}, Status: ${userCard?.status}',
+        );
       } else {
         // If 404 or other error, it likely means no card exists for this user
-        print('⚠️ No card found or error response: ${response.statusText} (Code: ${response.statusCode})');
+        print(
+          '⚠️ No card found or error response: ${response.statusText} (Code: ${response.statusCode})',
+        );
         print('   Response body: ${response.body}');
         setState(() {
           userCard = null;
@@ -365,6 +373,21 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         margin: const EdgeInsets.all(16),
         duration: const Duration(seconds: 3),
       );
+
+      // Notify that a new appointment was created
+      try {
+        AppointmentEventService.to.notifyAppointmentCreated();
+      } catch (e) {
+        print('⚠️ Could not notify appointment event service: $e');
+      }
+
+      // Refresh appointments list before navigating back
+      try {
+        final appointmentController = Get.find<AppointmentController>();
+        await appointmentController.refreshAppointments();
+      } catch (e) {
+        print('⚠️ Could not refresh appointments: $e');
+      }
 
       // Navigate back to dashboard
       Get.until((route) => route.isFirst);

@@ -21,6 +21,7 @@ import '../../data/repositories/patient_repository_impl.dart';
 import '../controllers/appointment_controller.dart';
 import '../../data/datasources/appointment_remote_data_source.dart';
 import '../../data/repositories/appointment_repository_impl.dart';
+import '../../core/services/appointment_event_service.dart';
 
 class MainNavigationBinding extends Bindings {
   @override
@@ -29,6 +30,9 @@ class MainNavigationBinding extends Bindings {
     Get.lazyPut(() => ApiClient());
     Get.lazyPut(() => UserRemoteDataSource());
     Get.lazyPut(() => ProfileController(userDataSource: Get.find()));
+
+    // Core Services
+    Get.put(AppointmentEventService(), permanent: true);
 
     // Card Dependencies
     Get.lazyPut<CardRemoteDataSourceImpl>(

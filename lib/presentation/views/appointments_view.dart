@@ -9,10 +9,50 @@ import '../controllers/appointment_controller.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/notification_badge.dart';
 
-class AppointmentsView extends GetView<AppointmentController> {
+class AppointmentsView extends StatefulWidget {
   const AppointmentsView({super.key});
 
   @override
+  State<AppointmentsView> createState() => _AppointmentsViewState();
+}
+
+class _AppointmentsViewState extends State<AppointmentsView>
+    with WidgetsBindingObserver {
+  AppointmentController get controller => Get.find<AppointmentController>();
+  bool _hasInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh when app comes back to foreground
+    if (state == AppLifecycleState.resumed && _hasInitialized) {
+      controller.refreshAppointments();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh when returning to this page (e.g., after booking an appointment)
+    if (_hasInitialized) {
+      controller.refreshAppointments();
+    } else {
+      _hasInitialized = true;
+    }
+  }
+
   Widget build(BuildContext context) {
     // Set status bar to be visible
     SystemChrome.setSystemUIOverlayStyle(
@@ -34,7 +74,7 @@ class AppointmentsView extends GetView<AppointmentController> {
           backgroundColor: AppColors.backgroundLight,
           body: SafeArea(
             child: RefreshIndicator(
-              onRefresh: () => controller.fetchAppointments(),
+              onRefresh: () => controller.refreshAppointments(),
               child: Column(
                 children: [
                   Obx(() {
