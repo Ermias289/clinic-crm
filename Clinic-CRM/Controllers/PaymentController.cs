@@ -169,7 +169,7 @@ namespace Clinic_CRM.Controllers
 
         [HttpGet("bypatientId/{patientId}")]
 
-        public async Task<ActionResult> GetPaymentByPatientId(int patientId)
+        public async Task<ActionResult> GetPayme2ntByPatientId(int patientId)
         {
             try
             {

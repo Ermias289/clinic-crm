@@ -349,7 +349,7 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (app == null)
                 throw new KeyNotFoundException("Appointment Not Found");
 
-            if (app.Status != APPOINTMENT_STATUS.SCHEDULED || app.Status != APPOINTMENT_STATUS.RESCHEDULED)
+            if (app.Status != APPOINTMENT_STATUS.SCHEDULED && app.Status != APPOINTMENT_STATUS.RESCHEDULED)
                 throw new KeyNotFoundException("Appointment has to be scheduled to be canceled.");
 
             app.CancelReason = Reason;
@@ -404,8 +404,11 @@ namespace Clinic_CRM.Services.AppointmentServices
                     .Where(x => x.Id == Id)
                     .FirstOrDefaultAsync();
 
-                if (app.Status != APPOINTMENT_STATUS.SCHEDULED || app.Status != APPOINTMENT_STATUS.RESCHEDULED)
-                    throw new KeyNotFoundException("Appointment has to be scheduled to be completed.");
+                if (app == null)
+                    continue;
+                 
+                if (app.Status != APPOINTMENT_STATUS.SCHEDULED && app.Status != APPOINTMENT_STATUS.RESCHEDULED)
+                    continue;
 
                 app.Status = APPOINTMENT_STATUS.COMPLETED;
                 app.CompletedAt = DateTime.Now;
@@ -475,5 +478,17 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .Where(x => x.PatientId == patient.Id)
                 .ToListAsync();
         }
+
+        public async Task<List<Appointment>> GetAppointmentsByDocId(int Id)
+        {
+            return await _context.Appointments
+                .Include(x => x.Patient)
+                .Include(x => x.MedicalProfessional)
+                .Include(x => x.Dentistry)
+                .Include(x => x.BranchSetting)
+                .Where(x => x.MedicalProfessionalId == Id)
+                .ToListAsync();
+        }
+
     }
 }

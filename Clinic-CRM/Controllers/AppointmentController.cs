@@ -116,7 +116,7 @@ namespace Clinic_CRM.Controllers
         {
             try
             {
-                var currentUser = _userService.GetCurrentUser();
+                var currentUser = _userService.GetCurrentUser();    
 
                 if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanCancelCardPayment))
                     throw new UnauthorizedAccessException();
@@ -131,7 +131,7 @@ namespace Clinic_CRM.Controllers
         }
 
         [HttpPut("completeAppointments")]
-        public async Task<ActionResult> CompleteAppointment(List<int> Id)
+        public async Task<ActionResult> CompleteAppointment([FromBody] List<int> Id)
         {
             try
             {
@@ -166,5 +166,22 @@ namespace Clinic_CRM.Controllers
                 return this.ParseException(ex);
             }
         }
+
+        [HttpGet("bydocId/{Id}")]
+        public async Task<ActionResult> GetAppointmentsByDocId(int Id)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewAppointment))
+                    throw new UnauthorizedAccessException();
+                return Ok(await _appointmentService.GetAppointmentsByDocId(Id));
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }   
+
     }
 }

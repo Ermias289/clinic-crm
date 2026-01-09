@@ -14,5 +14,6 @@ namespace Clinic_CRM.Services.AppointmentServices
         Task<bool> CompleteAppointment(List<int> Ids);
         Task<List<Appointment>> GetAppointmentsByPatientId(int Id);
         Task<List<Appointment>> GetAppointmentByUserId(int userId);
+        Task<List<Appointment>> GetAppointmentsByDocId(int Id);
     }
 }
