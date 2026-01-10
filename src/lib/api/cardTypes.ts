@@ -3,33 +3,18 @@ import apiClient from './client';
 export interface AddCardTypeDTO {
   name: string;
   description: string;
-  duration: number;
-  price: number;
-  benefits: string[];
-  color: string;
-  isActive?: boolean;
 }
 
 export interface UpdateCardTypeDTO {
   id: number;
   name: string;
   description: string;
-  duration: number;
-  price: number;
-  benefits: string[];
-  color: string;
-  isActive: boolean;
 }
 
 export interface CardTypeDTO {
   id: number;
   name: string;
   description: string;
-  duration: number;
-  price: number;
-  benefits: string[];
-  color: string;
-  isActive: boolean;
 }
 
 export const cardTypeService = {

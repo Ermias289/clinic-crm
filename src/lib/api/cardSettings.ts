@@ -1,23 +1,30 @@
 import apiClient from './client';
 
 export interface AddCardSettingDTO {
-  key: string;
-  value: string;
-  description?: string;
+  price: number;
+  expirationDuration: number; // in days
+  cardTypeId: number;
 }
 
 export interface UpdateCardSettingDTO {
   id: number;
-  key: string;
-  value: string;
-  description?: string;
+  price: number;
+  expirationDuration: number; // in days
+  cardTypeId: number;
 }
 
 export interface CardSettingDTO {
   id: number;
-  key: string;
-  value: string;
-  description?: string;
+  price: number;
+  expirationDuration: number; // in days
+  cardTypeId: number;
+  cardType?: {
+    id: number;
+    name: string;
+    description: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const cardSettingService = {

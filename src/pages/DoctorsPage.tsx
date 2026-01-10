@@ -64,7 +64,7 @@ interface BranchWithName {
 }
 
 interface FileUploadResponse {
-  fileName: string;
+  FileName: string;
 }
 
 const DoctorsPage = () => {
@@ -239,7 +239,7 @@ const DoctorsPage = () => {
       });
 
       // Extract fileName from response object
-      const fileName = response.data.fileName;
+      const fileName = response.data.FileName;
       
       if (isCreate) {
         setCreateForm(prev => ({ ...prev, profilePicture: fileName }));

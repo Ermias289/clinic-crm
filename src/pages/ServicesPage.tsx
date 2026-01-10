@@ -55,7 +55,7 @@ import {
 import apiClient from "@/lib/api/client";
 
 interface FileUploadResponse {
-  filename: string;
+  FileName: string;
 }
 
 /* ======================================================= */
@@ -400,7 +400,7 @@ const ServicesPage = () => {
         },
       });
 
-      const filename = response.data.filename;
+      const filename = response.data.FileName;
       
       if (isCreate) {
         setCreateForm(prev => ({ ...prev, servicePicture: filename }));
@@ -437,6 +437,22 @@ const ServicesPage = () => {
     doctor => !editSelectedDoctorIds.includes(doctor.id)
   );
 
+  // Filter doctors based on selected branches
+  const getFilteredDoctors = (selectedBranchIds: number[], availableDoctors: MedicalProfessional[]) => {
+    if (selectedBranchIds.length === 0) {
+      return availableDoctors; // Show all doctors if no branches selected
+    }
+    
+    return availableDoctors.filter(doctor => 
+      doctor.branches && doctor.branches.some(branch => 
+        selectedBranchIds.includes(branch.id)
+      )
+    );
+  };
+
+  const filteredCreateDoctors = getFilteredDoctors(createSelectedBranchIds, availableCreateDoctors);
+  const filteredEditDoctors = getFilteredDoctors(editSelectedBranchIds, availableEditDoctors);
+
   const availableCreateBranches = branches.filter(
     branch => !createSelectedBranchIds.includes(branch.id)
   );
@@ -472,7 +488,7 @@ const ServicesPage = () => {
         durationInMinutes: createForm.durationInMinutes,
         servicePicture: createForm.servicePicture,
         medicalProfessionalsId: createSelectedDoctorIds,
-        branches: createSelectedBranchIds,
+        branchesId: createSelectedBranchIds,
       };
 
       console.log("Creating service with data:", serviceData);
@@ -630,17 +646,51 @@ const ServicesPage = () => {
 
               {/* Doctors Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Assigned Doctors</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Assigned Doctors</h3>
+                  {createSelectedBranchIds.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Force refresh doctors for selected branches
+                        const currentBranches = [...createSelectedBranchIds];
+                        setCreateSelectedBranchIds([]);
+                        setTimeout(() => setCreateSelectedBranchIds(currentBranches), 100);
+                      }}
+                    >
+                      Refresh Doctors
+                    </Button>
+                  )}
+                </div>
+                
+                {createSelectedBranchIds.length === 0 && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                    <p className="text-sm text-amber-700">
+                      💡 Select branches first to see doctors available at those locations
+                    </p>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label>Select Doctors</Label>
                   <Select onValueChange={handleCreateDoctorSelect}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose doctors..." />
+                      <SelectValue placeholder={
+                        createSelectedBranchIds.length === 0 
+                          ? "Select branches first..." 
+                          : filteredCreateDoctors.length === 0 
+                            ? "No doctors available for selected branches"
+                            : "Choose doctors..."
+                      } />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableCreateDoctors.map((doctor) => (
+                      {filteredCreateDoctors.map((doctor) => (
                         <SelectItem key={doctor.id} value={doctor.id.toString()}>
                           Dr. {doctor.fName} {doctor.lName} - {doctor.specialty || "General"}
+                          <span className="text-xs text-muted-foreground ml-2">
+                            ({doctor.branches?.map(b => b.name).join(", ")})
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -439,14 +439,15 @@ const PatientsPage = () => {
                               <div className="flex items-center gap-2">
                                 <MapPin className="w-3 h-3 text-muted-foreground" />
                                 <span className="text-sm truncate max-w-[150px]">
-                                  {patient.city || patient.subCity || "-"}
+                                  {(() => {
+                                    const parts = [];
+                                    if (patient.country) parts.push(patient.country);
+                                    if (patient.city) parts.push(patient.city);
+                                    if (patient.subCity) parts.push(`and ${patient.subCity}`);
+                                    return parts.length > 0 ? parts.join(' - ') : "-";
+                                  })()}
                                 </span>
                               </div>
-                              {patient.country && (
-                                <span className="text-xs text-muted-foreground">
-                                  {patient.country}
-                                </span>
-                              )}
                             </div>
                           </td>
 

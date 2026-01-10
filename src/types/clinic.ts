@@ -86,14 +86,9 @@ export interface Branch {
 }
 
 export interface CardType {
-  id: string;
+  id: number;
   name: string;
   description: string;
-  duration: number; // validity in months
-  price: number;
-  benefits: string[];
-  color: string;
-  isActive: boolean;
 }
 
 export interface Payment {

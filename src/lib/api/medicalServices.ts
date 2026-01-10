@@ -31,11 +31,17 @@ export interface AddMedicalServiceDTO {
   durationInMinutes: number;
   servicePicture?: string;
   medicalProfessionalsId?: number[];
-  branches?: number[];
+  branchesId?: number[];
 }
 
-export interface UpdateMedicalServiceDTO extends AddMedicalServiceDTO {
+export interface UpdateMedicalServiceDTO {
   id: number;
+  name: string;
+  description?: string;
+  durationInMinutes: number;
+  servicePicture?: string;
+  medicalProfessionalsId?: number[];
+  branches?: number[];
 }
 
 /* ===== API Service ===== */
@@ -92,11 +98,11 @@ export const medicalServicesService = {
   },
 
   // Upload image
-  uploadImage: async (file: File): Promise<{ filename: string }> => {
+  uploadImage: async (file: File): Promise<{ FileName: string }> => {
     const formData = new FormData();
     formData.append("file", file);
     
-    const res = await apiClient.post<{ filename: string }>(
+    const res = await apiClient.post<{ FileName: string }>(
       "/api/FileUpload/upload",
       formData,
       {
