@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
       { title: "Branches", href: "/settings/branches", icon: Building2 },
       { title: "Card Settings", href: "/settings/cards", icon: CardIcon },
       { title: "Card Types", href: "/settings/card-types", icon: CreditCard },
-      { title: "User Onboarding", href: "/settings/onboarding", icon: UserCog },
+      { title: "Banner", href: "/settings/onboarding", icon: UserCog },
       { title: "Working Days", href: "/settings/working-days", icon: Clock },
       { title: "Users", href: "/settings/users", icon: UserCircle },
       { title: "User Roles", href: "/settings/roles", icon: Shield },
