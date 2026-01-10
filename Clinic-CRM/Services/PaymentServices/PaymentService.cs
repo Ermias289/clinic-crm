@@ -116,7 +116,7 @@ namespace Clinic_CRM.Services.PaymentServices
             if (pendingPayments.Any())
                 throw new KeyNotFoundException("You have a pending payment.");
 
-            _mapper.Map(payment, dto);
+            _mapper.Map(dto, payment);
 
             var card = await _context.Cards.FindAsync(payment.CardId);
 
@@ -351,6 +351,13 @@ namespace Clinic_CRM.Services.PaymentServices
             var user = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).FirstOrDefaultAsync();
             var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
 
+            // prepare payment (safe, no throw)
+            var prepared = await AutoPrepare(new AutoPaymentPrepareDTO
+            {
+                RequestedAmount = payment.ExpectedAmount,
+                CardId = payment.CardId
+            });
+
             if (receptions.Count > 0)
                 await _notify.SendUserAsync(
                     $"Payment Canceled",
@@ -398,6 +405,13 @@ namespace Clinic_CRM.Services.PaymentServices
             await _context.SaveChangesAsync();
             var user = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).FirstOrDefaultAsync();
             var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
+
+            // prepare payment (safe, no throw)
+            var prepared = await AutoPrepare(new AutoPaymentPrepareDTO
+            {
+                RequestedAmount = payment.ExpectedAmount,
+                CardId = payment.CardId
+            });
 
             if (receptions.Count > 0)
                 await _notify.SendUserAsync(

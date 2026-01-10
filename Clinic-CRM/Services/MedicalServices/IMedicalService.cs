@@ -6,7 +6,7 @@ namespace Clinic_CRM.Services.MedicalServices
     public interface IMedicalService
     {
         Task<MedicalService> GetMedicalServiceAsync(int Id);
-        Task<List<MedicalService>> GetAllMedicalervices();
+        Task<List<MedicalService>> GetAllMedicalServices();
         Task<MedicalService> AddMedicalService(AddMedicalServiceDTO dto);
         Task<MedicalService> UpdateMedicalService(UpdateMedicalServiceDTO dto);
         Task<MedicalService> DeleteMedicalService(int Id);

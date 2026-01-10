@@ -3,6 +3,7 @@ using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs.MedicalProfessionalDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.Models;
+using Clinic_CRM.Models.Settings;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using static Clinic_CRM.Helpers.Constants;
@@ -128,6 +129,50 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
             var doc = await _context.MedicalProfessionals
                 .Include(x => x.Branches)
                 .Include(x => x.MedicalServices)
+                .Select(x => new MedicalProfessional
+                {
+                    Id = x.Id,
+                    FName = x.FName,
+                    LName = x.LName,
+                    MName = x.MName,
+                    PhoneNumber = x.PhoneNumber,
+                    CreatedAt = x.CreatedAt,
+                    JobTitle = x.JobTitle,
+                    EducationalBackground = x.EducationalBackground,
+                    Email = x.Email,
+                    ProfilePicture = x.ProfilePicture,
+                    Specialty = x.Specialty,
+                    UpdatedAt = x.UpdatedAt,
+                    Prefix = x.Prefix,
+                    Status = x.Status,
+                    YearsOfExperience = x.YearsOfExperience,
+                    LicenseNumber = x.LicenseNumber,
+                    UserId = x.UserId,
+
+                    Branches = x.Branches.Select(x => new BranchSetting
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        Address = x.Address,
+                        SubCity = x.SubCity,
+                        City = x.City,
+                        Location = x.Location,
+                        PhoneNumber = x.PhoneNumber,
+                    }).ToList(),
+
+                    MedicalServices = x.MedicalServices.Select(x => new MedicalService
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        DurationInMinutes = x.DurationInMinutes,
+                        CreatedAt = x.CreatedAt,
+                        ServicePicture = x.ServicePicture,
+                        Description = x.Description,
+                        UpdatedAt = x.UpdatedAt,
+                        ServiceReference = x.ServiceReference,
+                    }).ToList()
+
+                })
                 .FirstOrDefaultAsync(x => x.Id == Id);
 
             if (doc == null)
@@ -150,7 +195,52 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
         public async Task<List<MedicalProfessional>> GetAllMedicalProfessionals()
         {
-            return await _context.MedicalProfessionals.Include(x => x.MedicalServices).Include(x => x.Branches).ToListAsync();
+            return await _context.MedicalProfessionals.Include(x => x.MedicalServices).Include(x => x.Branches)
+                 .Select(x => new MedicalProfessional
+                 {
+                     Id = x.Id,
+                     FName = x.FName,
+                     LName = x.LName,
+                     MName = x.MName,
+                     PhoneNumber = x.PhoneNumber,
+                     CreatedAt = x.CreatedAt,
+                     JobTitle = x.JobTitle,
+                     EducationalBackground = x.EducationalBackground,
+                     Email = x.Email,
+                     ProfilePicture = x.ProfilePicture,
+                     Specialty = x.Specialty,
+                     UpdatedAt = x.UpdatedAt,
+                     Prefix = x.Prefix,
+                     Status = x.Status,
+                     YearsOfExperience = x.YearsOfExperience,
+                     LicenseNumber = x.LicenseNumber,
+                     UserId = x.UserId,
+
+                     Branches = x.Branches.Select(x => new BranchSetting
+                     {
+                         Id = x.Id,
+                         Name = x.Name,
+                         Address = x.Address,
+                         SubCity = x.SubCity,
+                         City = x.City,
+                         Location = x.Location,
+                         PhoneNumber = x.PhoneNumber,
+                     }).ToList(),
+
+                     MedicalServices = x.MedicalServices.Select(x => new MedicalService
+                     {
+                         Id = x.Id,
+                         Name = x.Name,
+                         DurationInMinutes = x.DurationInMinutes,
+                         CreatedAt = x.CreatedAt,
+                         ServicePicture = x.ServicePicture,
+                         Description = x.Description,
+                         UpdatedAt = x.UpdatedAt,
+                         ServiceReference = x.ServiceReference,
+                     }).ToList()
+
+                 })
+                .ToListAsync();
         }
     }
 }

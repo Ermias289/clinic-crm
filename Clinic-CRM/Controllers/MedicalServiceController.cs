@@ -31,7 +31,7 @@ namespace Clinic_CRM.Controllers
                 if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewMedicalService))
                     throw new UnauthorizedAccessException();
 
-                return Ok(await _medicalService.GetAllMedicalervices());
+                return Ok(await _medicalService.GetAllMedicalServices());
             }catch (Exception ex)
             {
                 return this.ParseException(ex);
