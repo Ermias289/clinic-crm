@@ -1,4 +1,5 @@
 import apiClient from "./client";
+import { fileUploadService } from "./fileUpload";
 
 /* ===== Backend Response Types ===== */
 
@@ -97,20 +98,13 @@ export const medicalServicesService = {
     await apiClient.delete(`/api/MedicalService/${id}`);
   },
 
-  // Upload image
-  uploadImage: async (file: File): Promise<{ FileName: string }> => {
-    const formData = new FormData();
-    formData.append("file", file);
-    
-    const res = await apiClient.post<{ FileName: string }>(
-      "/api/FileUpload/upload",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-    return res.data;
+  // Upload image - use centralized file upload service
+  uploadImage: async (file: File): Promise<string> => {
+    return await fileUploadService.upload(file);
+  },
+
+  // Get image URL - use centralized file upload service
+  getImageUrl: (fileName: string): string => {
+    return fileUploadService.getFileUrl(fileName);
   },
 };

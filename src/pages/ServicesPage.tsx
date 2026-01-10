@@ -52,11 +52,6 @@ import {
   BranchSettingDTO,
   branchService,
 } from "@/lib/api/branches";
-import apiClient from "@/lib/api/client";
-
-interface FileUploadResponse {
-  FileName: string;
-}
 
 /* ======================================================= */
 
@@ -160,7 +155,7 @@ const ServicesPage = () => {
   /* -------------------- HELPERS -------------------- */
   const getImageUrl = (filename: string) => {
     if (!filename) return "";
-    return `https://crmgate.nexabusinessgroup.com/api/FileUpload/${filename}`;
+    return medicalServicesService.getImageUrl(filename);
   };
 
   /* CREATE FORM HANDLERS */
@@ -395,16 +390,7 @@ const ServicesPage = () => {
     }
     
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await apiClient.post<FileUploadResponse>('/api/FileUpload/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      const filename = response.data.FileName;
+      const filename = await medicalServicesService.uploadImage(file);
       
       if (isCreate) {
         setCreateForm(prev => ({ ...prev, servicePicture: filename }));

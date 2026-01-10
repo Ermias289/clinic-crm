@@ -50,7 +50,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { medicalServicesService, MedicalService } from "@/lib/api/medicalServices";
 import { branchService, BranchSettingDTO } from "@/lib/api/branches";
-import apiClient from "@/lib/api/client";
+import { fileUploadService } from "@/lib/api/fileUpload";
 
 interface MedicalServiceWithName {
   id: number;
@@ -61,10 +61,6 @@ interface BranchWithName {
   id: number;
   name: string;
   location?: string;
-}
-
-interface FileUploadResponse {
-  FileName: string;
 }
 
 const DoctorsPage = () => {
@@ -229,17 +225,7 @@ const DoctorsPage = () => {
     }
     
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await apiClient.post<FileUploadResponse>('/api/FileUpload/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      // Extract fileName from response object
-      const fileName = response.data.FileName;
+      const fileName = await fileUploadService.upload(file);
       
       if (isCreate) {
         setCreateForm(prev => ({ ...prev, profilePicture: fileName }));
@@ -585,7 +571,7 @@ const DoctorsPage = () => {
   // Get full image URL from filename
   const getImageUrl = (filename: string) => {
     if (!filename) return "";
-    return `https://crmgate.nexabusinessgroup.com/api/FileUpload/${filename}`;
+    return fileUploadService.getFileUrl(filename);
   };
 
   // Handle delete confirmation

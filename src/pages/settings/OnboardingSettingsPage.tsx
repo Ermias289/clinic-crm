@@ -35,6 +35,8 @@ const OnboardingSettingsPage = () => {
   });
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
   const [editPreviewUrl, setEditPreviewUrl] = useState<string>("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
 
   // Fetch banners from API
   useEffect(() => {
@@ -189,7 +191,15 @@ const OnboardingSettingsPage = () => {
         description: "Failed to delete banner. You may not have permission to remove banners.",
         variant: "destructive"
       });
+    } finally {
+      setDeleteDialogOpen(false);
+      setBannerToDelete(null);
     }
+  };
+
+  const confirmDeleteBanner = (banner: Banner) => {
+    setBannerToDelete(banner);
+    setDeleteDialogOpen(true);
   };
 
   const openEditDialog = (banner: Banner) => {
@@ -432,7 +442,7 @@ const OnboardingSettingsPage = () => {
                         variant="ghost" 
                         size="icon-sm" 
                         className="text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteBanner(banner.id)}
+                        onClick={() => confirmDeleteBanner(banner)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -674,6 +684,32 @@ The Bright Smile Team"
                 ) : (
                   "Update Banner"
                 )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Banner Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirm Delete</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this banner? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => bannerToDelete && handleDeleteBanner(bannerToDelete.id)}
+              >
+                Delete Banner
               </Button>
             </DialogFooter>
           </DialogContent>
