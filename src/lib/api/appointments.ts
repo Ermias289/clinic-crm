@@ -101,11 +101,13 @@ export const appointmentService = {
     });
   },
 
-  complete: async (id: number): Promise<void> => {
-    await apiClient.put('/api/Appointment/completeAppointments', null, {
-      params: { Id: id },
-    });
-  },
+  complete: async (ids: number[]): Promise<void> => {
+  await apiClient.put(
+    '/api/Appointment/completeAppointments',
+    ids
+  );
+},
+
 
   update: async (id: number, data: Partial<CreateAppointmentDTO>): Promise<AppointmentDTO> => {
     const response = await apiClient.put<AppointmentDTO>(`/api/Appointment/${id}`, data);
