@@ -106,6 +106,7 @@ const ServicesPage = () => {
   /* -------------------- LOAD DATA -------------------- */
   const loadData = async () => {
     try {
+      console.log("Loading data...");
       const [srv, docs, brs] = await Promise.all([
         medicalServicesService.getAll(),
         medicalProfessionalsService.getAll(),
@@ -113,6 +114,7 @@ const ServicesPage = () => {
       ]);
 
       console.log("Services:", srv); // Debug
+      console.log("Doctors:", docs); // Debug
       console.log("Branches:", brs); // Debug
 
       setServices(srv);
@@ -134,6 +136,8 @@ const ServicesPage = () => {
         }
       }
       setServiceBranches(branchMap);
+
+      console.log("Data loading completed successfully");
 
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -481,19 +485,28 @@ const ServicesPage = () => {
       return;
     }
 
+    if (isCreateUploading) {
+      toast({
+        title: "Upload in progress",
+        description: "Please wait for the image upload to complete",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const serviceData = {
         name: createForm.name,
         description: createForm.description,
         durationInMinutes: createForm.durationInMinutes,
-        servicePicture: createForm.servicePicture,
+        servicePicture: createForm.servicePicture || "",
         medicalProfessionalsId: createSelectedDoctorIds,
         branchesId: createSelectedBranchIds,
       };
 
-      console.log("Creating service with data:", serviceData);
-
       const newService = await medicalServicesService.create(serviceData);
+
+      console.log("Service created successfully:", newService);
 
       setServices((prev) => [...prev, newService]);
       
@@ -507,9 +520,13 @@ const ServicesPage = () => {
       loadData(); // Reload data to get branches
     } catch (err: any) {
       console.error("Error adding service:", err);
+      console.error("Error response data:", err.response?.data);
+      console.error("Error response status:", err.response?.status);
+      console.error("Error response headers:", err.response?.headers);
+      
       toast({
         title: "Failed to add service",
-        description: err.response?.data?.message || "Please check the form and try again",
+        description: err.response?.data?.message || err.response?.data || err.message || "Please check the form and try again",
         variant: "destructive",
       });
     }
@@ -536,18 +553,25 @@ const ServicesPage = () => {
       return;
     }
 
+    if (isEditUploading) {
+      toast({
+        title: "Upload in progress",
+        description: "Please wait for the image upload to complete",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const serviceData = {
         id: editingService.id,
         name: editForm.name,
         description: editForm.description,
         durationInMinutes: editForm.durationInMinutes,
-        servicePicture: editForm.servicePicture,
+        servicePicture: editForm.servicePicture || "",
         medicalProfessionalsId: editSelectedDoctorIds,
         branches: editSelectedBranchIds,
       };
-
-      console.log("Updating service with data:", serviceData);
 
       const updatedService = await medicalServicesService.update(serviceData);
 
@@ -859,6 +883,19 @@ const ServicesPage = () => {
             </div>
 
             <DialogFooter className="px-6 py-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  console.log("Debug - Current form state:");
+                  console.log("createForm:", createForm);
+                  console.log("createSelectedBranchIds:", createSelectedBranchIds);
+                  console.log("createSelectedDoctorIds:", createSelectedDoctorIds);
+                  console.log("branches:", branches);
+                  console.log("availableCreateBranches:", availableCreateBranches);
+                }}
+              >
+                Debug Form
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => {
