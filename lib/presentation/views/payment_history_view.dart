@@ -4,6 +4,7 @@ import '../controllers/payment_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../data/models/payment_model.dart';
+import '../../core/utils/image_utils.dart';
 
 class PaymentHistoryView extends GetView<PaymentController> {
   const PaymentHistoryView({super.key});
@@ -314,6 +315,85 @@ class PaymentHistoryView extends GetView<PaymentController> {
                 ),
               ),
             ],
+
+            // Payment Proof Image (exclude AUTO-PREPARE status)
+            if (payment.paymentProof.isNotEmpty && 
+                payment.status.toLowerCase() != 'auto-prepared') ...[
+              const SizedBox(height: 12),
+              Text(
+                'Payment Proof',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () => _showPaymentProofDialog(payment.paymentProof),
+                child: Container(
+                  width: double.infinity,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(11),
+                    child: Image.network(
+                      ImageUtils.buildImageUrl(payment.paymentProof),
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: AppColors.backgroundLight,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryBlue,
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.backgroundLight,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.broken_image_outlined,
+                                size: 32,
+                                color: AppColors.textHint,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Failed to load image',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textHint,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tap to view full size',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -372,6 +452,128 @@ class PaymentHistoryView extends GetView<PaymentController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showPaymentProofDialog(String paymentProof) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: [
+            // Background tap to close
+            GestureDetector(
+              onTap: () => Get.back(),
+              child: Container(
+                width: double.infinity,
+                height: double.infinity,
+                color: Colors.black54,
+              ),
+            ),
+            // Image container
+            Center(
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Payment Proof',
+                              style: AppTextStyles.h3.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Get.back(),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Image
+                    Container(
+                      constraints: BoxConstraints(
+                        maxHeight: Get.height * 0.6,
+                        maxWidth: Get.width * 0.9,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                        child: Image.network(
+                          ImageUtils.buildImageUrl(paymentProof),
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              height: 200,
+                              color: AppColors.backgroundLight,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.primaryBlue,
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 200,
+                              color: AppColors.backgroundLight,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 48,
+                                    color: AppColors.textHint,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Failed to load payment proof',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textHint,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

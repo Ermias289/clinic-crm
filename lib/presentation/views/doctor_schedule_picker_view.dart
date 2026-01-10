@@ -60,7 +60,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     if (!_controller.canContinue) {
       Get.snackbar(
         'Required',
-        'Please select doctor, date, and time',
+        'Please select branch, doctor, date, and time',
         backgroundColor: AppColors.warningOrange,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -69,6 +69,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
       return;
     }
 
+    final branch = _controller.selectedBranch.value!;
     final doctor = _controller.selectedDoctor.value!;
     final date = _controller.selectedDate.value!;
     final time = _controller.selectedTime.value!;
@@ -77,6 +78,8 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     Get.back(
       result: {
         'service': _service,
+        'branchId': branch.id,
+        'branchName': branch.name ?? 'Unknown Branch',
         'doctorId': doctor.id,
         'doctorName': doctor.fullName,
         'date': date,
@@ -106,6 +109,18 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                       _ErrorBanner(message: error),
                       const SizedBox(height: 16),
                     ],
+
+                    Text('Branch', style: AppTextStyles.h3),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Choose your preferred branch location',
+                      style: AppTextStyles.bodySmall,
+                    ),
+                    const SizedBox(height: 16),
+
+                    _buildBranchSection(),
+
+                    const SizedBox(height: 28),
 
                     Text('Doctor', style: AppTextStyles.h3),
                     const SizedBox(height: 8),
@@ -181,8 +196,43 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     );
   }
 
+  Widget _buildBranchSection() {
+    return Obx(() {
+      if (_controller.isLoadingBranches.value) {
+        return _LoadingCard(label: 'Loading branches...');
+      }
+
+      if (_controller.branches.isEmpty) {
+        return _EmptyStateCard(
+          title: 'No branches found',
+          subtitle: 'Please try again later.',
+          icon: Icons.location_on_rounded,
+          actionLabel: 'Refresh',
+          onAction: _controller.loadBranches,
+        );
+      }
+
+      return _SelectionCard(
+        title: 'Select Branch',
+        value: _controller.selectedBranch.value?.name ?? 'Choose Branch',
+        icon: Icons.location_on_rounded,
+        isSelected: _controller.selectedBranch.value != null,
+        onTap: () => _openBranchBottomSheet(),
+      );
+    });
+  }
+
   Widget _buildDoctorSection() {
     return Obx(() {
+      final branch = _controller.selectedBranch.value;
+      if (branch == null) {
+        return _DisabledHintCard(
+          icon: Icons.person_rounded,
+          title: 'Select a branch first',
+          subtitle: 'Doctors will appear after you pick a branch.',
+        );
+      }
+
       if (_controller.isLoadingDoctors.value) {
         return _LoadingCard(label: 'Loading doctors...');
       }
@@ -190,10 +240,10 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
       if (_controller.doctors.isEmpty) {
         return _EmptyStateCard(
           title: 'No doctors found',
-          subtitle: 'Please try again later.',
+          subtitle: 'No doctors available for this branch.',
           icon: Icons.medical_information_rounded,
-          actionLabel: 'Refresh',
-          onAction: _controller.loadDoctors,
+          actionLabel: 'Change branch',
+          onAction: () => _openBranchBottomSheet(),
         );
       }
 
@@ -205,6 +255,152 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
         onTap: () => _openDoctorBottomSheet(),
       );
     });
+  }
+
+  void _openBranchBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 42,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppColors.textHint.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Text('Choose Branch', style: AppTextStyles.h3),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Get.back(),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.65,
+                ),
+                child: Obx(() {
+                  final list = _controller.branches;
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final branch = list[index];
+                      final selected =
+                          _controller.selectedBranch.value?.id == branch.id;
+
+                      return InkWell(
+                        onTap: () {
+                          _controller.selectBranch(branch);
+                          Get.back();
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? AppColors.primaryBlue.withOpacity(0.08)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.primaryBlue
+                                  : AppColors.textHint.withOpacity(0.15),
+                              width: 1.5,
+                            ),
+                            boxShadow: AppColors.softShadow,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: selected
+                                        ? AppColors.primaryBlue.withOpacity(0.1)
+                                        : AppColors.backgroundLight,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.location_on_rounded,
+                                    color: selected
+                                        ? AppColors.primaryBlue
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        branch.name ?? 'Unknown Branch',
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                      if (branch.address != null &&
+                                          branch.address!.isNotEmpty) ...[
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          branch.address!,
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Icon(
+                                  selected
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked_rounded,
+                                  color: selected
+                                      ? AppColors.primaryBlue
+                                      : AppColors.textHint,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
   }
 
   void _openDoctorBottomSheet() {
@@ -863,7 +1059,7 @@ class _Header extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Select doctor, date, and time from schedule',
+                      'Select branch, doctor, date, and time from schedule',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: Colors.white70,
                       ),

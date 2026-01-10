@@ -1,3 +1,5 @@
+import '../../data/models/branch_setting_model.dart';
+
 class MedicalProfessional {
   final int id;
   final String fullName;
@@ -9,6 +11,7 @@ class MedicalProfessional {
   final String? educationalBackground;
   final int? yearsOfExperience;
   final bool isActive;
+  final List<BranchSettingModel>? branches;
 
   MedicalProfessional({
     required this.id,
@@ -21,6 +24,7 @@ class MedicalProfessional {
     this.educationalBackground,
     this.yearsOfExperience,
     required this.isActive,
+    this.branches,
   });
 
   factory MedicalProfessional.fromJson(Map<String, dynamic> json) {
@@ -91,6 +95,12 @@ class MedicalProfessional {
           : (json['status']?.toString().toLowerCase() == 'active')
           ? true
           : true,
+      branches: (json['branches'] is List)
+          ? (json['branches'] as List)
+                .where((e) => e != null) // Filter out null values
+                .map((e) => BranchSettingModel.fromJson(e))
+                .toList()
+          : null,
     );
   }
 
@@ -106,6 +116,7 @@ class MedicalProfessional {
       'educationalBackground': educationalBackground,
       'yearsOfExperience': yearsOfExperience,
       'isActive': isActive,
+      'branches': branches?.map((e) => e.toJson()).toList(),
     };
   }
 }

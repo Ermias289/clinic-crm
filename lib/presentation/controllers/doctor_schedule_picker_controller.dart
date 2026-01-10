@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 
 import '../../data/repositories/doctor_repository_impl.dart';
 import '../../domain/models/medical_professional_model.dart';
+import '../../data/models/branch_setting_model.dart';
+import '../../domain/repositories/branch_setting_repository.dart';
 
 /// Controls a "pick doctor -> pick date -> pick time" flow.
 ///
@@ -19,19 +21,29 @@ import '../../domain/models/medical_professional_model.dart';
 /// - If `slotDurationInMinutes` is missing on schedule, the controller will
 ///   fall back to `serviceDurationInMinutes` if provided, otherwise 30 minutes.
 class DoctorSchedulePickerController extends GetxController {
-  DoctorSchedulePickerController(this._doctorRepository);
+  DoctorSchedulePickerController(
+    this._doctorRepository,
+    this._branchSettingRepository,
+  );
 
   final DoctorRepository _doctorRepository;
+  final BranchSettingRepository _branchSettingRepository;
 
   // Loading states
   final isLoadingDoctors = false.obs;
   final isLoadingSchedules = false.obs;
+  final isLoadingBranches = false.obs;
 
   // Data
   final doctors = <MedicalProfessional>[].obs;
+  // Private store for all doctors (before filtering)
+  final _allDoctors = <MedicalProfessional>[];
   final schedulesForSelectedDoctor = <DoctorSchedule>[].obs;
+  final branches = <BranchSettingModel>[].obs;
 
   // Selection
+  // Selection
+  final selectedBranch = Rxn<BranchSettingModel>();
   final selectedDoctor = Rxn<MedicalProfessional>();
   final selectedDate = Rxn<DateTime>(); // date only (yyyy-mm-dd)
   final selectedTime = Rxn<TimeOfDay>();
@@ -49,20 +61,76 @@ class DoctorSchedulePickerController extends GetxController {
   /// Initialize controller by loading doctors.
   Future<void> init({int? serviceDurationInMinutes}) async {
     _serviceDurationInMinutes = serviceDurationInMinutes;
+    // Load branches and doctors sequentially
+    await loadBranches();
     await loadDoctors();
+
+    // Auto-select branch AFTER both are loaded
+    if (branches.length == 1 &&
+        selectedBranch.value == null &&
+        _allDoctors.isNotEmpty) {
+      print('DEBUG: Auto-selecting single branch after init complete');
+      selectBranch(branches.first);
+    }
+  }
+
+  Future<void> loadBranches() async {
+    isLoadingBranches.value = true;
+    try {
+      final list = await _branchSettingRepository.getBranchSettings();
+      branches.assignAll(list);
+
+      // Don't auto-select here - let loadDoctors handle it after doctors are loaded
+    } catch (e) {
+      print('loadBranches error: $e');
+    } finally {
+      isLoadingBranches.value = false;
+    }
   }
 
   Future<void> loadDoctors() async {
     errorMessage.value = null;
     isLoadingDoctors.value = true;
     try {
+      print('🔍 DoctorSchedulePickerController: Starting to load doctors...');
       final list = await _doctorRepository.getDoctors();
-      doctors.assignAll(list.where((d) => d.isActive).toList());
+      print('DEBUG: Loaded ${list.length} doctors from API');
 
+      final activeDoctors = list.where((d) => d.isActive).toList();
+      print('DEBUG: ${activeDoctors.length} active doctors');
+
+      _allDoctors.clear();
+      _allDoctors.addAll(activeDoctors);
+      print('DEBUG: Stored ${_allDoctors.length} doctors in _allDoctors');
+
+      // Log each doctor's branches
+      for (final doctor in _allDoctors) {
+        final branchInfo =
+            doctor.branches?.map((b) => 'ID:${b.id} Name:${b.name}').toList() ??
+            ['No branches'];
+        print('DEBUG: Doctor ${doctor.fullName} - branches: $branchInfo');
+      }
+
+      // IMPORTANT: After loading doctors, re-apply branch filter if branch is already selected
+      final currentBranch = selectedBranch.value;
+      if (currentBranch != null) {
+        print('DEBUG: Re-applying branch filter after loading doctors');
+        // Temporarily clear the selected branch to force re-filtering
+        selectedBranch.value = null;
+        selectBranch(currentBranch);
+      } else {
+        // If no branch selected yet, doctors list remains empty
+        // Requirement: "choose branch first then fetch doctors".
+        doctors.clear();
+        print('DEBUG: No branch selected, keeping doctors list empty');
+      }
+
+      /*
       // If only one doctor, auto-select it to reduce friction.
       if (doctors.length == 1) {
         await selectDoctor(doctors.first);
       }
+      */
     } catch (e) {
       errorMessage.value = 'Failed to load doctors.';
       // Keep a dev-friendly log.
@@ -71,6 +139,70 @@ class DoctorSchedulePickerController extends GetxController {
     } finally {
       isLoadingDoctors.value = false;
     }
+  }
+
+  void selectBranch(BranchSettingModel branch) {
+    print('DEBUG: selectBranch called - Stack trace:');
+    print(StackTrace.current.toString().split('\n').take(5).join('\n'));
+
+    if (selectedBranch.value?.id == branch.id) {
+      print('DEBUG: Branch already selected, skipping');
+      return;
+    }
+
+    selectedBranch.value = branch;
+
+    print('DEBUG: Selected branch ID: ${branch.id}, Name: ${branch.name}');
+    print('DEBUG: Total doctors before filtering: ${_allDoctors.length}');
+
+    // Filter doctors based on branch
+    final filtered = <MedicalProfessional>[];
+
+    for (int i = 0; i < _allDoctors.length; i++) {
+      final doctor = _allDoctors[i];
+      print('DEBUG: Checking doctor ${i + 1}: ${doctor.fullName}');
+      print(
+        'DEBUG: Doctor branches: ${doctor.branches?.map((b) => 'ID:${b.id}').toList()}',
+      );
+
+      if (doctor.branches == null || doctor.branches!.isEmpty) {
+        print('DEBUG: Doctor has no branches, including by default');
+        filtered.add(doctor);
+      } else {
+        final hasMatchingBranch = doctor.branches!.any(
+          (b) => b.id == branch.id,
+        );
+        print(
+          'DEBUG: Doctor has matching branch for ID ${branch.id}: $hasMatchingBranch',
+        );
+        if (hasMatchingBranch) {
+          filtered.add(doctor);
+        }
+      }
+    }
+
+    print('DEBUG: Filtered doctors count: ${filtered.length}');
+    print(
+      'DEBUG: Filtered doctor names: ${filtered.map((d) => d.fullName).toList()}',
+    );
+
+    doctors.assignAll(filtered);
+
+    // If only one doctor, auto-select
+    if (doctors.length == 1) {
+      print('DEBUG: Auto-selecting single doctor: ${doctors.first.fullName}');
+      selectDoctor(doctors.first);
+    } else {
+      selectedDoctor.value = null;
+      print('DEBUG: Multiple doctors available, user needs to select');
+    }
+
+    // Reset downstream selections
+    selectedDate.value = null;
+    selectedTime.value = null;
+    availableDates.clear();
+    availableTimes.clear();
+    schedulesForSelectedDoctor.clear();
   }
 
   Future<void> selectDoctor(MedicalProfessional doctor) async {
@@ -102,6 +234,7 @@ class DoctorSchedulePickerController extends GetxController {
   }
 
   bool get canContinue =>
+      selectedBranch.value != null &&
       selectedDoctor.value != null &&
       selectedDate.value != null &&
       selectedTime.value != null;
@@ -117,12 +250,16 @@ class DoctorSchedulePickerController extends GetxController {
 
   /// Clears all selections (doctor included).
   void resetAll() {
+    selectedBranch.value = null;
     selectedDoctor.value = null;
     selectedDate.value = null;
     selectedTime.value = null;
     schedulesForSelectedDoctor.clear();
     availableDates.clear();
     availableTimes.clear();
+    doctors.clear();
+    _allDoctors.clear();
+    branches.clear();
     errorMessage.value = null;
   }
 
@@ -140,7 +277,20 @@ class DoctorSchedulePickerController extends GetxController {
       // Only keep active schedules (if field exists; our model defaults to true).
       final active = schedules.where((s) => s.isActive).toList();
 
-      schedulesForSelectedDoctor.assignAll(active);
+      // Filter schedules by selected branch
+      final branchId = selectedBranch.value?.id;
+      if (branchId != null) {
+        schedulesForSelectedDoctor.assignAll(
+          active
+              .where(
+                (s) =>
+                    s.branchSettingId == branchId || s.branchSettingId == null,
+              )
+              .toList(),
+        );
+      } else {
+        schedulesForSelectedDoctor.assignAll(active);
+      }
     } catch (e) {
       errorMessage.value = 'Failed to load schedule for this doctor.';
       // ignore: avoid_print

@@ -41,8 +41,8 @@ class AppointmentController extends GetxController {
       );
     }
 
-    // Set up periodic refresh every 2 minutes when the controller is active
-    _startPeriodicRefresh();
+    // Periodic refresh disabled to improve performance
+    // _startPeriodicRefresh();
   }
 
   @override
@@ -51,13 +51,14 @@ class AppointmentController extends GetxController {
     super.onClose();
   }
 
-  void _startPeriodicRefresh() {
-    _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
-      print('📅 AppointmentController: Periodic refresh triggered');
-      refreshAppointments();
-    });
-  }
+  // Periodic refresh method disabled to improve performance
+  // void _startPeriodicRefresh() {
+  //   _refreshTimer?.cancel();
+  //   _refreshTimer = Timer.periodic(const Duration(minutes: 2), (timer) {
+  //     print('📅 AppointmentController: Periodic refresh triggered');
+  //     refreshAppointments();
+  //   });
+  // }
 
   void debugUserSession() {
     final userId = _box.read('userId');

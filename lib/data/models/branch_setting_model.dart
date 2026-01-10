@@ -1,5 +1,5 @@
 class BranchSettingModel {
-  final int? id;
+  final int id;
   final String? name;
   final String? address;
   final String? phoneNumber;
@@ -8,7 +8,7 @@ class BranchSettingModel {
   final String? location;
 
   BranchSettingModel({
-    this.id,
+    required this.id,
     this.name,
     this.address,
     this.phoneNumber,
@@ -17,9 +17,15 @@ class BranchSettingModel {
     this.location,
   });
 
-  factory BranchSettingModel.fromJson(Map<String, dynamic> json) {
+  factory BranchSettingModel.fromJson(Map<String, dynamic>? json) {
+    if (json == null) {
+      return BranchSettingModel(id: 0); // Provide default id
+    }
+
     return BranchSettingModel(
-      id: json['id'],
+      id: (json['id'] is int)
+          ? json['id'] as int
+          : int.tryParse('${json['id'] ?? 0}') ?? 0,
       name: json['name'],
       address: json['address'],
       phoneNumber: json['phoneNumber'],
