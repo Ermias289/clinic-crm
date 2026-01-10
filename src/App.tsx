@@ -23,6 +23,7 @@ import OnboardingSettingsPage from "./pages/settings/OnboardingSettingsPage";
 import WorkingDaysPage from "./pages/settings/WorkingDaysPage";
 import UsersPage from "./pages/settings/UsersPage";
 import UserRolesPage from "./pages/settings/UserRolesPage";
+import TestServiceAdd from "./pages/TestServiceAdd";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
           <Route path="/settings/working-days" element={<ProtectedRoute><WorkingDaysPage /></ProtectedRoute>} />
           <Route path="/settings/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
           <Route path="/settings/roles" element={<ProtectedRoute><UserRolesPage /></ProtectedRoute>} />
+          <Route path="/test-service" element={<ProtectedRoute><TestServiceAdd /></ProtectedRoute>} />
 
           {/* 404 page */}
           <Route path="*" element={<NotFound />} />
