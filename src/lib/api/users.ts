@@ -1,10 +1,14 @@
 import apiClient from './client';
 
 export interface CreateUserDTO {
+  username: string;
+  fName: string;
+  mName?: string;
+  lName: string;
   email: string;
+  phoneNumber?: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+  userRoleId?: number;
 }
 
 export interface UpdateUserDTO {
@@ -16,11 +20,14 @@ export interface UpdateUserDTO {
 
 export interface User {
   id: number;
+  username: string;
+  fName: string;
+  mName?: string;
+  lName: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  isConfirmed?: boolean;
+  roleName: string;
+  phoneNumber?: string;
+  userRoleId: number;
 }
 
 export const usersService = {

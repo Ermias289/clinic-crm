@@ -35,18 +35,18 @@ const CardTypesPage = () => {
   // Form states
   const [createForm, setCreateForm] = useState<{
     cardType: AddCardTypeDTO;
-    cardSetting: Omit<AddCardSettingDTO, 'cardTypeId'>;
+    cardSetting: { price: string; expirationDuration: string };
   }>({
     cardType: { name: "", description: "" },
-    cardSetting: { price: 0, expirationDuration: 365 }
+    cardSetting: { price: "", expirationDuration: "" }
   });
 
   const [editForm, setEditForm] = useState<{
     cardType: UpdateCardTypeDTO;
-    cardSetting: Omit<UpdateCardSettingDTO, 'cardTypeId'> & { id?: number };
+    cardSetting: { id?: number; price: string; expirationDuration: string };
   }>({
     cardType: { id: 0, name: "", description: "" },
-    cardSetting: { id: 0, price: 0, expirationDuration: 365 }
+    cardSetting: { id: 0, price: "", expirationDuration: "" }
   });
 
   // Load data on component mount
@@ -93,10 +93,22 @@ const CardTypesPage = () => {
       return;
     }
 
-    if (createForm.cardSetting.price <= 0) {
+    const price = parseFloat(createForm.cardSetting.price);
+    const duration = parseInt(createForm.cardSetting.expirationDuration);
+
+    if (!createForm.cardSetting.price || price <= 0) {
       toast({ 
         title: "Validation Error", 
         description: "Price must be greater than 0.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!createForm.cardSetting.expirationDuration || duration <= 0) {
+      toast({ 
+        title: "Validation Error", 
+        description: "Duration must be greater than 0 days.",
         variant: "destructive"
       });
       return;
@@ -123,7 +135,8 @@ const CardTypesPage = () => {
       
       // Then create the card setting
       const cardSettingData: AddCardSettingDTO = {
-        ...createForm.cardSetting,
+        price: parseFloat(createForm.cardSetting.price),
+        expirationDuration: parseInt(createForm.cardSetting.expirationDuration),
         cardTypeId: newCardType.id
       };
       await cardSettingService.create(cardSettingData);
@@ -132,7 +145,7 @@ const CardTypesPage = () => {
       setIsCreateOpen(false);
       setCreateForm({
         cardType: { name: "", description: "" },
-        cardSetting: { price: 0, expirationDuration: 365 }
+        cardSetting: { price: "", expirationDuration: "" }
       });
       loadData();
     } catch (error: any) {
@@ -164,10 +177,22 @@ const CardTypesPage = () => {
       return;
     }
 
-    if (editForm.cardSetting.price <= 0) {
+    const price = parseFloat(editForm.cardSetting.price);
+    const duration = parseInt(editForm.cardSetting.expirationDuration);
+
+    if (!editForm.cardSetting.price || price <= 0) {
       toast({ 
         title: "Validation Error", 
         description: "Price must be greater than 0.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!editForm.cardSetting.expirationDuration || duration <= 0) {
+      toast({ 
+        title: "Validation Error", 
+        description: "Duration must be greater than 0 days.",
         variant: "destructive"
       });
       return;
@@ -205,16 +230,16 @@ const CardTypesPage = () => {
       // Update or create the card setting
       if (editForm.cardSetting.id) {
         const updateData: UpdateCardSettingDTO = {
-          id: editForm.cardSetting.id,
-          price: editForm.cardSetting.price,
-          expirationDuration: editForm.cardSetting.expirationDuration,
+          id: editForm.cardSetting.id!,
+          price: parseFloat(editForm.cardSetting.price),
+          expirationDuration: parseInt(editForm.cardSetting.expirationDuration),
           cardTypeId: editForm.cardType.id
         };
         await cardSettingService.update(updateData);
       } else {
         const createData: AddCardSettingDTO = {
-          price: editForm.cardSetting.price,
-          expirationDuration: editForm.cardSetting.expirationDuration,
+          price: parseFloat(editForm.cardSetting.price),
+          expirationDuration: parseInt(editForm.cardSetting.expirationDuration),
           cardTypeId: editForm.cardType.id
         };
         await cardSettingService.create(createData);
@@ -279,8 +304,8 @@ const CardTypesPage = () => {
       },
       cardSetting: {
         id: cardType.setting?.id,
-        price: cardType.setting?.price || 0,
-        expirationDuration: cardType.setting?.expirationDuration || 365,
+        price: cardType.setting?.price ? cardType.setting.price.toString() : "",
+        expirationDuration: cardType.setting?.expirationDuration ? cardType.setting.expirationDuration.toString() : "",
       }
     });
     setEditingType(cardType);
@@ -339,13 +364,13 @@ const CardTypesPage = () => {
                   <Label>Price ($) *</Label>
                   <Input 
                     type="number" 
-                    placeholder="199" 
+                    placeholder="199.00" 
                     min="0"
                     step="0.01"
                     value={createForm.cardSetting.price}
                     onChange={(e) => setCreateForm(prev => ({ 
                       ...prev, 
-                      cardSetting: { ...prev.cardSetting, price: parseFloat(e.target.value) || 0 }
+                      cardSetting: { ...prev.cardSetting, price: e.target.value }
                     }))}
                   />
                 </div>
@@ -358,7 +383,7 @@ const CardTypesPage = () => {
                     value={createForm.cardSetting.expirationDuration}
                     onChange={(e) => setCreateForm(prev => ({ 
                       ...prev, 
-                      cardSetting: { ...prev.cardSetting, expirationDuration: parseInt(e.target.value) || 365 }
+                      cardSetting: { ...prev.cardSetting, expirationDuration: e.target.value }
                     }))}
                   />
                 </div>
@@ -371,7 +396,7 @@ const CardTypesPage = () => {
                   setIsCreateOpen(false);
                   setCreateForm({
                     cardType: { name: "", description: "" },
-                    cardSetting: { price: 0, expirationDuration: 365 }
+                    cardSetting: { price: "", expirationDuration: "" }
                   });
                 }}
                 disabled={submitting}
@@ -502,12 +527,13 @@ const CardTypesPage = () => {
                 <Label>Price ($) *</Label>
                 <Input 
                   type="number" 
+                  placeholder="199.00"
                   min="0"
                   step="0.01"
                   value={editForm.cardSetting.price}
                   onChange={(e) => setEditForm(prev => ({ 
                     ...prev, 
-                    cardSetting: { ...prev.cardSetting, price: parseFloat(e.target.value) || 0 }
+                    cardSetting: { ...prev.cardSetting, price: e.target.value }
                   }))}
                 />
               </div>
@@ -515,11 +541,12 @@ const CardTypesPage = () => {
                 <Label>Duration (days)</Label>
                 <Input 
                   type="number" 
+                  placeholder="365"
                   min="1"
                   value={editForm.cardSetting.expirationDuration}
                   onChange={(e) => setEditForm(prev => ({ 
                     ...prev, 
-                    cardSetting: { ...prev.cardSetting, expirationDuration: parseInt(e.target.value) || 365 }
+                    cardSetting: { ...prev.cardSetting, expirationDuration: e.target.value }
                   }))}
                 />
               </div>
