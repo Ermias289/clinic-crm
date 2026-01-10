@@ -42,9 +42,7 @@ class BannerCarousel extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 16),
           child: PageView.builder(
             controller: PageController(viewportFraction: 0.85),
-            itemCount: controller.banners.length > 2
-                ? 2
-                : controller.banners.length,
+            itemCount: controller.banners.length,
             itemBuilder: (context, index) {
               final banner = controller.banners[index];
               return Container(
