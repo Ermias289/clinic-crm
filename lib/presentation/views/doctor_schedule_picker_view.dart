@@ -651,8 +651,9 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
         );
       }
 
-      if (_controller.isLoadingSchedules.value) {
-        return _LoadingCard(label: 'Loading schedule...');
+      if (_controller.isLoadingSchedules.value ||
+          _controller.isLoadingAppointments.value) {
+        return _LoadingCard(label: 'Loading available dates...');
       }
 
       if (_controller.availableDates.isEmpty) {
@@ -821,8 +822,9 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
         );
       }
 
-      if (_controller.isLoadingSchedules.value) {
-        return _LoadingCard(label: 'Loading schedule...');
+      if (_controller.isLoadingSchedules.value ||
+          _controller.isLoadingAppointments.value) {
+        return _LoadingCard(label: 'Loading available times...');
       }
 
       if (_controller.availableTimes.isEmpty) {

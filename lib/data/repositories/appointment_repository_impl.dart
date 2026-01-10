@@ -18,6 +18,11 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   }
 
   @override
+  Future<List<AppointmentModel>> getAppointmentsByDoctorId(int doctorId) async {
+    return await remoteDataSource.getAppointmentsByDoctorId(doctorId);
+  }
+
+  @override
   Future<bool> cancelAppointment(int id, String reason) async {
     return await remoteDataSource.cancelAppointment(id, reason);
   }

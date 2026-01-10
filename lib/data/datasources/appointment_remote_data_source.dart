@@ -5,6 +5,7 @@ abstract class AppointmentRemoteDataSource {
   Future<AppointmentModel> bookAppointment(AppointmentModel appointment);
   Future<List<AppointmentModel>> getAppointmentsByPatientId(int id);
   Future<List<AppointmentModel>> getAppointmentsByUserId(int userId);
+  Future<List<AppointmentModel>> getAppointmentsByDoctorId(int doctorId);
   Future<bool> cancelAppointment(int id, String reason);
 }
 
@@ -129,14 +130,75 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
   }
 
   @override
+  Future<List<AppointmentModel>> getAppointmentsByDoctorId(int doctorId) async {
+    try {
+      print('🔍 Fetching appointments for doctor ID: $doctorId');
+      final url = '/Appointment/bydocId/$doctorId';
+      print('🌐 Requesting: $url');
+      final response = await apiClient.get(url);
+
+      if (response.hasError) {
+        print(
+          '❌ API call failed: ${response.statusCode} - ${response.statusText}',
+        );
+
+        // Fallback: Try query parameter approach
+        final url2 = '/Appointment?medicalProfessionalId=$doctorId';
+        print('🔄 Retrying with strategy 2: $url2');
+        final response2 = await apiClient.get(url2);
+
+        if (!response2.hasError) {
+          print('✅ Strategy 2 succeeded');
+          final List<dynamic> body = response2.body;
+          return body.map((e) => AppointmentModel.fromJson(e)).toList();
+        }
+
+        // Final fallback: Get all and filter
+        print('🔄 Retrying with strategy 3: Fetch All & Filter');
+        final url3 = '/Appointment';
+        final response3 = await apiClient.get(url3);
+
+        if (!response3.hasError) {
+          print('✅ Strategy 3 succeeded');
+          final List<dynamic> body = response3.body;
+          final all = body.map((e) => AppointmentModel.fromJson(e)).toList();
+          final filtered = all
+              .where((a) => a.medicalProfessionalId == doctorId)
+              .toList();
+          print(
+            '🔍 Filtered ${all.length} appointments to ${filtered.length} for doctor $doctorId',
+          );
+          return filtered;
+        }
+
+        throw Exception(
+          'Failed to fetch appointments for doctor: ${response.statusText}',
+        );
+      }
+
+      final List<dynamic> body = response.body;
+      print(
+        '✅ Successfully fetched ${body.length} appointments for doctor $doctorId',
+      );
+      return body.map((e) => AppointmentModel.fromJson(e)).toList();
+    } catch (e) {
+      print('❌ Exception in getAppointmentsByDoctorId: $e');
+      rethrow;
+    }
+  }
+
+  @override
   Future<bool> cancelAppointment(int id, String reason) async {
     try {
-      final url = '/Appointment/cancelAppointment?Id=$id&reason=${Uri.encodeComponent(reason)}';
+      final url =
+          '/Appointment/cancelAppointment?Id=$id&reason=${Uri.encodeComponent(reason)}';
       print('🌐 Cancelling appointment: $url');
       final response = await apiClient.put(url, {});
 
       if (response.hasError) {
-        print('❌ Cancel failed: ${response.statusCode} - ${response.statusText}');
+        print(
+          '❌ Cancel failed: ${response.statusCode} - ${response.statusText}',
+        );
         throw Exception(response.statusText ?? 'Failed to cancel appointment');
       }
 
