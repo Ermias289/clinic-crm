@@ -2,6 +2,10 @@ import apiClient from './client';
 
 const API_BASE_URL = 'https://crmgate.nexabusinessgroup.com';
 
+interface FileUploadResponse {
+  fileName: string; // Changed from FileName to fileName (lowercase)
+}
+
 export const fileUploadService = {
   /**
    * Upload a file and get back the filename
@@ -11,12 +15,12 @@ export const fileUploadService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await apiClient.post<string>('/api/FileUpload/upload', formData, {
+    const response = await apiClient.post<FileUploadResponse>('/api/FileUpload/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response.data.fileName; // Extract the fileName from the response
   },
 
   /**
@@ -28,12 +32,12 @@ export const fileUploadService = {
       formData.append('files', file);
     });
 
-    const response = await apiClient.post<string[]>('/api/FileUpload/upload/multiple', formData, {
+    const response = await apiClient.post<FileUploadResponse[]>('/api/FileUpload/upload/multiple', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response.data.map(item => item.fileName); // Extract fileNames from the response array
   },
 
   /**
