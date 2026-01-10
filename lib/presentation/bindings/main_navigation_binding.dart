@@ -94,15 +94,13 @@ class MainNavigationBinding extends Bindings {
     Get.lazyPut<AppointmentRemoteDataSourceImpl>(
       () => AppointmentRemoteDataSourceImpl(apiClient: Get.find<ApiClient>()),
     );
-    Get.lazyPut<AppointmentRepository>(
-      () => AppointmentRepositoryImpl(
+    Get.put<AppointmentRepository>(
+      AppointmentRepositoryImpl(
         remoteDataSource: Get.find<AppointmentRemoteDataSourceImpl>(),
       ),
     );
-    Get.lazyPut<AppointmentController>(
-      () => AppointmentController(
-        repository: Get.find<AppointmentRepository>(),
-      ),
+    Get.put<AppointmentController>(
+      AppointmentController(repository: Get.find<AppointmentRepository>()),
     );
 
     // Notification Dependencies
