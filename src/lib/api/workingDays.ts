@@ -24,8 +24,15 @@ export const workingDayService = {
   },
 
   update: async (data: UpdateWorkingDayDTO): Promise<WorkingDayDTO> => {
-    const response = await apiClient.put<WorkingDayDTO>('/api/WorkingDaySetting', data);
-    return response.data;
+    console.log("Sending workday update:", JSON.stringify(data, null, 2));
+    try {
+      const response = await apiClient.put<WorkingDayDTO>('/api/WorkingDaySetting', data);
+      console.log("Workday update response:", JSON.stringify(response.data, null, 2));
+      return response.data;
+    } catch (error) {
+      console.error("Workday update error:", error);
+      throw error;
+    }
   },
 
   updateMultiple: async (workdays: UpdateWorkingDayDTO[]): Promise<WorkingDayDTO[]> => {

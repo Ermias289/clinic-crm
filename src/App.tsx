@@ -23,6 +23,7 @@ import OnboardingSettingsPage from "./pages/settings/OnboardingSettingsPage";
 
 import UsersPage from "./pages/settings/UsersPage";
 import UserRolesPage from "./pages/settings/UserRolesPage";
+import WorkingDaysPage from "./pages/settings/WorkingDaysPage";
 import TestServiceAdd from "./pages/TestServiceAdd";
 import NotFound from "./pages/NotFound";
 
@@ -66,6 +67,7 @@ const App = () => (
 
           <Route path="/settings/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
           <Route path="/settings/roles" element={<ProtectedRoute><UserRolesPage /></ProtectedRoute>} />
+          <Route path="/settings/working-days" element={<ProtectedRoute><WorkingDaysPage /></ProtectedRoute>} />
           <Route path="/test-service" element={<ProtectedRoute><TestServiceAdd /></ProtectedRoute>} />
 
           {/* 404 page */}

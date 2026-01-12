@@ -30,6 +30,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
   Plus,
   Search,
@@ -39,6 +41,7 @@ import {
   Check,
   XCircle,
   Pencil,
+  Clock,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +54,7 @@ import { toast } from "@/hooks/use-toast";
 import { medicalServicesService, MedicalService } from "@/lib/api/medicalServices";
 import { branchService, BranchSettingDTO } from "@/lib/api/branches";
 import { fileUploadService } from "@/lib/api/fileUpload";
+import { doctorScheduleService, DoctorScheduleDTO, AddDoctorScheduleDTO } from "@/lib/api/doctorSchedules";
 
 interface MedicalServiceWithName {
   id: number;
@@ -98,6 +102,17 @@ const DoctorsPage = () => {
   const [createProfilePicturePreview, setCreateProfilePicturePreview] = useState<string>("");
   const [isCreateUploading, setIsCreateUploading] = useState(false);
 
+  // Schedule states for create form
+  const [createSchedules, setCreateSchedules] = useState<{[key: string]: {isWorking: boolean, startTime: string, endTime: string, branchId: number}}>({
+    monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+  });
+
   // Edit form states
   const [editForm, setEditForm] = useState({
     fName: "",
@@ -119,6 +134,18 @@ const DoctorsPage = () => {
   const [editProfilePictureFile, setEditProfilePictureFile] = useState<File | null>(null);
   const [editProfilePicturePreview, setEditProfilePicturePreview] = useState<string>("");
   const [isEditUploading, setIsEditUploading] = useState(false);
+
+  // Schedule states for edit form
+  const [editSchedules, setEditSchedules] = useState<{[key: string]: {isWorking: boolean, startTime: string, endTime: string, branchId: number}}>({
+    monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+  });
+  const [existingSchedules, setExistingSchedules] = useState<DoctorScheduleDTO[]>([]);
 
   const createFileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -628,6 +655,129 @@ const DoctorsPage = () => {
   // Update edit form field
   const updateEditForm = (field: keyof typeof editForm, value: any) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Schedule helper functions
+  const daysOfWeek = [
+    { key: 'monday', name: 'Monday' },
+    { key: 'tuesday', name: 'Tuesday' },
+    { key: 'wednesday', name: 'Wednesday' },
+    { key: 'thursday', name: 'Thursday' },
+    { key: 'friday', name: 'Friday' },
+    { key: 'saturday', name: 'Saturday' },
+    { key: 'sunday', name: 'Sunday' },
+  ];
+
+  // Update create schedule
+  const updateCreateSchedule = (day: string, field: 'isWorking' | 'startTime' | 'endTime' | 'branchId', value: any) => {
+    setCreateSchedules(prev => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: value }
+    }));
+  };
+
+  // Update edit schedule
+  const updateEditSchedule = (day: string, field: 'isWorking' | 'startTime' | 'endTime' | 'branchId', value: any) => {
+    setEditSchedules(prev => ({
+      ...prev,
+      [day]: { ...prev[day], [field]: value }
+    }));
+  };
+
+  // Reset create schedules
+  const resetCreateSchedules = () => {
+    setCreateSchedules({
+      monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    });
+  };
+
+  // Load doctor schedules for editing
+  const loadDoctorSchedules = async (doctorId: number) => {
+    try {
+      const schedules = await doctorScheduleService.getByDoctorId(doctorId);
+      setExistingSchedules(schedules);
+      
+      // Reset edit schedules first
+      const resetSchedules = {
+        monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+        tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+        wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+        thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+        friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+        saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+        sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      };
+
+      // Populate with existing schedules
+      schedules.forEach(schedule => {
+        const dayKey = schedule.weekDay.toLowerCase();
+        if (resetSchedules[dayKey]) {
+          resetSchedules[dayKey] = {
+            isWorking: true,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            branchId: schedule.branchSettingId,
+          };
+        }
+      });
+
+      setEditSchedules(resetSchedules);
+    } catch (error) {
+      console.error("Error loading doctor schedules:", error);
+      toast({
+        title: "Failed to load schedules",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Save doctor schedules
+  const saveDoctorSchedules = async (doctorId: number, schedules: typeof createSchedules) => {
+    try {
+      const schedulePromises: Promise<any>[] = [];
+
+      // Create schedules for working days
+      Object.entries(schedules).forEach(([day, schedule]) => {
+        if (schedule.isWorking && schedule.branchId > 0) {
+          const scheduleData: AddDoctorScheduleDTO = {
+            medicalProfessionalId: doctorId,
+            branchSettingId: schedule.branchId,
+            weekDay: day.charAt(0).toUpperCase() + day.slice(1),
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+          };
+          schedulePromises.push(doctorScheduleService.create(scheduleData));
+        }
+      });
+
+      await Promise.all(schedulePromises);
+    } catch (error) {
+      console.error("Error saving schedules:", error);
+      throw error;
+    }
+  };
+
+  // Update doctor schedules (delete existing and create new ones)
+  const updateDoctorSchedules = async (doctorId: number, schedules: typeof editSchedules) => {
+    try {
+      // Delete existing schedules
+      const deletePromises = existingSchedules.map(schedule => 
+        doctorScheduleService.delete(schedule.id)
+      );
+      await Promise.all(deletePromises);
+
+      // Create new schedules
+      await saveDoctorSchedules(doctorId, schedules);
+    } catch (error) {
+      console.error("Error updating schedules:", error);
+      throw error;
+    }
   };
 
   return (
