@@ -1,5 +1,22 @@
 import apiClient from './client';
 
+export interface WorkdayDTO {
+  id: number;
+  day: string;
+  openingTime: string;
+  closingTime: string;
+  isWorkingDay: boolean;
+  companySettingId: number;
+}
+
+export interface BranchDTO {
+  id: number;
+  name: string;
+  address: string;
+  phoneNumber: string;
+  companySettingId: number;
+}
+
 export interface UpdateCompanySettingDTO {
   id: number;
   name: string;
@@ -28,6 +45,8 @@ export interface CompanySettingDTO {
   country?: string;
   subCity?: string;
   locationOnMap?: string;
+  branches: BranchDTO[];
+  workdays: WorkdayDTO[];
   createdAt: string;
   updatedAt: string;
 }

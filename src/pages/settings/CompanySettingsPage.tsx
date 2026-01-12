@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Building, Save, Upload, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Building, Save, Upload, Loader2, Clock } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { companySettingService, CompanySettingDTO, UpdateCompanySettingDTO } from "@/lib/api/companySettings";
+import { workingDayService, WorkingDayDTO, UpdateWorkingDayDTO } from "@/lib/api/workingDays";
 import { fileUploadService } from "@/lib/api/fileUpload";
 
 const CompanySettingsPage = () => {
@@ -28,6 +30,7 @@ const CompanySettingsPage = () => {
     locationOnMap: "",
     logo: "",
   });
+  const [workdays, setWorkdays] = useState<WorkingDayDTO[]>([]);
 
   useEffect(() => {
     loadCompanySettings();
@@ -42,21 +45,28 @@ const CompanySettingsPage = () => {
   const loadCompanySettings = async () => {
     try {
       setLoading(true);
-      const data = await companySettingService.get();
-      setCompanyData(data);
+      
+      // Load company settings and workdays separately
+      const [companyData, workdaysData] = await Promise.all([
+        companySettingService.get(),
+        workingDayService.getAll()
+      ]);
+      
+      setCompanyData(companyData);
       setFormData({
-        name: data.name || "",
-        email: data.email || "",
-        phoneNumber: data.phoneNumber || "",
-        emergencyPhoneNumber: data.emergencyPhoneNumber || "",
-        address: data.address || "",
-        city: data.city || "",
-        country: data.country || "",
-        subCity: data.subCity || "",
-        prefix: data.prefix || "",
-        locationOnMap: data.locationOnMap || "",
-        logo: data.logo || "",
+        name: companyData.name || "",
+        email: companyData.email || "",
+        phoneNumber: companyData.phoneNumber || "",
+        emergencyPhoneNumber: companyData.emergencyPhoneNumber || "",
+        address: companyData.address || "",
+        city: companyData.city || "",
+        country: companyData.country || "",
+        subCity: companyData.subCity || "",
+        prefix: companyData.prefix || "",
+        locationOnMap: companyData.locationOnMap || "",
+        logo: companyData.logo || "",
       });
+      setWorkdays(workdaysData || []);
     } catch (error) {
       console.error("Failed to load company settings:", error);
       toast({
@@ -74,6 +84,36 @@ const CompanySettingsPage = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleWorkdayChange = (dayId: number, field: keyof WorkingDayDTO, value: string | boolean) => {
+    setWorkdays(prev => prev.map(workday => 
+      workday.id === dayId 
+        ? { ...workday, [field]: value }
+        : workday
+    ));
+  };
+
+  const formatTimeForInput = (time: string) => {
+    // Convert backend time format to HTML input format
+    if (!time) return "";
+    
+    // Handle "2:00" format from backend - convert to "02:00" for HTML input
+    if (time.includes(':')) {
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}`;
+    }
+    
+    return time;
+  };
+
+  const formatTimeForAPI = (time: string) => {
+    // Convert HTML input time back to backend format
+    if (!time) return "0:00";
+    
+    // Convert "02:00" back to "2:00" format (matching original API response)
+    const [hours, minutes] = time.split(':');
+    return `${parseInt(hours)}:${minutes || '00'}`;
   };
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,17 +167,33 @@ const CompanySettingsPage = () => {
     try {
       setSaving(true);
       
-      const updateData: UpdateCompanySettingDTO = {
+      // Prepare company settings update (without workdays)
+      const companyUpdateData: UpdateCompanySettingDTO = {
         id: companyData?.id || 0,
         ...formData,
       };
 
-      const updatedData = await companySettingService.update(updateData);
-      setCompanyData(updatedData);
+      // Prepare workdays update
+      const workdaysUpdateData: UpdateWorkingDayDTO[] = workdays.map(workday => ({
+        id: workday.id,
+        day: workday.day,
+        openingTime: formatTimeForAPI(workday.openingTime),
+        closingTime: formatTimeForAPI(workday.closingTime),
+        isWorkingDay: workday.isWorkingDay,
+      }));
+
+      // Update both company settings and workdays
+      const [updatedCompanyData, updatedWorkdays] = await Promise.all([
+        companySettingService.update(companyUpdateData),
+        workingDayService.updateMultiple(workdaysUpdateData)
+      ]);
+      
+      setCompanyData(updatedCompanyData);
+      setWorkdays(updatedWorkdays);
       
       toast({
         title: "Settings Saved",
-        description: "Company settings have been updated successfully.",
+        description: "Company settings and working hours have been updated successfully.",
       });
     } catch (error) {
       console.error("Failed to save company settings:", error);
@@ -330,6 +386,59 @@ const CompanySettingsPage = () => {
                 placeholder="Google Maps URL or coordinates"
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Working Hours */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Working Hours
+            </CardTitle>
+            <CardDescription>Set your clinic's operating hours for each day of the week</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {workdays.map((workday) => (
+              <div key={workday.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                <div className="w-24 font-medium">
+                  {workday.day}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    checked={workday.isWorkingDay}
+                    onCheckedChange={(checked) => handleWorkdayChange(workday.id, 'isWorkingDay', checked)}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {workday.isWorkingDay ? 'Open' : 'Closed'}
+                  </span>
+                </div>
+                {workday.isWorkingDay && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`opening-${workday.id}`} className="text-sm">From:</Label>
+                      <Input
+                        id={`opening-${workday.id}`}
+                        type="time"
+                        value={formatTimeForInput(workday.openingTime)}
+                        onChange={(e) => handleWorkdayChange(workday.id, 'openingTime', formatTimeForAPI(e.target.value))}
+                        className="w-32"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`closing-${workday.id}`} className="text-sm">To:</Label>
+                      <Input
+                        id={`closing-${workday.id}`}
+                        type="time"
+                        value={formatTimeForInput(workday.closingTime)}
+                        onChange={(e) => handleWorkdayChange(workday.id, 'closingTime', formatTimeForAPI(e.target.value))}
+                        className="w-32"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
           </CardContent>
         </Card>
 
