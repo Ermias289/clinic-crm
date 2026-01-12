@@ -21,8 +21,19 @@ export interface MedicalService {
   durationInMinutes: number;
   servicePicture?: string;
   medicalProfessionals: (MedicalProfessionalMini | null)[];
+  branches?: BranchMini[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BranchMini {
+  id: number;
+  name: string;
+  address: string;
+  phoneNumber: string;
+  subCity: string;
+  city: string;
+  location: string;
 }
 
 /* ===== Create / Update DTO ===== */

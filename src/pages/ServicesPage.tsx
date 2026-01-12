@@ -40,6 +40,7 @@ import {
 
 import {
   MedicalService,
+  BranchMini,
   medicalServicesService,
 } from "@/lib/api/medicalServices";
 
@@ -60,7 +61,7 @@ const ServicesPage = () => {
   const [services, setServices] = useState<MedicalService[]>([]);
   const [doctors, setDoctors] = useState<MedicalProfessional[]>([]);
   const [branches, setBranches] = useState<BranchSettingDTO[]>([]);
-  const [serviceBranches, setServiceBranches] = useState<{[key: number]: BranchSettingDTO[]}>({});
+  const [serviceBranches, setServiceBranches] = useState<{[key: number]: BranchMini[]}>({});
 
   const [searchQuery, setSearchQuery] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
@@ -116,20 +117,13 @@ const ServicesPage = () => {
       setDoctors(docs);
       setBranches(brs);
 
-      // Load branches for each service
-      const branchMap: {[key: number]: BranchSettingDTO[]} = {};
-      for (const service of srv) {
-        try {
-          const serviceDetails = await medicalServicesService.getById(service.id);
-          console.log(`Service ${service.id} details:`, serviceDetails); // Debug
-          
-          // if (serviceDetails.branches && Array.isArray(serviceDetails.branches)) {
-          //   branchMap[service.id] = serviceDetails.branches.filter(b => b !== null) as BranchSettingDTO[];
-          // }
-        } catch (error) {
-          console.error(`Error loading branches for service ${service.id}:`, error);
+      // Extract branches from services data directly
+      const branchMap: {[key: number]: BranchMini[]} = {};
+      srv.forEach(service => {
+        if (service.branches && Array.isArray(service.branches)) {
+          branchMap[service.id] = service.branches;
         }
-      }
+      });
       setServiceBranches(branchMap);
 
       console.log("Data loading completed successfully");
