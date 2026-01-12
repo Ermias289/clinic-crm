@@ -152,7 +152,41 @@ const DoctorsPage = () => {
 
   useEffect(() => {
     fetchData();
+    // Test DoctorSchedule API connection
+    testDoctorScheduleAPI();
   }, []);
+
+  const testDoctorScheduleAPI = async () => {
+    try {
+      console.log("=== Testing DoctorSchedule API ===");
+      
+      // Test GET all schedules
+      const allSchedules = await doctorScheduleService.getAll();
+      console.log("✅ GET /api/DoctorSchedule works - found", allSchedules.length, "schedules");
+      
+      // Test connection
+      const isConnected = await doctorScheduleService.testConnection();
+      console.log("✅ API connection test:", isConnected ? "PASSED" : "FAILED");
+      
+      // Log the structure of existing schedules to understand the data format
+      if (allSchedules.length > 0) {
+        console.log("📋 Sample schedule structure:", allSchedules[0]);
+      }
+      
+      console.log("=== Testing Medical Professional API ===");
+      
+      // Test GET all medical professionals
+      try {
+        const allDoctors = await medicalProfessionalsService.getAll();
+        console.log("✅ GET /api/MedicalProfessional works - found", allDoctors.length, "doctors");
+      } catch (error) {
+        console.error("❌ GET /api/MedicalProfessional failed:", error);
+      }
+      
+    } catch (error) {
+      console.error("❌ API test failed:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -375,6 +409,7 @@ const DoctorsPage = () => {
     if (createFileInputRef.current) {
       createFileInputRef.current.value = "";
     }
+    resetCreateSchedules();
   };
 
   // Reset edit form
@@ -446,6 +481,9 @@ const DoctorsPage = () => {
       setEditSelectedBranchIds(branchIds);
     }
     
+    // Load doctor schedules
+    loadDoctorSchedules(doctor.id);
+    
     setOpenEdit(true);
   };
 
@@ -498,6 +536,26 @@ const DoctorsPage = () => {
         branches: createSelectedBranchIds,
       });
 
+      // Save doctor schedules if any are configured
+      const hasValidSchedules = Object.values(createSchedules).some(schedule => 
+        schedule.isWorking && schedule.branchId > 0
+      );
+      if (hasValidSchedules) {
+        try {
+          await saveDoctorSchedules(newDoctor.id, createSchedules);
+          console.log("Schedules saved successfully for new doctor");
+        } catch (scheduleError) {
+          console.error("Error saving schedules:", scheduleError);
+          toast({
+            title: "Doctor added but schedules failed",
+            description: "The doctor was created but there was an issue saving the schedule. You can edit the doctor to add schedules.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        console.log("No valid schedules to save (no working days with branches selected)");
+      }
+
       setDoctors((prev) => [...prev, newDoctor]);
       
       toast({
@@ -549,7 +607,12 @@ const DoctorsPage = () => {
       return;
     }
 
+    let doctorUpdateSuccess = false;
+    let scheduleUpdateSuccess = false;
+
     try {
+      // First, try to update the doctor's basic information
+      console.log("Updating doctor basic information...");
       const updatedDoctor = await medicalProfessionalsService.update({
         id: editingDoctor.id,
         fName: editForm.fName,
@@ -569,22 +632,63 @@ const DoctorsPage = () => {
         branches: editSelectedBranchIds,
       });
 
+      console.log("Doctor basic information updated successfully");
+      doctorUpdateSuccess = true;
+
       setDoctors((prev) =>
         prev.map((doc) => (doc.id === editingDoctor.id ? updatedDoctor : doc))
       );
+
+    } catch (err: any) {
+      console.error("Error updating doctor basic information:", err);
       
+      // Don't return here - continue with schedule update even if basic info fails
+      toast({
+        title: "Doctor info update failed",
+        description: "Basic information update failed, but we'll try to update the schedule.",
+        variant: "destructive",
+      });
+    }
+
+    // Always try to update schedules, regardless of basic info update success
+    try {
+      console.log("Updating doctor schedules...");
+      await updateDoctorSchedules(editingDoctor.id, editSchedules);
+      console.log("Schedules updated successfully");
+      scheduleUpdateSuccess = true;
+    } catch (scheduleError) {
+      console.error("Error updating schedules:", scheduleError);
+      toast({
+        title: "Schedule update failed",
+        description: "There was an issue updating the doctor's schedule. Please try again.",
+        variant: "destructive",
+      });
+    }
+
+    // Show appropriate success message
+    if (doctorUpdateSuccess && scheduleUpdateSuccess) {
       toast({
         title: "Doctor updated successfully",
-        description: `${editForm.fName} ${editForm.lName} has been updated`,
+        description: `${editForm.fName} ${editForm.lName} and their schedule have been updated`,
       });
-      
       resetEditForm();
       setOpenEdit(false);
-    } catch (err: any) {
-      console.error("Error updating doctor:", err);
+    } else if (scheduleUpdateSuccess) {
       toast({
-        title: "Failed to update doctor",
-        description: err.response?.data?.message || "Please check the form and try again",
+        title: "Schedule updated",
+        description: "The doctor's schedule was updated successfully, but basic information update failed.",
+      });
+      resetEditForm();
+      setOpenEdit(false);
+    } else if (doctorUpdateSuccess) {
+      toast({
+        title: "Partial update",
+        description: "Basic information was updated, but schedule update failed.",
+      });
+    } else {
+      toast({
+        title: "Update failed",
+        description: "Both doctor information and schedule updates failed. Please try again.",
         variant: "destructive",
       });
     }
@@ -670,18 +774,36 @@ const DoctorsPage = () => {
 
   // Update create schedule
   const updateCreateSchedule = (day: string, field: 'isWorking' | 'startTime' | 'endTime' | 'branchId', value: any) => {
-    setCreateSchedules(prev => ({
-      ...prev,
-      [day]: { ...prev[day], [field]: value }
-    }));
+    setCreateSchedules(prev => {
+      const updated = {
+        ...prev,
+        [day]: { ...prev[day], [field]: value }
+      };
+      
+      // If toggling working day on and no branch selected, select first available branch
+      if (field === 'isWorking' && value === true && prev[day].branchId === 0 && branches.length > 0) {
+        updated[day].branchId = branches[0].id;
+      }
+      
+      return updated;
+    });
   };
 
   // Update edit schedule
   const updateEditSchedule = (day: string, field: 'isWorking' | 'startTime' | 'endTime' | 'branchId', value: any) => {
-    setEditSchedules(prev => ({
-      ...prev,
-      [day]: { ...prev[day], [field]: value }
-    }));
+    setEditSchedules(prev => {
+      const updated = {
+        ...prev,
+        [day]: { ...prev[day], [field]: value }
+      };
+      
+      // If toggling working day on and no branch selected, select first available branch
+      if (field === 'isWorking' && value === true && prev[day].branchId === 0 && branches.length > 0) {
+        updated[day].branchId = branches[0].id;
+      }
+      
+      return updated;
+    });
   };
 
   // Reset create schedules
@@ -700,7 +822,9 @@ const DoctorsPage = () => {
   // Load doctor schedules for editing
   const loadDoctorSchedules = async (doctorId: number) => {
     try {
+      console.log("Loading schedules for doctor:", doctorId);
       const schedules = await doctorScheduleService.getByDoctorId(doctorId);
+      console.log("Loaded schedules:", schedules);
       setExistingSchedules(schedules);
       
       // Reset edit schedules first
@@ -717,6 +841,7 @@ const DoctorsPage = () => {
       // Populate with existing schedules
       schedules.forEach(schedule => {
         const dayKey = schedule.weekDay.toLowerCase();
+        console.log("Processing schedule for day:", dayKey, schedule);
         if (resetSchedules[dayKey]) {
           resetSchedules[dayKey] = {
             isWorking: true,
@@ -727,11 +852,14 @@ const DoctorsPage = () => {
         }
       });
 
+      console.log("Final schedule state:", resetSchedules);
       setEditSchedules(resetSchedules);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading doctor schedules:", error);
+      // Show a user-friendly message
       toast({
-        title: "Failed to load schedules",
+        title: "Could not load schedules",
+        description: "Unable to load existing schedules. You can still create new ones.",
         variant: "destructive",
       });
     }
@@ -740,6 +868,7 @@ const DoctorsPage = () => {
   // Save doctor schedules
   const saveDoctorSchedules = async (doctorId: number, schedules: typeof createSchedules) => {
     try {
+      console.log("Saving schedules for doctor:", doctorId, schedules);
       const schedulePromises: Promise<any>[] = [];
 
       // Create schedules for working days
@@ -752,11 +881,16 @@ const DoctorsPage = () => {
             startTime: schedule.startTime,
             endTime: schedule.endTime,
           };
+          console.log("Creating schedule:", scheduleData);
           schedulePromises.push(doctorScheduleService.create(scheduleData));
         }
       });
 
-      await Promise.all(schedulePromises);
+      console.log("Schedule promises count:", schedulePromises.length);
+      if (schedulePromises.length > 0) {
+        await Promise.all(schedulePromises);
+        console.log("All schedules saved successfully");
+      }
     } catch (error) {
       console.error("Error saving schedules:", error);
       throw error;
@@ -766,16 +900,71 @@ const DoctorsPage = () => {
   // Update doctor schedules (delete existing and create new ones)
   const updateDoctorSchedules = async (doctorId: number, schedules: typeof editSchedules) => {
     try {
-      // Delete existing schedules
-      const deletePromises = existingSchedules.map(schedule => 
-        doctorScheduleService.delete(schedule.id)
-      );
-      await Promise.all(deletePromises);
+      console.log("=== Updating Doctor Schedules ===");
+      console.log("Doctor ID:", doctorId);
+      console.log("New schedules:", schedules);
+      console.log("Existing schedules to delete:", existingSchedules);
+      
+      // Delete existing schedules first
+      if (existingSchedules.length > 0) {
+        console.log("Deleting", existingSchedules.length, "existing schedules...");
+        const deletePromises = existingSchedules.map(async (schedule) => {
+          console.log("Deleting schedule ID:", schedule.id);
+          try {
+            await doctorScheduleService.delete(schedule.id);
+            console.log("✅ Deleted schedule ID:", schedule.id);
+          } catch (error) {
+            console.error("❌ Failed to delete schedule ID:", schedule.id, error);
+            throw error;
+          }
+        });
+        
+        await Promise.all(deletePromises);
+        console.log("✅ All existing schedules deleted successfully");
+      } else {
+        console.log("No existing schedules to delete");
+      }
 
       // Create new schedules
-      await saveDoctorSchedules(doctorId, schedules);
+      console.log("Creating new schedules...");
+      const createPromises: Promise<any>[] = [];
+      
+      Object.entries(schedules).forEach(([day, schedule]) => {
+        if (schedule.isWorking && schedule.branchId > 0) {
+          const scheduleData: AddDoctorScheduleDTO = {
+            medicalProfessionalId: doctorId,
+            branchSettingId: schedule.branchId,
+            weekDay: day.charAt(0).toUpperCase() + day.slice(1),
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+          };
+          
+          console.log("Will create schedule for", day, ":", scheduleData);
+          createPromises.push(
+            doctorScheduleService.create(scheduleData).then(result => {
+              console.log("✅ Created schedule for", day, ":", result);
+              return result;
+            }).catch(error => {
+              console.error("❌ Failed to create schedule for", day, ":", error);
+              throw error;
+            })
+          );
+        } else {
+          console.log("Skipping", day, "- not working or no branch selected");
+        }
+      });
+
+      if (createPromises.length > 0) {
+        console.log("Creating", createPromises.length, "new schedules...");
+        await Promise.all(createPromises);
+        console.log("✅ All new schedules created successfully");
+      } else {
+        console.log("No new schedules to create");
+      }
+      
+      console.log("=== Schedule Update Complete ===");
     } catch (error) {
-      console.error("Error updating schedules:", error);
+      console.error("❌ Error updating schedules:", error);
       throw error;
     }
   };
@@ -802,322 +991,443 @@ const DoctorsPage = () => {
               <DialogTitle className="py-3">Add New Medical Professional</DialogTitle>
             </DialogHeader>
 
-            <div className="p-6 space-y-6">
-              {/* Personal Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Personal Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="fName">First Name *</Label>
-                    <Input
-                      id="fName"
-                      value={createForm.fName}
-                      onChange={(e) => updateCreateForm("fName", e.target.value)}
-                      placeholder="John"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="mName">Middle Name</Label>
-                    <Input
-                      id="mName"
-                      value={createForm.mName}
-                      onChange={(e) => updateCreateForm("mName", e.target.value)}
-                      placeholder="Michael"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="lName">Last Name *</Label>
-                    <Input
-                      id="lName"
-                      value={createForm.lName}
-                      onChange={(e) => updateCreateForm("lName", e.target.value)}
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={createForm.email}
-                      onChange={(e) => updateCreateForm("email", e.target.value)}
-                      placeholder="john.doe@example.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phoneNumber">Phone Number *</Label>
-                    <Input
-                      id="phoneNumber"
-                      value={createForm.phoneNumber}
-                      onChange={(e) => updateCreateForm("phoneNumber", e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-                </div>
+            <Tabs defaultValue="basic" className="w-full">
+              <div className="px-6">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="services">Services & Branches</TabsTrigger>
+                  <TabsTrigger value="schedule">Schedule</TabsTrigger>
+                </TabsList>
               </div>
 
-              {/* Professional Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Professional Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="jobTitle">Job Title</Label>
-                    <Input
-                      id="jobTitle"
-                      value={createForm.jobTitle}
-                      onChange={(e) => updateCreateForm("jobTitle", e.target.value)}
-                      placeholder="Senior Dentist"
-                    />
+              <TabsContent value="basic" className="p-6 space-y-6 mt-0">
+                {/* Personal Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Personal Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="fName">First Name *</Label>
+                      <Input
+                        id="fName"
+                        value={createForm.fName}
+                        onChange={(e) => updateCreateForm("fName", e.target.value)}
+                        placeholder="John"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="mName">Middle Name</Label>
+                      <Input
+                        id="mName"
+                        value={createForm.mName}
+                        onChange={(e) => updateCreateForm("mName", e.target.value)}
+                        placeholder="Michael"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="lName">Last Name *</Label>
+                      <Input
+                        id="lName"
+                        value={createForm.lName}
+                        onChange={(e) => updateCreateForm("lName", e.target.value)}
+                        placeholder="Doe"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="specialty">Specialty</Label>
-                    <Input
-                      id="specialty"
-                      value={createForm.specialty}
-                      onChange={(e) => updateCreateForm("specialty", e.target.value)}
-                      placeholder="Orthodontics"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={createForm.email}
+                        onChange={(e) => updateCreateForm("email", e.target.value)}
+                        placeholder="john.doe@example.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phoneNumber">Phone Number *</Label>
+                      <Input
+                        id="phoneNumber"
+                        value={createForm.phoneNumber}
+                        onChange={(e) => updateCreateForm("phoneNumber", e.target.value)}
+                        placeholder="+1 (555) 123-4567"
+                      />
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="licenseNumber">License Number</Label>
-                    <Input
-                      id="licenseNumber"
-                      value={createForm.licenseNumber}
-                      onChange={(e) => updateCreateForm("licenseNumber", e.target.value)}
-                      placeholder="MED123456"
-                    />
+                {/* Professional Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Professional Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="jobTitle">Job Title</Label>
+                      <Input
+                        id="jobTitle"
+                        value={createForm.jobTitle}
+                        onChange={(e) => updateCreateForm("jobTitle", e.target.value)}
+                        placeholder="Senior Dentist"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="specialty">Specialty</Label>
+                      <Input
+                        id="specialty"
+                        value={createForm.specialty}
+                        onChange={(e) => updateCreateForm("specialty", e.target.value)}
+                        placeholder="Orthodontics"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="educationalBackground">Educational Background</Label>
-                    <Input
-                      id="educationalBackground"
-                      value={createForm.educationalBackground}
-                      onChange={(e) => updateCreateForm("educationalBackground", e.target.value)}
-                      placeholder="Harvard Medical School"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="licenseNumber">License Number</Label>
+                      <Input
+                        id="licenseNumber"
+                        value={createForm.licenseNumber}
+                        onChange={(e) => updateCreateForm("licenseNumber", e.target.value)}
+                        placeholder="MED123456"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="educationalBackground">Educational Background</Label>
+                      <Input
+                        id="educationalBackground"
+                        value={createForm.educationalBackground}
+                        onChange={(e) => updateCreateForm("educationalBackground", e.target.value)}
+                        placeholder="Harvard Medical School"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="yearsOfExperience">Years of Experience</Label>
+                      <Input
+                        id="yearsOfExperience"
+                        type="number"
+                        min="0"
+                        max="50"
+                        value={createForm.yearsOfExperience}
+                        onChange={(e) => updateCreateForm("yearsOfExperience", e.target.value ? parseInt(e.target.value) : "")}
+                        placeholder="10"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select 
+                        value={createForm.status} 
+                        onValueChange={(value) => updateCreateForm("status", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Inactive">Inactive</SelectItem>
+                          <SelectItem value="On Leave">On Leave</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="yearsOfExperience">Years of Experience</Label>
-                    <Input
-                      id="yearsOfExperience"
-                      type="number"
-                      min="0"
-                      max="50"
-                      value={createForm.yearsOfExperience}
-                      onChange={(e) => updateCreateForm("yearsOfExperience", e.target.value ? parseInt(e.target.value) : "")}
-                      placeholder="10"
-                    />
-                  </div>
+                {/* Profile Picture Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Profile Picture</h3>
+                  <div className="flex items-start gap-6">
+                    {/* Avatar Preview */}
+                    <div className="flex flex-col items-center gap-2">
+                      <Avatar className="w-24 h-24 border-2">
+                        {createProfilePicturePreview ? (
+                          <AvatarImage src={createProfilePicturePreview} alt="Preview" />
+                        ) : createForm.profilePicture ? (
+                          <AvatarImage src={getImageUrl(createForm.profilePicture)} alt="Uploaded" />
+                        ) : null}
+                        <AvatarFallback className="text-lg bg-muted">
+                          {createForm.fName || createForm.lName ? getInitials(createForm.fName, createForm.lName) : <User className="w-8 h-8" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs text-muted-foreground">
+                        {createProfilePictureFile ? createProfilePictureFile.name : "No image selected"}
+                      </span>
+                    </div>
 
+                    {/* Upload Controls */}
+                    <div className="flex-1 space-y-4">
+                      <div className="space-y-2">
+                        <Label>Upload Profile Picture</Label>
+                        <Input
+                          ref={createFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCreateFileSelect}
+                          className="hidden"
+                          id="profile-picture-upload"
+                        />
+                        <div className="flex items-center gap-3">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => createFileInputRef.current?.click()}
+                            disabled={isCreateUploading}
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            {isCreateUploading ? "Uploading..." : "Choose Image"}
+                          </Button>
+                          <span className="text-sm text-muted-foreground">
+                            JPG, PNG up to 5MB
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Status Indicators */}
+                      <div className="space-y-2">
+                        {isCreateUploading && (
+                          <div className="flex items-center gap-2 text-amber-600">
+                            <div className="w-3 h-3 rounded-full border-2 border-amber-600 border-t-transparent animate-spin" />
+                            Uploading image to server...
+                          </div>
+                        )}
+                        {createForm.profilePicture && !isCreateUploading && (
+                          <div className="flex items-center gap-2 text-green-600">
+                            <Check className="w-4 h-4" />
+                            Image uploaded successfully
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* User Account Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Account Settings</h3>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="requiresUserAccount"
+                      checked={createForm.requiresUserAccount}
+                      onChange={(e) => updateCreateForm("requiresUserAccount", e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="requiresUserAccount" className="cursor-pointer">
+                      Create user account for this professional
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, the system will create login credentials and send them to the provided email.
+                  </p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="services" className="p-6 space-y-6 mt-0">
+                {/* Medical Services Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Medical Services *</h3>
                   <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select 
-                      value={createForm.status} 
-                      onValueChange={(value) => updateCreateForm("status", value)}
-                    >
+                    <Label>Select Services</Label>
+                    <Select onValueChange={handleCreateServiceSelect}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder="Choose services..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                        <SelectItem value="On Leave">On Leave</SelectItem>
+                        {availableCreateServices.map((service) => (
+                          <SelectItem key={service.id} value={service.id.toString()}>
+                            {service.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-              </div>
 
-              {/* Medical Services Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Medical Services *</h3>
-                <div className="space-y-2">
-                  <Label>Select Services</Label>
-                  <Select onValueChange={handleCreateServiceSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose services..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableCreateServices.map((service) => (
-                        <SelectItem key={service.id} value={service.id.toString()}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {createSelectedServiceIds.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Selected Services</Label>
-                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                      {createSelectedServiceIds.map((serviceId) => {
-                        const service = services.find(s => s.id === serviceId);
-                        return service ? (
-                          <Badge
-                            key={service.id}
-                            variant="secondary"
-                            className="px-3 py-1.5 flex items-center gap-2"
-                          >
-                            {service.name}
-                            <XCircle
-                              className="w-3 h-3 cursor-pointer hover:text-destructive"
-                              onClick={() => removeCreateService(service.id)}
-                            />
-                          </Badge>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Branches Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Branches *</h3>
-                <div className="space-y-2">
-                  <Label>Select Branches</Label>
-                  <Select onValueChange={handleCreateBranchSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose branches..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableCreateBranches.map((branch) => (
-                        <SelectItem key={branch.id} value={branch.id.toString()}>
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {createSelectedBranchIds.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Selected Branches</Label>
-                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                      {createSelectedBranchIds.map((branchId) => {
-                        const branch = branches.find(b => b.id === branchId);
-                        return branch ? (
-                          <Badge
-                            key={branch.id}
-                            variant="secondary"
-                            className="px-3 py-1.5 flex items-center gap-2"
-                          >
-                            {branch.name}
-                            <XCircle
-                              className="w-3 h-3 cursor-pointer hover:text-destructive"
-                              onClick={() => removeCreateBranch(branch.id)}
-                            />
-                          </Badge>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Profile Picture Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Profile Picture</h3>
-                <div className="flex items-start gap-6">
-                  {/* Avatar Preview */}
-                  <div className="flex flex-col items-center gap-2">
-                    <Avatar className="w-24 h-24 border-2">
-                      {createProfilePicturePreview ? (
-                        <AvatarImage src={createProfilePicturePreview} alt="Preview" />
-                      ) : createForm.profilePicture ? (
-                        <AvatarImage src={getImageUrl(createForm.profilePicture)} alt="Uploaded" />
-                      ) : null}
-                      <AvatarFallback className="text-lg bg-muted">
-                        {createForm.fName || createForm.lName ? getInitials(createForm.fName, createForm.lName) : <User className="w-8 h-8" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-xs text-muted-foreground">
-                      {createProfilePictureFile ? createProfilePictureFile.name : "No image selected"}
-                    </span>
-                  </div>
-
-                  {/* Upload Controls */}
-                  <div className="flex-1 space-y-4">
+                  {createSelectedServiceIds.length > 0 && (
                     <div className="space-y-2">
-                      <Label>Upload Profile Picture</Label>
-                      <Input
-                        ref={createFileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleCreateFileSelect}
-                        className="hidden"
-                        id="profile-picture-upload"
-                      />
-                      <div className="flex items-center gap-3">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => createFileInputRef.current?.click()}
-                          disabled={isCreateUploading}
-                        >
-                          <Upload className="w-4 h-4 mr-2" />
-                          {isCreateUploading ? "Uploading..." : "Choose Image"}
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
-                          JPG, PNG up to 5MB
-                        </span>
+                      <Label>Selected Services</Label>
+                      <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
+                        {createSelectedServiceIds.map((serviceId) => {
+                          const service = services.find(s => s.id === serviceId);
+                          return service ? (
+                            <Badge
+                              key={service.id}
+                              variant="secondary"
+                              className="px-3 py-1.5 flex items-center gap-2"
+                            >
+                              {service.name}
+                              <XCircle
+                                className="w-3 h-3 cursor-pointer hover:text-destructive"
+                                onClick={() => removeCreateService(service.id)}
+                              />
+                            </Badge>
+                          ) : null;
+                        })}
                       </div>
                     </div>
+                  )}
+                </div>
 
-                    {/* Status Indicators */}
+                {/* Branches Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Branches *</h3>
+                  <div className="space-y-2">
+                    <Label>Select Branches</Label>
+                    <Select onValueChange={handleCreateBranchSelect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose branches..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCreateBranches.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.id.toString()}>
+                            {branch.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {createSelectedBranchIds.length > 0 && (
                     <div className="space-y-2">
-                      {isCreateUploading && (
-                        <div className="flex items-center gap-2 text-amber-600">
-                          <div className="w-3 h-3 rounded-full border-2 border-amber-600 border-t-transparent animate-spin" />
-                          Uploading image to server...
-                        </div>
-                      )}
-                      {createForm.profilePicture && !isCreateUploading && (
-                        <div className="flex items-center gap-2 text-green-600">
-                          <Check className="w-4 h-4" />
-                          Image uploaded successfully
-                        </div>
-                      )}
+                      <Label>Selected Branches</Label>
+                      <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
+                        {createSelectedBranchIds.map((branchId) => {
+                          const branch = branches.find(b => b.id === branchId);
+                          return branch ? (
+                            <Badge
+                              key={branch.id}
+                              variant="secondary"
+                              className="px-3 py-1.5 flex items-center gap-2"
+                            >
+                              {branch.name}
+                              <XCircle
+                                className="w-3 h-3 cursor-pointer hover:text-destructive"
+                                onClick={() => removeCreateBranch(branch.id)}
+                              />
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
                     </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="schedule" className="p-6 space-y-6 mt-0">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5" />
+                      <h3 className="text-lg font-semibold">Weekly Schedule</h3>
+                    </div>
+                    {/* Test button for schedule operations */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (editingDoctor) {
+                          console.log("=== Testing Schedule Update for Doctor", editingDoctor.id, "===");
+                          try {
+                            await updateDoctorSchedules(editingDoctor.id, editSchedules);
+                            toast({
+                              title: "Schedule test successful",
+                              description: "Schedule operations are working correctly",
+                            });
+                          } catch (error) {
+                            toast({
+                              title: "Schedule test failed",
+                              description: "Check console for details",
+                              variant: "destructive",
+                            });
+                          }
+                        }
+                      }}
+                    >
+                      Test Schedule Update
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Configure working hours for each day of the week. Select a branch for each working day.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {daysOfWeek.map((day) => (
+                      <div 
+                        key={day.key} 
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                          createSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <Switch 
+                            checked={createSchedules[day.key].isWorking} 
+                            onCheckedChange={(checked) => updateCreateSchedule(day.key, 'isWorking', checked)}
+                          />
+                          <div className="w-28">
+                            <span className={`font-medium ${!createSchedules[day.key].isWorking ? 'text-muted-foreground' : ''}`}>
+                              {day.name}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {createSchedules[day.key].isWorking ? (
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-sm text-muted-foreground">Branch</Label>
+                              <Select 
+                                value={createSchedules[day.key].branchId > 0 ? createSchedules[day.key].branchId.toString() : ""} 
+                                onValueChange={(value) => updateCreateSchedule(day.key, 'branchId', parseInt(value))}
+                              >
+                                <SelectTrigger className={`w-40 ${createSchedules[day.key].branchId === 0 ? 'border-red-300' : ''}`}>
+                                  <SelectValue placeholder="Select branch" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {branches.map((branch) => (
+                                    <SelectItem key={branch.id} value={branch.id.toString()}>
+                                      {branch.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {createSchedules[day.key].branchId === 0 && (
+                                <span className="text-xs text-red-500">Required</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-sm text-muted-foreground">Start</Label>
+                              <Input 
+                                type="time" 
+                                value={createSchedules[day.key].startTime}
+                                onChange={(e) => updateCreateSchedule(day.key, 'startTime', e.target.value)}
+                                className="w-32" 
+                              />
+                            </div>
+                            <span className="text-muted-foreground">to</span>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-sm text-muted-foreground">End</Label>
+                              <Input 
+                                type="time" 
+                                value={createSchedules[day.key].endTime}
+                                onChange={(e) => updateCreateSchedule(day.key, 'endTime', e.target.value)}
+                                className="w-32" 
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground italic">Not working</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-
-              {/* User Account Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Account Settings</h3>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="requiresUserAccount"
-                    checked={createForm.requiresUserAccount}
-                    onChange={(e) => updateCreateForm("requiresUserAccount", e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <Label htmlFor="requiresUserAccount" className="cursor-pointer">
-                    Create user account for this professional
-                  </Label>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  When enabled, the system will create login credentials and send them to the provided email.
-                </p>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
 
             <DialogFooter className="px-6 py-4 border-t">
               <Button
@@ -1292,322 +1602,416 @@ const DoctorsPage = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <div className="p-6 space-y-6">
-            {/* Personal Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Personal Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-fName">First Name *</Label>
-                  <Input
-                    id="edit-fName"
-                    value={editForm.fName}
-                    onChange={(e) => updateEditForm("fName", e.target.value)}
-                    placeholder="John"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-mName">Middle Name</Label>
-                  <Input
-                    id="edit-mName"
-                    value={editForm.mName}
-                    onChange={(e) => updateEditForm("mName", e.target.value)}
-                    placeholder="Michael"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-lName">Last Name *</Label>
-                  <Input
-                    id="edit-lName"
-                    value={editForm.lName}
-                    onChange={(e) => updateEditForm("lName", e.target.value)}
-                    placeholder="Doe"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-email">Email *</Label>
-                  <Input
-                    id="edit-email"
-                    type="email"
-                    value={editForm.email}
-                    onChange={(e) => updateEditForm("email", e.target.value)}
-                    placeholder="john.doe@example.com"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="edit-phoneNumber">Phone Number *</Label>
-                    <Input
-                    id="edit-phoneNumber"
-                    value={editForm.phoneNumber}
-                    onChange={(e) => updateEditForm("phoneNumber", e.target.value)}
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-              </div>
+          <Tabs defaultValue="basic" className="w-full">
+            <div className="px-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="services">Services & Branches</TabsTrigger>
+                <TabsTrigger value="schedule">Schedule</TabsTrigger>
+              </TabsList>
             </div>
 
-            {/* Professional Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Professional Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-jobTitle">Job Title</Label>
-                  <Input
-                    id="edit-jobTitle"
-                    value={editForm.jobTitle}
-                    onChange={(e) => updateEditForm("jobTitle", e.target.value)}
-                    placeholder="Senior Dentist"
-                  />
+            <TabsContent value="basic" className="p-6 space-y-6 mt-0">
+              {/* Personal Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Personal Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-fName">First Name *</Label>
+                    <Input
+                      id="edit-fName"
+                      value={editForm.fName}
+                      onChange={(e) => updateEditForm("fName", e.target.value)}
+                      placeholder="John"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-mName">Middle Name</Label>
+                    <Input
+                      id="edit-mName"
+                      value={editForm.mName}
+                      onChange={(e) => updateEditForm("mName", e.target.value)}
+                      placeholder="Michael"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-lName">Last Name *</Label>
+                    <Input
+                      id="edit-lName"
+                      value={editForm.lName}
+                      onChange={(e) => updateEditForm("lName", e.target.value)}
+                      placeholder="Doe"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="edit-specialty">Specialty</Label>
-                  <Input
-                    id="edit-specialty"
-                    value={editForm.specialty}
-                    onChange={(e) => updateEditForm("specialty", e.target.value)}
-                    placeholder="Orthodontics"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-email">Email *</Label>
+                    <Input
+                      id="edit-email"
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => updateEditForm("email", e.target.value)}
+                      placeholder="john.doe@example.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-phoneNumber">Phone Number *</Label>
+                      <Input
+                      id="edit-phoneNumber"
+                      value={editForm.phoneNumber}
+                      onChange={(e) => updateEditForm("phoneNumber", e.target.value)}
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-licenseNumber">License Number</Label>
-                  <Input
-                    id="edit-licenseNumber"
-                    value={editForm.licenseNumber}
-                    onChange={(e) => updateEditForm("licenseNumber", e.target.value)}
-                    placeholder="MED123456"
-                  />
+              {/* Professional Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Professional Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-jobTitle">Job Title</Label>
+                    <Input
+                      id="edit-jobTitle"
+                      value={editForm.jobTitle}
+                      onChange={(e) => updateEditForm("jobTitle", e.target.value)}
+                      placeholder="Senior Dentist"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-specialty">Specialty</Label>
+                    <Input
+                      id="edit-specialty"
+                      value={editForm.specialty}
+                      onChange={(e) => updateEditForm("specialty", e.target.value)}
+                      placeholder="Orthodontics"
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="edit-educationalBackground">Educational Background</Label>
-                  <Input
-                    id="edit-educationalBackground"
-                    value={editForm.educationalBackground}
-                    onChange={(e) => updateEditForm("educationalBackground", e.target.value)}
-                    placeholder="Harvard Medical School"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-licenseNumber">License Number</Label>
+                    <Input
+                      id="edit-licenseNumber"
+                      value={editForm.licenseNumber}
+                      onChange={(e) => updateEditForm("licenseNumber", e.target.value)}
+                      placeholder="MED123456"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-educationalBackground">Educational Background</Label>
+                    <Input
+                      id="edit-educationalBackground"
+                      value={editForm.educationalBackground}
+                      onChange={(e) => updateEditForm("educationalBackground", e.target.value)}
+                      placeholder="Harvard Medical School"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-yearsOfExperience">Years of Experience</Label>
+                    <Input
+                      id="edit-yearsOfExperience"
+                      type="number"
+                      min="0"
+                      max="50"
+                      value={editForm.yearsOfExperience}
+                      onChange={(e) => updateEditForm("yearsOfExperience", e.target.value ? parseInt(e.target.value) : "")}
+                      placeholder="10"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-status">Status</Label>
+                    <Select 
+                      value={editForm.status} 
+                      onValueChange={(value) => updateEditForm("status", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Active">Active</SelectItem>
+                        <SelectItem value="Inactive">Inactive</SelectItem>
+                        <SelectItem value="On Leave">On Leave</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-yearsOfExperience">Years of Experience</Label>
-                  <Input
-                    id="edit-yearsOfExperience"
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={editForm.yearsOfExperience}
-                    onChange={(e) => updateEditForm("yearsOfExperience", e.target.value ? parseInt(e.target.value) : "")}
-                    placeholder="10"
-                  />
-                </div>
+              {/* Profile Picture Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Profile Picture</h3>
+                <div className="flex items-start gap-6">
+                  {/* Avatar Preview */}
+                  <div className="flex flex-col items-center gap-2">
+                    <Avatar className="w-24 h-24 border-2">
+                      {editProfilePicturePreview ? (
+                        <AvatarImage src={editProfilePicturePreview} alt="Preview" />
+                      ) : editForm.profilePicture ? (
+                        <AvatarImage src={getImageUrl(editForm.profilePicture)} alt="Uploaded" />
+                      ) : null}
+                      <AvatarFallback className="text-lg bg-muted">
+                        {editForm.fName || editForm.lName ? getInitials(editForm.fName, editForm.lName) : <User className="w-8 h-8" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs text-muted-foreground">
+                      {editProfilePictureFile ? editProfilePictureFile.name : "Current image"}
+                    </span>
+                  </div>
 
+                  {/* Upload Controls */}
+                  <div className="flex-1 space-y-4">
+                    <div className="space-y-2">
+                      <Label>Change Profile Picture</Label>
+                      <Input
+                        ref={editFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditFileSelect}
+                        className="hidden"
+                        id="edit-profile-picture-upload"
+                      />
+                      <div className="flex items-center gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => editFileInputRef.current?.click()}
+                          disabled={isEditUploading}
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          {isEditUploading ? "Uploading..." : "Change Image"}
+                        </Button>
+                        <span className="text-sm text-muted-foreground">
+                          JPG, PNG up to 5MB
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Status Indicators */}
+                    <div className="space-y-2">
+                      {isEditUploading && (
+                        <div className="flex items-center gap-2 text-amber-600">
+                          <div className="w-3 h-3 rounded-full border-2 border-amber-600 border-t-transparent animate-spin" />
+                          Uploading image to server...
+                        </div>
+                      )}
+                      {editForm.profilePicture && !isEditUploading && (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <Check className="w-4 h-4" />
+                          Image uploaded successfully
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* User Account Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Account Settings</h3>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="edit-requiresUserAccount"
+                    checked={editForm.requiresUserAccount}
+                    onChange={(e) => updateEditForm("requiresUserAccount", e.target.checked)}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="edit-requiresUserAccount" className="cursor-pointer">
+                    User account for this professional
+                  </Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  When enabled, the system will maintain login credentials for this professional.
+                </p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="services" className="p-6 space-y-6 mt-0">
+              {/* Medical Services Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Medical Services *</h3>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select 
-                    value={editForm.status} 
-                    onValueChange={(value) => updateEditForm("status", value)}
-                  >
+                  <Label>Select Services</Label>
+                  <Select onValueChange={handleEditServiceSelect}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder="Choose services..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="On Leave">On Leave</SelectItem>
+                      {availableEditServices.map((service) => (
+                        <SelectItem key={service.id} value={service.id.toString()}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </div>
 
-            {/* Medical Services Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Medical Services *</h3>
-              <div className="space-y-2">
-                <Label>Select Services</Label>
-                <Select onValueChange={handleEditServiceSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose services..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableEditServices.map((service) => (
-                      <SelectItem key={service.id} value={service.id.toString()}>
-                        {service.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {editSelectedServiceIds.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Selected Services</Label>
-                  <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                    {editSelectedServiceIds.map((serviceId) => {
-                      const service = services.find(s => s.id === serviceId);
-                      return service ? (
-                        <Badge
-                          key={service.id}
-                          variant="secondary"
-                          className="px-3 py-1.5 flex items-center gap-2"
-                        >
-                          {service.name}
-                          <XCircle
-                            className="w-3 h-3 cursor-pointer hover:text-destructive"
-                            onClick={() => removeEditService(service.id)}
-                          />
-                        </Badge>
-                      ) : null;
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Branches Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Branches *</h3>
-              <div className="space-y-2">
-                <Label>Select Branches</Label>
-                <Select onValueChange={handleEditBranchSelect}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose branches..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableEditBranches.map((branch) => (
-                      <SelectItem key={branch.id} value={branch.id.toString()}>
-                        {branch.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {editSelectedBranchIds.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Selected Branches</Label>
-                  <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                    {editSelectedBranchIds.map((branchId) => {
-                      const branch = branches.find(b => b.id === branchId);
-                      return branch ? (
-                        <Badge
-                          key={branch.id}
-                          variant="secondary"
-                          className="px-3 py-1.5 flex items-center gap-2"
-                        >
-                          {branch.name}
-                          <XCircle
-                            className="w-3 h-3 cursor-pointer hover:text-destructive"
-                            onClick={() => removeEditBranch(branch.id)}
-                          />
-                        </Badge>
-                      ) : null;
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Profile Picture Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Profile Picture</h3>
-              <div className="flex items-start gap-6">
-                {/* Avatar Preview */}
-                <div className="flex flex-col items-center gap-2">
-                  <Avatar className="w-24 h-24 border-2">
-                    {editProfilePicturePreview ? (
-                      <AvatarImage src={editProfilePicturePreview} alt="Preview" />
-                    ) : editForm.profilePicture ? (
-                      <AvatarImage src={getImageUrl(editForm.profilePicture)} alt="Uploaded" />
-                    ) : null}
-                    <AvatarFallback className="text-lg bg-muted">
-                      {editForm.fName || editForm.lName ? getInitials(editForm.fName, editForm.lName) : <User className="w-8 h-8" />}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-muted-foreground">
-                    {editProfilePictureFile ? editProfilePictureFile.name : "Current image"}
-                  </span>
-                </div>
-
-                {/* Upload Controls */}
-                <div className="flex-1 space-y-4">
+                {editSelectedServiceIds.length > 0 && (
                   <div className="space-y-2">
-                    <Label>Change Profile Picture</Label>
-                    <Input
-                      ref={editFileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleEditFileSelect}
-                      className="hidden"
-                      id="edit-profile-picture-upload"
-                    />
-                    <div className="flex items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => editFileInputRef.current?.click()}
-                        disabled={isEditUploading}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        {isEditUploading ? "Uploading..." : "Change Image"}
-                      </Button>
-                      <span className="text-sm text-muted-foreground">
-                        JPG, PNG up to 5MB
-                      </span>
+                    <Label>Selected Services</Label>
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
+                      {editSelectedServiceIds.map((serviceId) => {
+                        const service = services.find(s => s.id === serviceId);
+                        return service ? (
+                          <Badge
+                            key={service.id}
+                            variant="secondary"
+                            className="px-3 py-1.5 flex items-center gap-2"
+                          >
+                            {service.name}
+                            <XCircle
+                              className="w-3 h-3 cursor-pointer hover:text-destructive"
+                              onClick={() => removeEditService(service.id)}
+                            />
+                          </Badge>
+                        ) : null;
+                      })}
                     </div>
                   </div>
+                )}
+              </div>
 
-                  {/* Status Indicators */}
+              {/* Branches Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Branches *</h3>
+                <div className="space-y-2">
+                  <Label>Select Branches</Label>
+                  <Select onValueChange={handleEditBranchSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose branches..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableEditBranches.map((branch) => (
+                        <SelectItem key={branch.id} value={branch.id.toString()}>
+                          {branch.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {editSelectedBranchIds.length > 0 && (
                   <div className="space-y-2">
-                    {isEditUploading && (
-                      <div className="flex items-center gap-2 text-amber-600">
-                        <div className="w-3 h-3 rounded-full border-2 border-amber-600 border-t-transparent animate-spin" />
-                        Uploading image to server...
-                      </div>
-                    )}
-                    {editForm.profilePicture && !isEditUploading && (
-                      <div className="flex items-center gap-2 text-green-600">
-                        <Check className="w-4 h-4" />
-                        Image uploaded successfully
-                      </div>
-                    )}
+                    <Label>Selected Branches</Label>
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
+                      {editSelectedBranchIds.map((branchId) => {
+                        const branch = branches.find(b => b.id === branchId);
+                        return branch ? (
+                          <Badge
+                            key={branch.id}
+                            variant="secondary"
+                            className="px-3 py-1.5 flex items-center gap-2"
+                          >
+                            {branch.name}
+                            <XCircle
+                              className="w-3 h-3 cursor-pointer hover:text-destructive"
+                              onClick={() => removeEditBranch(branch.id)}
+                            />
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
                   </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="schedule" className="p-6 space-y-6 mt-0">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  <h3 className="text-lg font-semibold">Weekly Schedule</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Configure working hours for each day of the week. Select a branch for each working day.
+                </p>
+                
+                <div className="space-y-4">
+                  {daysOfWeek.map((day) => (
+                    <div 
+                      key={day.key} 
+                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                        editSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Switch 
+                          checked={editSchedules[day.key].isWorking} 
+                          onCheckedChange={(checked) => updateEditSchedule(day.key, 'isWorking', checked)}
+                        />
+                        <div className="w-28">
+                          <span className={`font-medium ${!editSchedules[day.key].isWorking ? 'text-muted-foreground' : ''}`}>
+                            {day.name}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {editSchedules[day.key].isWorking ? (
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm text-muted-foreground">Branch</Label>
+                            <Select 
+                              value={editSchedules[day.key].branchId > 0 ? editSchedules[day.key].branchId.toString() : ""} 
+                              onValueChange={(value) => updateEditSchedule(day.key, 'branchId', parseInt(value))}
+                            >
+                              <SelectTrigger className={`w-40 ${editSchedules[day.key].branchId === 0 ? 'border-red-300' : ''}`}>
+                                <SelectValue placeholder="Select branch" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {branches.map((branch) => (
+                                  <SelectItem key={branch.id} value={branch.id.toString()}>
+                                    {branch.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {editSchedules[day.key].branchId === 0 && (
+                              <span className="text-xs text-red-500">Required</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm text-muted-foreground">Start</Label>
+                            <Input 
+                              type="time" 
+                              value={editSchedules[day.key].startTime}
+                              onChange={(e) => updateEditSchedule(day.key, 'startTime', e.target.value)}
+                              className="w-32" 
+                            />
+                          </div>
+                          <span className="text-muted-foreground">to</span>
+                          <div className="flex items-center gap-2">
+                            <Label className="text-sm text-muted-foreground">End</Label>
+                            <Input 
+                              type="time" 
+                              value={editSchedules[day.key].endTime}
+                              onChange={(e) => updateEditSchedule(day.key, 'endTime', e.target.value)}
+                              className="w-32" 
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground italic">Not working</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* User Account Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Account Settings</h3>
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="edit-requiresUserAccount"
-                  checked={editForm.requiresUserAccount}
-                  onChange={(e) => updateEditForm("requiresUserAccount", e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <Label htmlFor="edit-requiresUserAccount" className="cursor-pointer">
-                  User account for this professional
-                </Label>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                When enabled, the system will maintain login credentials for this professional.
-              </p>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter className="px-6 py-4 border-t">
             <Button
