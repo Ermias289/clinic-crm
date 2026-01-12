@@ -1,24 +1,35 @@
 import apiClient from './client';
 
 export interface UpdateCompanySettingDTO {
+  id: number;
   name: string;
   logo?: string;
+  prefix?: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
   address: string;
-  website?: string;
-  taxId?: string;
+  city?: string;
+  country?: string;
+  subCity?: string;
+  locationOnMap?: string;
+  emergencyPhoneNumber?: string;
 }
 
 export interface CompanySettingDTO {
   id: number;
   name: string;
   logo?: string;
+  prefix?: string;
   email: string;
-  phone: string;
+  phoneNumber: string;
+  emergencyPhoneNumber?: string;
   address: string;
-  website?: string;
-  taxId?: string;
+  city?: string;
+  country?: string;
+  subCity?: string;
+  locationOnMap?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const companySettingService = {

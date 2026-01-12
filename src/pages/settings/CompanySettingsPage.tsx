@@ -1,20 +1,165 @@
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Building, Save, Upload } from "lucide-react";
-import { mockCompany } from "@/data/mockData";
+import { Building, Save, Upload, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { companySettingService, CompanySettingDTO, UpdateCompanySettingDTO } from "@/lib/api/companySettings";
+import { fileUploadService } from "@/lib/api/fileUpload";
 
 const CompanySettingsPage = () => {
-  const handleSave = () => {
-    toast({
-      title: "Settings Saved",
-      description: "Company settings have been updated successfully.",
-    });
+  const [companyData, setCompanyData] = useState<CompanySettingDTO | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    emergencyPhoneNumber: "",
+    address: "",
+    city: "",
+    country: "",
+    subCity: "",
+    prefix: "",
+    locationOnMap: "",
+    logo: "",
+  });
+
+  useEffect(() => {
+    loadCompanySettings();
+  }, []);
+
+  // Get full image URL from filename (same pattern as other pages)
+  const getImageUrl = (filename: string) => {
+    if (!filename) return "";
+    return fileUploadService.getFileUrl(filename);
   };
+
+  const loadCompanySettings = async () => {
+    try {
+      setLoading(true);
+      const data = await companySettingService.get();
+      setCompanyData(data);
+      setFormData({
+        name: data.name || "",
+        email: data.email || "",
+        phoneNumber: data.phoneNumber || "",
+        emergencyPhoneNumber: data.emergencyPhoneNumber || "",
+        address: data.address || "",
+        city: data.city || "",
+        country: data.country || "",
+        subCity: data.subCity || "",
+        prefix: data.prefix || "",
+        locationOnMap: data.locationOnMap || "",
+        logo: data.logo || "",
+      });
+    } catch (error) {
+      console.error("Failed to load company settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load company settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file (PNG, JPG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const fileName = await fileUploadService.upload(file);
+      setFormData(prev => ({
+        ...prev,
+        logo: fileName
+      }));
+      toast({
+        title: "Logo Uploaded",
+        description: "Logo has been uploaded successfully",
+      });
+    } catch (error) {
+      console.error("Failed to upload logo:", error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload logo. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      const updateData: UpdateCompanySettingDTO = {
+        id: companyData?.id || 0,
+        ...formData,
+      };
+
+      const updatedData = await companySettingService.update(updateData);
+      setCompanyData(updatedData);
+      
+      toast({
+        title: "Settings Saved",
+        description: "Company settings have been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Failed to save company settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save company settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Company Settings" subtitle="Configure your clinic's company information">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Company Settings" subtitle="Configure your clinic's company information">
@@ -30,15 +175,49 @@ const CompanySettingsPage = () => {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6">
-              <div className="w-24 h-24 rounded-xl bg-primary/10 flex items-center justify-center border-2 border-dashed border-primary/30">
-                <Building className="w-10 h-10 text-primary/50" />
+              <div className="w-24 h-24 rounded-xl bg-primary/10 flex items-center justify-center border-2 border-dashed border-primary/30 overflow-hidden">
+                {formData.logo ? (
+                  <img 
+                    src={getImageUrl(formData.logo)} 
+                    alt="Company Logo" 
+                    className="w-full h-full object-cover rounded-xl"
+                    onError={(e) => {
+                      // Hide image on error and show fallback
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : null}
+                {!formData.logo && (
+                  <Building className="w-10 h-10 text-primary/50" />
+                )}
               </div>
               <div className="space-y-2">
-                <Button variant="outline">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Logo
-                </Button>
-                <p className="text-xs text-muted-foreground">Recommended: 200x200px, PNG or JPG</p>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    disabled={uploading}
+                  />
+                  <Button variant="outline" disabled={uploading}>
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Logo
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Recommended: 200x200px, PNG or JPG, Max 5MB</p>
+                {formData.logo && (
+                  <p className="text-xs text-success">Current: {formData.logo}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -54,16 +233,56 @@ const CompanySettingsPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Company Name</Label>
-                <Input id="name" defaultValue={mockCompany.name} />
+                <Input 
+                  id="name" 
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="taxId">Tax ID / Registration Number</Label>
-                <Input id="taxId" defaultValue={mockCompany.taxId} />
+                <Label htmlFor="prefix">Company Prefix</Label>
+                <Input 
+                  id="prefix" 
+                  value={formData.prefix}
+                  onChange={(e) => handleInputChange("prefix", e.target.value)}
+                  placeholder="e.g., BSC"
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
-              <Textarea id="address" defaultValue={mockCompany.address} rows={2} />
+              <Textarea 
+                id="address" 
+                value={formData.address}
+                onChange={(e) => handleInputChange("address", e.target.value)}
+                rows={2} 
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input 
+                  id="city" 
+                  value={formData.city}
+                  onChange={(e) => handleInputChange("city", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subCity">Sub City</Label>
+                <Input 
+                  id="subCity" 
+                  value={formData.subCity}
+                  onChange={(e) => handleInputChange("subCity", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Input 
+                  id="country" 
+                  value={formData.country}
+                  onChange={(e) => handleInputChange("country", e.target.value)}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -78,24 +297,59 @@ const CompanySettingsPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input id="email" type="email" defaultValue={mockCompany.email} />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" defaultValue={mockCompany.phone} />
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input 
+                  id="phoneNumber" 
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
-              <Input id="website" defaultValue={mockCompany.website} />
+              <Label htmlFor="emergencyPhoneNumber">Emergency Phone Number</Label>
+              <Input 
+                id="emergencyPhoneNumber" 
+                value={formData.emergencyPhoneNumber}
+                onChange={(e) => handleInputChange("emergencyPhoneNumber", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="locationOnMap">Location on Map</Label>
+              <Input 
+                id="locationOnMap" 
+                value={formData.locationOnMap}
+                onChange={(e) => handleInputChange("locationOnMap", e.target.value)}
+                placeholder="Google Maps URL or coordinates"
+              />
             </div>
           </CardContent>
         </Card>
 
         <div className="flex justify-end">
-          <Button variant="dental" onClick={handleSave}>
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
+          <Button 
+            variant="dental" 
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
       </div>

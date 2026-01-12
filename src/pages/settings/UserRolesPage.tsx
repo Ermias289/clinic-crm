@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -280,8 +280,8 @@ const UserRolesPage = () => {
               </thead>
               <tbody>
                 {Object.entries(groupedPermissions).map(([category, permissions]) => (
-                  <>
-                    <tr key={category} className="bg-muted/50">
+                  <React.Fragment key={category}>
+                    <tr className="bg-muted/50">
                       <td colSpan={roles.length + 1} className="font-semibold">
                         <div className="flex items-center gap-2">
                           {categoryIcons[category] && (() => {
@@ -311,7 +311,7 @@ const UserRolesPage = () => {
                         ))}
                       </tr>
                     ))}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
