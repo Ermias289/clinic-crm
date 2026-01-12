@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Building, CreditCard, Users, Clock, Building2, Settings as SettingsIcon } from "lucide-react";
+import { Building, CreditCard, Users, Building2, Settings as SettingsIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { mockCompany, mockWorkingDays } from "@/data/mockData";
+import { mockCompany } from "@/data/mockData";
 
 const settingsCards = [
   { title: "Company Settings", description: "Configure company information", icon: Building, href: "/settings/company" },
@@ -14,7 +14,6 @@ const settingsCards = [
   { title: "Card Settings", description: "Configure card options", icon: CreditCard, href: "/settings/cards" },
   { title: "Card Types", description: "Manage membership tiers", icon: CreditCard, href: "/settings/card-types" },
   { title: "User Onboarding", description: "Setup patient onboarding", icon: Users, href: "/settings/onboarding" },
-  { title: "Working Days", description: "Set business hours", icon: Clock, href: "/settings/working-days" },
 ];
 
 const SettingsPage = () => {
@@ -38,7 +37,7 @@ const SettingsPage = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Building className="w-5 h-5" /> Company Info</CardTitle>
@@ -48,29 +47,6 @@ const SettingsPage = () => {
             <div className="grid gap-2"><Label>Email</Label><Input defaultValue={mockCompany.email} /></div>
             <div className="grid gap-2"><Label>Phone</Label><Input defaultValue={mockCompany.phone} /></div>
             <Button variant="dental">Save Changes</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" /> Working Hours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {mockWorkingDays.map((day) => (
-                <div key={day.dayOfWeek} className="flex items-center justify-between py-2 border-b last:border-0">
-                  <div className="flex items-center gap-3">
-                    <Switch checked={day.isOpen} />
-                    <span className="font-medium w-24">{day.dayName}</span>
-                  </div>
-                  {day.isOpen ? (
-                    <span className="text-sm text-muted-foreground">{day.openTime} - {day.closeTime}</span>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">Closed</span>
-                  )}
-                </div>
-              ))}
-            </div>
           </CardContent>
         </Card>
       </div>

@@ -12,7 +12,6 @@ import {
   Building2,
   CreditCard as CardIcon,
   UserCog,
-  Clock,
   Building,
   Shield,
   UserCircle,
@@ -48,7 +47,6 @@ const navItems: NavItem[] = [
       { title: "Card Settings", href: "/settings/cards", icon: CardIcon },
       { title: "Card Types", href: "/settings/card-types", icon: CreditCard },
       { title: "Banner", href: "/settings/onboarding", icon: UserCog },
-      { title: "Working Days", href: "/settings/working-days", icon: Clock },
       { title: "Users", href: "/settings/users", icon: UserCircle },
       { title: "User Roles", href: "/settings/roles", icon: Shield },
     ]

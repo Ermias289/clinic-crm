@@ -20,7 +20,7 @@ import BranchSettingsPage from "./pages/settings/BranchSettingsPage";
 import CardSettingsPage from "./pages/settings/CardSettingsPage";
 import CardTypesPage from "./pages/settings/CardTypesPage";
 import OnboardingSettingsPage from "./pages/settings/OnboardingSettingsPage";
-import WorkingDaysPage from "./pages/settings/WorkingDaysPage";
+
 import UsersPage from "./pages/settings/UsersPage";
 import UserRolesPage from "./pages/settings/UserRolesPage";
 import TestServiceAdd from "./pages/TestServiceAdd";
@@ -63,7 +63,7 @@ const App = () => (
           <Route path="/settings/cards" element={<ProtectedRoute><CardSettingsPage /></ProtectedRoute>} />
           <Route path="/settings/card-types" element={<ProtectedRoute><CardTypesPage /></ProtectedRoute>} />
           <Route path="/settings/onboarding" element={<ProtectedRoute><OnboardingSettingsPage /></ProtectedRoute>} />
-          <Route path="/settings/working-days" element={<ProtectedRoute><WorkingDaysPage /></ProtectedRoute>} />
+
           <Route path="/settings/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
           <Route path="/settings/roles" element={<ProtectedRoute><UserRolesPage /></ProtectedRoute>} />
           <Route path="/test-service" element={<ProtectedRoute><TestServiceAdd /></ProtectedRoute>} />
