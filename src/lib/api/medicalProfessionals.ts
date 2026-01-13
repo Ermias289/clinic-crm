@@ -64,61 +64,107 @@ export const medicalProfessionalsService = {
     return res.data;
   },
 
-update: async (
-  data: CreateMedicalProfessionalDTO & { id: number }
-): Promise<MedicalProfessional> => {
-  // Convert the data to match the backend DTO format
-  const updateData = {
-    Id: data.id,
-    FName: data.fName,
-    MName: data.mName || "",
-    LName: data.lName,
-    Email: data.email,
-    PhoneNumber: data.phoneNumber,
-    JobTitle: data.jobTitle,
-    Specialty: data.specialty,
-    LicenseNumber: data.licenseNumber,
-    EducationalBackground: data.educationalBackground,
-    YearsOfExperience: data.yearsOfExperience,
-    Status: data.status,
-    ProfilePicture: data.profilePicture || "",
-    RequiresUserAccount: data.requiresUserAccount,
-    MedicalServicesId: data.medicalServicesId,
-    Branches: data.branches,
-  };
-
-  console.log("Attempting to update medical professional:", updateData);
-
-  // Since both PUT methods are failing, let's try different approaches
-  const attempts = [
-    // Attempt 1: PUT with body (what the controller expects)
-    () => apiClient.put<MedicalProfessional>(`/api/MedicalProfessional`, updateData),
-    // Attempt 2: PUT with ID in URL
-    () => apiClient.put<MedicalProfessional>(`/api/MedicalProfessional/${data.id}`, updateData),
-    // Attempt 3: POST to update endpoint (some APIs use this pattern)
-    () => apiClient.post<MedicalProfessional>(`/api/MedicalProfessional/update`, updateData),
-    // Attempt 4: PATCH method
-    () => apiClient.patch<MedicalProfessional>(`/api/MedicalProfessional/${data.id}`, updateData),
-  ];
-
-  for (let i = 0; i < attempts.length; i++) {
+  update: async (
+    data: CreateMedicalProfessionalDTO & { id: number }
+  ): Promise<MedicalProfessional> => {
+    // Map frontend data to backend DTO format exactly as expected
+    const updateData = {
+      Id: data.id,
+      FName: data.fName,
+      MName: data.mName || "",
+      LName: data.lName,
+      Email: data.email,
+      PhoneNumber: data.phoneNumber,
+      JobTitle: data.jobTitle || "",
+      Specialty: data.specialty || "",
+      LicenseNumber: data.licenseNumber || "",
+      EducationalBackground: data.educationalBackground || "",
+      YearsOfExperience: data.yearsOfExperience || 0,
+      Status: data.status || "Active",
+      ProfilePicture: data.profilePicture || "",
+      RequiresUserAccount: data.requiresUserAccount,
+      MedicalServicesId: data.medicalServicesId || [],
+      Branches: data.branches || [],
+    };
+    
     try {
-      console.log(`Trying update method ${i + 1}...`);
-      const response = await attempts[i]();
-      console.log(`Update method ${i + 1} succeeded!`);
+      // Try the standard PUT request first
+      const response = await apiClient.put<MedicalProfessional>(
+        `/api/MedicalProfessional`,
+        updateData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        }
+      );
       return response.data;
     } catch (error: any) {
-      console.log(`Update method ${i + 1} failed:`, error.response?.status, error.response?.statusText);
-      if (i === attempts.length - 1) {
-        // Last attempt failed, throw the error
+      // If we get 405, let's try with ID in URL (even though it shouldn't be needed)
+      if (error.response?.status === 405) {
+        try {
+          const alternativeResponse = await apiClient.put<MedicalProfessional>(
+            `/api/MedicalProfessional/${data.id}`,
+            updateData,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              }
+            }
+          );
+          return alternativeResponse.data;
+        } catch (altError: any) {
+          // If alternative also fails, throw the original error
+        }
+      }
+      
+      throw error;
+    }
+  },
+
+  // Test function to diagnose the issue
+  testUpdate: async (
+    data: CreateMedicalProfessionalDTO & { id: number }
+  ): Promise<any> => {
+    // Test 1: Check authentication
+    try {
+      const getResponse = await apiClient.get(`/api/MedicalProfessional/${data.id}`);
+    } catch (error: any) {
+      throw new Error(`Authentication test failed: ${error.response?.status}`);
+    }
+
+    // Test 2: Check if PUT method is allowed
+    try {
+      const minimalData = {
+        Id: data.id,
+        FName: data.fName,
+        LName: data.lName,
+        Email: data.email,
+        PhoneNumber: data.phoneNumber,
+        RequiresUserAccount: false,
+        MedicalServicesId: data.medicalServicesId || [],
+        Branches: data.branches || [],
+      };
+      
+      const response = await apiClient.put(`/api/MedicalProfessional`, minimalData);
+      return response.data;
+    } catch (error: any) {
+      // Test 3: Try different content type
+      try {
+        const response = await apiClient.put(`/api/MedicalProfessional`, data, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        });
+        return response.data;
+      } catch (error2: any) {
         throw error;
       }
     }
-  }
-
-  // This should never be reached, but TypeScript requires it
-  throw new Error("All update attempts failed");
-},
+  },
 
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/MedicalProfessional/${id}`);

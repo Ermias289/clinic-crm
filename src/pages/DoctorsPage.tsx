@@ -104,13 +104,13 @@ const DoctorsPage = () => {
 
   // Schedule states for create form
   const [createSchedules, setCreateSchedules] = useState<{[key: string]: {isWorking: boolean, startTime: string, endTime: string, branchId: number}}>({
-    monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
   });
 
   // Edit form states
@@ -137,13 +137,13 @@ const DoctorsPage = () => {
 
   // Schedule states for edit form
   const [editSchedules, setEditSchedules] = useState<{[key: string]: {isWorking: boolean, startTime: string, endTime: string, branchId: number}}>({
-    monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-    sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+    monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+    sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
   });
   const [existingSchedules, setExistingSchedules] = useState<DoctorScheduleDTO[]>([]);
 
@@ -152,41 +152,7 @@ const DoctorsPage = () => {
 
   useEffect(() => {
     fetchData();
-    // Test DoctorSchedule API connection
-    testDoctorScheduleAPI();
   }, []);
-
-  const testDoctorScheduleAPI = async () => {
-    try {
-      console.log("=== Testing DoctorSchedule API ===");
-      
-      // Test GET all schedules
-      const allSchedules = await doctorScheduleService.getAll();
-      console.log("✅ GET /api/DoctorSchedule works - found", allSchedules.length, "schedules");
-      
-      // Test connection
-      const isConnected = await doctorScheduleService.testConnection();
-      console.log("✅ API connection test:", isConnected ? "PASSED" : "FAILED");
-      
-      // Log the structure of existing schedules to understand the data format
-      if (allSchedules.length > 0) {
-        console.log("📋 Sample schedule structure:", allSchedules[0]);
-      }
-      
-      console.log("=== Testing Medical Professional API ===");
-      
-      // Test GET all medical professionals
-      try {
-        const allDoctors = await medicalProfessionalsService.getAll();
-        console.log("✅ GET /api/MedicalProfessional works - found", allDoctors.length, "doctors");
-      } catch (error) {
-        console.error("❌ GET /api/MedicalProfessional failed:", error);
-      }
-      
-    } catch (error) {
-      console.error("❌ API test failed:", error);
-    }
-  };
 
   const fetchData = async () => {
     try {
@@ -543,17 +509,13 @@ const DoctorsPage = () => {
       if (hasValidSchedules) {
         try {
           await saveDoctorSchedules(newDoctor.id, createSchedules);
-          console.log("Schedules saved successfully for new doctor");
         } catch (scheduleError) {
-          console.error("Error saving schedules:", scheduleError);
           toast({
             title: "Doctor added but schedules failed",
             description: "The doctor was created but there was an issue saving the schedule. You can edit the doctor to add schedules.",
             variant: "destructive",
           });
         }
-      } else {
-        console.log("No valid schedules to save (no working days with branches selected)");
       }
 
       setDoctors((prev) => [...prev, newDoctor]);
@@ -612,7 +574,6 @@ const DoctorsPage = () => {
 
     try {
       // First, try to update the doctor's basic information
-      console.log("Updating doctor basic information...");
       const updatedDoctor = await medicalProfessionalsService.update({
         id: editingDoctor.id,
         fName: editForm.fName,
@@ -632,7 +593,6 @@ const DoctorsPage = () => {
         branches: editSelectedBranchIds,
       });
 
-      console.log("Doctor basic information updated successfully");
       doctorUpdateSuccess = true;
 
       setDoctors((prev) =>
@@ -640,24 +600,19 @@ const DoctorsPage = () => {
       );
 
     } catch (err: any) {
-      console.error("Error updating doctor basic information:", err);
-      
       // Don't return here - continue with schedule update even if basic info fails
       toast({
         title: "Doctor info update failed",
-        description: "Basic information update failed, but we'll try to update the schedule.",
+        description: `Error: ${err.response?.status} ${err.response?.statusText}. Check console for details.`,
         variant: "destructive",
       });
     }
 
     // Always try to update schedules, regardless of basic info update success
     try {
-      console.log("Updating doctor schedules...");
       await updateDoctorSchedules(editingDoctor.id, editSchedules);
-      console.log("Schedules updated successfully");
       scheduleUpdateSuccess = true;
     } catch (scheduleError) {
-      console.error("Error updating schedules:", scheduleError);
       toast({
         title: "Schedule update failed",
         description: "There was an issue updating the doctor's schedule. Please try again.",
@@ -761,6 +716,49 @@ const DoctorsPage = () => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
+  // Helper function to format time for display
+  const formatTimeForDisplay = (timeString: string): string => {
+    if (!timeString || timeString === "" || timeString === "00:00:00" || timeString === "00:00") {
+      return "02:00"; // Ethiopian default start time
+    }
+    
+    // Handle different time formats from backend
+    if (timeString.length > 5) {
+      // If time includes seconds (HH:MM:SS), extract HH:MM
+      return timeString.substring(0, 5);
+    }
+    
+    // If time is in correct format already (HH:MM)
+    if (timeString.match(/^\d{1,2}:\d{2}$/)) {
+      // Ensure two-digit hour format
+      const parts = timeString.split(':');
+      const hour = parts[0].padStart(2, '0');
+      const minute = parts[1];
+      return `${hour}:${minute}`;
+    }
+    
+    // Default fallback
+    return "02:00";
+  };
+
+  // Helper function to format time for backend
+  const formatTimeForBackend = (timeString: string): string => {
+    if (!timeString || timeString === "") {
+      return "02:00";
+    }
+    
+    // Ensure format is HH:MM
+    if (timeString.match(/^\d{1,2}:\d{2}$/)) {
+      const parts = timeString.split(':');
+      const hour = parts[0].padStart(2, '0');
+      const minute = parts[1];
+      return `${hour}:${minute}`;
+    }
+    
+    // Default fallback
+    return "02:00";
+  };
+
   // Schedule helper functions
   const daysOfWeek = [
     { key: 'monday', name: 'Monday' },
@@ -809,53 +807,52 @@ const DoctorsPage = () => {
   // Reset create schedules
   const resetCreateSchedules = () => {
     setCreateSchedules({
-      monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-      tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-      wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-      thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-      friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-      saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-      sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+      monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+      tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+      wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+      thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+      friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+      saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+      sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
     });
   };
 
   // Load doctor schedules for editing
   const loadDoctorSchedules = async (doctorId: number) => {
     try {
-      console.log("Loading schedules for doctor:", doctorId);
       const schedules = await doctorScheduleService.getByDoctorId(doctorId);
-      console.log("Loaded schedules:", schedules);
       setExistingSchedules(schedules);
       
-      // Reset edit schedules first
+      // Reset edit schedules first with Ethiopian default times
       const resetSchedules = {
-        monday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-        tuesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-        wednesday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-        thursday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-        friday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-        saturday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
-        sunday: { isWorking: false, startTime: "09:00", endTime: "17:00", branchId: 0 },
+        monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+        tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+        wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+        thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+        friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+        saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
+        sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
       };
 
       // Populate with existing schedules
       schedules.forEach(schedule => {
         const dayKey = schedule.weekDay.toLowerCase();
-        console.log("Processing schedule for day:", dayKey, schedule);
+        
         if (resetSchedules[dayKey]) {
+          const formattedStartTime = formatTimeForDisplay(schedule.startTime);
+          const formattedEndTime = formatTimeForDisplay(schedule.endTime);
+          
           resetSchedules[dayKey] = {
             isWorking: true,
-            startTime: schedule.startTime,
-            endTime: schedule.endTime,
+            startTime: formattedStartTime,
+            endTime: formattedEndTime,
             branchId: schedule.branchSettingId,
           };
         }
       });
 
-      console.log("Final schedule state:", resetSchedules);
       setEditSchedules(resetSchedules);
     } catch (error: any) {
-      console.error("Error loading doctor schedules:", error);
       // Show a user-friendly message
       toast({
         title: "Could not load schedules",
@@ -868,7 +865,6 @@ const DoctorsPage = () => {
   // Save doctor schedules
   const saveDoctorSchedules = async (doctorId: number, schedules: typeof createSchedules) => {
     try {
-      console.log("Saving schedules for doctor:", doctorId, schedules);
       const schedulePromises: Promise<any>[] = [];
 
       // Create schedules for working days
@@ -878,21 +874,17 @@ const DoctorsPage = () => {
             medicalProfessionalId: doctorId,
             branchSettingId: schedule.branchId,
             weekDay: day.charAt(0).toUpperCase() + day.slice(1),
-            startTime: schedule.startTime,
-            endTime: schedule.endTime,
+            startTime: formatTimeForBackend(schedule.startTime),
+            endTime: formatTimeForBackend(schedule.endTime),
           };
-          console.log("Creating schedule:", scheduleData);
           schedulePromises.push(doctorScheduleService.create(scheduleData));
         }
       });
 
-      console.log("Schedule promises count:", schedulePromises.length);
       if (schedulePromises.length > 0) {
         await Promise.all(schedulePromises);
-        console.log("All schedules saved successfully");
       }
     } catch (error) {
-      console.error("Error saving schedules:", error);
       throw error;
     }
   };
@@ -900,33 +892,20 @@ const DoctorsPage = () => {
   // Update doctor schedules (delete existing and create new ones)
   const updateDoctorSchedules = async (doctorId: number, schedules: typeof editSchedules) => {
     try {
-      console.log("=== Updating Doctor Schedules ===");
-      console.log("Doctor ID:", doctorId);
-      console.log("New schedules:", schedules);
-      console.log("Existing schedules to delete:", existingSchedules);
-      
       // Delete existing schedules first
       if (existingSchedules.length > 0) {
-        console.log("Deleting", existingSchedules.length, "existing schedules...");
         const deletePromises = existingSchedules.map(async (schedule) => {
-          console.log("Deleting schedule ID:", schedule.id);
           try {
             await doctorScheduleService.delete(schedule.id);
-            console.log("✅ Deleted schedule ID:", schedule.id);
           } catch (error) {
-            console.error("❌ Failed to delete schedule ID:", schedule.id, error);
             throw error;
           }
         });
         
         await Promise.all(deletePromises);
-        console.log("✅ All existing schedules deleted successfully");
-      } else {
-        console.log("No existing schedules to delete");
       }
 
       // Create new schedules
-      console.log("Creating new schedules...");
       const createPromises: Promise<any>[] = [];
       
       Object.entries(schedules).forEach(([day, schedule]) => {
@@ -939,32 +918,20 @@ const DoctorsPage = () => {
             endTime: schedule.endTime,
           };
           
-          console.log("Will create schedule for", day, ":", scheduleData);
           createPromises.push(
             doctorScheduleService.create(scheduleData).then(result => {
-              console.log("✅ Created schedule for", day, ":", result);
               return result;
             }).catch(error => {
-              console.error("❌ Failed to create schedule for", day, ":", error);
               throw error;
             })
           );
-        } else {
-          console.log("Skipping", day, "- not working or no branch selected");
         }
       });
 
       if (createPromises.length > 0) {
-        console.log("Creating", createPromises.length, "new schedules...");
         await Promise.all(createPromises);
-        console.log("✅ All new schedules created successfully");
-      } else {
-        console.log("No new schedules to create");
       }
-      
-      console.log("=== Schedule Update Complete ===");
     } catch (error) {
-      console.error("❌ Error updating schedules:", error);
       throw error;
     }
   };
@@ -1354,6 +1321,8 @@ const DoctorsPage = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Configure working hours for each day of the week. Select a branch for each working day.
+                    <br />
+                    <span className="text-xs text-blue-600">Default Ethiopian working hours: 2:00 AM - 11:00 AM</span>
                   </p>
                   
                   <div className="space-y-4">
@@ -1938,6 +1907,8 @@ const DoctorsPage = () => {
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Configure working hours for each day of the week. Select a branch for each working day.
+                  <br />
+                  <span className="text-xs text-blue-600">Default Ethiopian working hours: 2:00 AM - 11:00 AM</span>
                 </p>
                 
                 <div className="space-y-4">
