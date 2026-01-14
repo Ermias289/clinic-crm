@@ -21,6 +21,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { authService } from '@/lib/api/auth';
 import avatar from '../../assets/avatar.png';
+import { NotificationsButton } from "@/components/NotificationsButton";
 
 interface NavItem {
   title: string;
@@ -100,15 +101,25 @@ export function AppSidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-primary">
-          <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
+      {/* Logo and Notifications */}
+      <div className="flex items-center justify-between px-6 py-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-primary">
+            <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-sidebar-foreground">Lucid</h1>
+            <p className="text-xs text-sidebar-foreground/60">Dental Clinic CRM</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-lg font-bold text-sidebar-foreground">Lucid</h1>
-          <p className="text-xs text-sidebar-foreground/60">Dental Clinic CRM</p>
-        </div>
+        {/* Notifications Button */}
+        {user?.id ? (
+          <div className="flex items-center">
+            <NotificationsButton userId={user.id} />
+          </div>
+        ) : (
+          <div className="text-xs text-muted-foreground">No user</div>
+        )}
       </div>
 
       {/* Navigation */}
