@@ -212,6 +212,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 2,
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                     if (userCard != null) ...[
                                       const SizedBox(height: 8),
@@ -225,6 +227,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                               letterSpacing: 3,
                                               fontWeight: FontWeight.w500,
                                             ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ],
@@ -279,6 +283,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                           ),
                                         ),
                                         child: Row(
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(
                                               isActive
@@ -292,14 +297,18 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                               size: 16,
                                             ),
                                             const SizedBox(width: 4),
-                                            Text(
-                                              userCard.status.toUpperCase(),
-                                              style: AppTextStyles.bodySmall
-                                                  .copyWith(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 10,
-                                                  ),
+                                            Flexible(
+                                              child: Text(
+                                                userCard.status.toUpperCase(),
+                                                style: AppTextStyles.bodySmall
+                                                    .copyWith(
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 10,
+                                                    ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -451,6 +460,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                             fontWeight:
                                                                 FontWeight.bold,
                                                           ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
                                                     );
                                                   },
                                                 ),
@@ -500,6 +511,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                         AppColors.textSecondary,
                                                     fontWeight: FontWeight.w600,
                                                   ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             if (appointment
                                                 .medicalProfessional!
@@ -513,6 +526,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                     .copyWith(
                                                       color: AppColors.textHint,
                                                     ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                           ],
                                         ],
@@ -553,26 +568,46 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                   const SizedBox(height: 12),
                                   Row(
                                     children: [
-                                      Icon(
-                                        Icons.calendar_today,
-                                        size: 16,
-                                        color: AppColors.textHint,
+                                      Flexible(
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_today,
+                                              size: 16,
+                                              color: AppColors.textHint,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Flexible(
+                                              child: Text(
+                                                appointment.day,
+                                                style: AppTextStyles.bodyMedium,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        appointment.day,
-                                        style: AppTextStyles.bodyMedium,
-                                      ),
-                                      const SizedBox(width: 24),
-                                      Icon(
-                                        Icons.access_time,
-                                        size: 16,
-                                        color: AppColors.textHint,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        appointment.reservationTime,
-                                        style: AppTextStyles.bodyMedium,
+                                      const SizedBox(width: 16),
+                                      Flexible(
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.access_time,
+                                              size: 16,
+                                              color: AppColors.textHint,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Flexible(
+                                              child: Text(
+                                                appointment.reservationTime,
+                                                style: AppTextStyles.bodyMedium,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                       if (appointment
                                                   .dentistryService
@@ -582,16 +617,26 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                   .dentistryService!
                                                   .durationInMinutes >
                                               0) ...[
-                                        const SizedBox(width: 24),
-                                        Icon(
-                                          Icons.timer_outlined,
-                                          size: 16,
-                                          color: AppColors.textHint,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '${appointment.dentistryService!.durationInMinutes} min',
-                                          style: AppTextStyles.bodyMedium,
+                                        const SizedBox(width: 16),
+                                        Flexible(
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.timer_outlined,
+                                                size: 16,
+                                                color: AppColors.textHint,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Flexible(
+                                                child: Text(
+                                                  '${appointment.dentistryService!.durationInMinutes} min',
+                                                  style: AppTextStyles.bodyMedium,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ],
                                     ],

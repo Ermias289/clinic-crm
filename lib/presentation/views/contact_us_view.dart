@@ -176,165 +176,188 @@ class ContactUsView extends GetView<ContactUsController> {
                 );
               }
 
-              return Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // Company Logo and Name Card
-                    if (setting.name?.isNotEmpty == true)
-                      _buildCompanyInfoCard(setting),
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // Company Logo and Name Card
+                      if (setting.name?.isNotEmpty == true)
+                        _buildCompanyInfoCard(setting),
 
-                    if (setting.name?.isNotEmpty == true)
-                      const SizedBox(height: 16),
+                      if (setting.name?.isNotEmpty == true)
+                        const SizedBox(height: 16),
 
-                    // Phone Card
-                    if (setting.phoneNumber?.isNotEmpty == true)
-                      _buildContactCard(
-                        icon: Icons.phone_in_talk_outlined,
-                        title: 'Phone',
-                        subtitle: setting.phoneNumber!,
-                        onTap: () async {
-                          final Uri launchUri = Uri(
-                            scheme: 'tel',
-                            path: setting.phoneNumber!.replaceAll(
-                              RegExp(r'[^\d+]'),
-                              '',
-                            ),
-                          );
-                          if (await canLaunchUrl(launchUri)) {
-                            await launchUrl(launchUri);
-                          } else {
-                            Get.snackbar(
-                              'Error',
-                              'Could not launch phone dialer',
-                            );
-                          }
-                        },
-                      ),
+                      // Phone Card
+                      if (setting.phoneNumber?.isNotEmpty == true)
+                        _buildContactCard(
+                          icon: Icons.phone_in_talk_outlined,
+                          title: 'Phone',
+                          subtitle: setting.phoneNumber!,
+                          onTap: () async {
+                            try {
+                              final Uri launchUri = Uri(
+                                scheme: 'tel',
+                                path: setting.phoneNumber!.replaceAll(
+                                  RegExp(r'[^\d+]'),
+                                  '',
+                                ),
+                              );
+                              await launchUrl(
+                                launchUri,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              Get.snackbar(
+                                'Error',
+                                'Could not launch phone dialer',
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            }
+                          },
+                        ),
 
-                    if (setting.phoneNumber?.isNotEmpty == true)
-                      const SizedBox(height: 8),
+                      if (setting.phoneNumber?.isNotEmpty == true)
+                        const SizedBox(height: 8),
 
-                    // Emergency Phone Card (separate from regular phone if available)
-                    if (setting.emergencyPhoneNumber?.isNotEmpty == true)
-                      _buildContactCard(
-                        icon: Icons.emergency_outlined,
-                        title: 'Emergency Contact',
-                        subtitle: setting.emergencyPhoneNumber!,
-                        isEmergency: true,
-                        onTap: () async {
-                          final Uri launchUri = Uri(
-                            scheme: 'tel',
-                            path: setting.emergencyPhoneNumber!.replaceAll(
-                              RegExp(r'[^\d+]'),
-                              '',
-                            ),
-                          );
-                          if (await canLaunchUrl(launchUri)) {
-                            await launchUrl(launchUri);
-                          } else {
-                            Get.snackbar(
-                              'Error',
-                              'Could not launch phone dialer',
-                            );
-                          }
-                        },
-                      ),
+                      // Emergency Phone Card (separate from regular phone if available)
+                      if (setting.emergencyPhoneNumber?.isNotEmpty == true)
+                        _buildContactCard(
+                          icon: Icons.emergency_outlined,
+                          title: 'Emergency Contact',
+                          subtitle: setting.emergencyPhoneNumber!,
+                          isEmergency: true,
+                          onTap: () async {
+                            try {
+                              final Uri launchUri = Uri(
+                                scheme: 'tel',
+                                path: setting.emergencyPhoneNumber!.replaceAll(
+                                  RegExp(r'[^\d+]'),
+                                  '',
+                                ),
+                              );
+                              await launchUrl(
+                                launchUri,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              Get.snackbar(
+                                'Error',
+                                'Could not launch phone dialer',
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            }
+                          },
+                        ),
 
-                    if (setting.emergencyPhoneNumber?.isNotEmpty == true)
-                      const SizedBox(height: 8),
+                      if (setting.emergencyPhoneNumber?.isNotEmpty == true)
+                        const SizedBox(height: 8),
 
-                    // Email Card
-                    if (setting.email?.isNotEmpty == true)
-                      _buildContactCard(
-                        icon: Icons.email_outlined,
-                        title: 'Email',
-                        subtitle: setting.email!,
-                        onTap: () async {
-                          final Uri launchUri = Uri(
-                            scheme: 'mailto',
-                            path: setting.email!,
-                            query: 'subject=Inquiry&body=Hello,',
-                          );
-                          if (await canLaunchUrl(launchUri)) {
-                            await launchUrl(launchUri);
-                          } else {
-                            Get.snackbar('Error', 'Could not open email app');
-                          }
-                        },
-                      ),
+                      // Email Card
+                      if (setting.email?.isNotEmpty == true)
+                        _buildContactCard(
+                          icon: Icons.email_outlined,
+                          title: 'Email',
+                          subtitle: setting.email!,
+                          onTap: () async {
+                            try {
+                              final Uri launchUri = Uri(
+                                scheme: 'mailto',
+                                path: setting.email!,
+                              
+                              );
+                              await launchUrl(
+                                launchUri,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              Get.snackbar(
+                                'Error',
+                                'Could not open email app',
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            }
+                          },
+                        ),
 
-                    if (setting.email?.isNotEmpty == true)
-                      const SizedBox(height: 8),
+                      if (setting.email?.isNotEmpty == true)
+                        const SizedBox(height: 8),
 
-                    // Address Card
-                    if (setting.address?.isNotEmpty == true)
-                      _buildContactCard(
-                        icon: Icons.location_on_outlined,
-                        title: 'Address',
-                        subtitle: _buildFullAddress(setting),
-                        onTap: setting.locationOnMap?.isNotEmpty == true
-                            ? () async {
-                                // Try to open location in maps
-                                final Uri mapsUri = Uri.parse(
-                                  'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(_buildFullAddress(setting))}',
-                                );
-                                if (await canLaunchUrl(mapsUri)) {
-                                  await launchUrl(mapsUri);
-                                } else {
-                                  Get.snackbar('Error', 'Could not open maps');
+                      // Address Card
+                      if (setting.address?.isNotEmpty == true)
+                        _buildContactCard(
+                          icon: Icons.location_on_outlined,
+                          title: 'Address',
+                          subtitle: _buildFullAddress(setting),
+                          onTap: setting.locationOnMap?.isNotEmpty == true
+                              ? () async {
+                                  try {
+                                    // Open the locationOnMap URL directly
+                                    final Uri mapsUri = Uri.parse(
+                                      setting.locationOnMap!,
+                                    );
+                                    await launchUrl(
+                                      mapsUri,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  } catch (e) {
+                                    Get.snackbar(
+                                      'Error',
+                                      'Could not open maps',
+                                      snackPosition: SnackPosition.BOTTOM,
+                                    );
+                                  }
                                 }
-                              }
-                            : () {
-                                Get.snackbar(
-                                  'Info',
-                                  'Maps integration coming soon',
-                                );
-                              },
-                      ),
+                              : null,
+                        ),
 
-                    if (setting.address?.isNotEmpty == true)
-                      const SizedBox(height: 8),
+                      if (setting.address?.isNotEmpty == true)
+                        const SizedBox(height: 8),
 
-                    // Working Hours Card - Now using real data from API
-                    _buildContactCard(
-                      icon: Icons.access_time_outlined,
-                      title: 'Working Hours',
-                      subtitle: _buildWorkingHours(setting),
-                      onTap: null, // Static info
-                    ),
-
-                    const Spacer(),
-
-                    // Emergency Contact fallback (using regular phone if no emergency number)
-                    if (setting.emergencyPhoneNumber?.isEmpty == true &&
-                        setting.phoneNumber?.isNotEmpty == true)
+                      // Working Hours Card - Now using real data from API
                       _buildContactCard(
-                        icon: Icons.emergency_outlined,
-                        title: 'Emergency Contact',
-                        subtitle: setting.phoneNumber!,
-                        isEmergency: true,
-                        onTap: () async {
-                          final Uri launchUri = Uri(
-                            scheme: 'tel',
-                            path: setting.phoneNumber!.replaceAll(
-                              RegExp(r'[^\d+]'),
-                              '',
-                            ),
-                          );
-                          if (await canLaunchUrl(launchUri)) {
-                            await launchUrl(launchUri);
-                          } else {
-                            Get.snackbar(
-                              'Error',
-                              'Could not launch phone dialer',
-                            );
-                          }
-                        },
+                        icon: Icons.access_time_outlined,
+                        title: 'Working Hours',
+                        subtitle: _buildWorkingHours(setting),
+                        onTap: null, // Static info
                       ),
 
-                    const SizedBox(height: 16),
-                  ],
+                      const SizedBox(height: 24),
+
+                      // Emergency Contact fallback (using regular phone if no emergency number)
+                      if (setting.emergencyPhoneNumber?.isEmpty == true &&
+                          setting.phoneNumber?.isNotEmpty == true)
+                        _buildContactCard(
+                          icon: Icons.emergency_outlined,
+                          title: 'Emergency Contact',
+                          subtitle: setting.phoneNumber!,
+                          isEmergency: true,
+                          onTap: () async {
+                            try {
+                              final Uri launchUri = Uri(
+                                scheme: 'tel',
+                                path: setting.phoneNumber!.replaceAll(
+                                  RegExp(r'[^\d+]'),
+                                  '',
+                                ),
+                              );
+                              await launchUrl(
+                                launchUri,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              Get.snackbar(
+                                'Error',
+                                'Could not launch phone dialer',
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            }
+                          },
+                        ),
+
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               );
             }),
