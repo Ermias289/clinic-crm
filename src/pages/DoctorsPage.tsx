@@ -1197,50 +1197,6 @@ const DoctorsPage = () => {
               </TabsContent>
 
               <TabsContent value="services" className="p-6 space-y-6 mt-0">
-                {/* Medical Services Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Medical Services *</h3>
-                  <div className="space-y-2">
-                    <Label>Select Services</Label>
-                    <Select onValueChange={handleCreateServiceSelect}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose services..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableCreateServices.map((service) => (
-                          <SelectItem key={service.id} value={service.id.toString()}>
-                            {service.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {createSelectedServiceIds.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Selected Services</Label>
-                      <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                        {createSelectedServiceIds.map((serviceId) => {
-                          const service = services.find(s => s.id === serviceId);
-                          return service ? (
-                            <Badge
-                              key={service.id}
-                              variant="secondary"
-                              className="px-3 py-1.5 flex items-center gap-2"
-                            >
-                              {service.name}
-                              <XCircle
-                                className="w-3 h-3 cursor-pointer hover:text-destructive"
-                                onClick={() => removeCreateService(service.id)}
-                              />
-                            </Badge>
-                          ) : null;
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
                 {/* Branches Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Branches *</h3>
@@ -1276,6 +1232,50 @@ const DoctorsPage = () => {
                               <XCircle
                                 className="w-3 h-3 cursor-pointer hover:text-destructive"
                                 onClick={() => removeCreateBranch(branch.id)}
+                              />
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Medical Services Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Medical Services *</h3>
+                  <div className="space-y-2">
+                    <Label>Select Services</Label>
+                    <Select onValueChange={handleCreateServiceSelect}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose services..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCreateServices.map((service) => (
+                          <SelectItem key={service.id} value={service.id.toString()}>
+                            {service.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {createSelectedServiceIds.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Selected Services</Label>
+                      <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
+                        {createSelectedServiceIds.map((serviceId) => {
+                          const service = services.find(s => s.id === serviceId);
+                          return service ? (
+                            <Badge
+                              key={service.id}
+                              variant="secondary"
+                              className="px-3 py-1.5 flex items-center gap-2"
+                            >
+                              {service.name}
+                              <XCircle
+                                className="w-3 h-3 cursor-pointer hover:text-destructive"
+                                onClick={() => removeCreateService(service.id)}
                               />
                             </Badge>
                           ) : null;
@@ -1810,50 +1810,6 @@ const DoctorsPage = () => {
             </TabsContent>
 
             <TabsContent value="services" className="p-6 space-y-6 mt-0">
-              {/* Medical Services Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Medical Services *</h3>
-                <div className="space-y-2">
-                  <Label>Select Services</Label>
-                  <Select onValueChange={handleEditServiceSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose services..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableEditServices.map((service) => (
-                        <SelectItem key={service.id} value={service.id.toString()}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {editSelectedServiceIds.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Selected Services</Label>
-                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                      {editSelectedServiceIds.map((serviceId) => {
-                        const service = services.find(s => s.id === serviceId);
-                        return service ? (
-                          <Badge
-                            key={service.id}
-                            variant="secondary"
-                            className="px-3 py-1.5 flex items-center gap-2"
-                          >
-                            {service.name}
-                            <XCircle
-                              className="w-3 h-3 cursor-pointer hover:text-destructive"
-                              onClick={() => removeEditService(service.id)}
-                            />
-                          </Badge>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Branches Section */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Branches *</h3>
@@ -1889,6 +1845,50 @@ const DoctorsPage = () => {
                             <XCircle
                               className="w-3 h-3 cursor-pointer hover:text-destructive"
                               onClick={() => removeEditBranch(branch.id)}
+                            />
+                          </Badge>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Medical Services Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Medical Services *</h3>
+                <div className="space-y-2">
+                  <Label>Select Services</Label>
+                  <Select onValueChange={handleEditServiceSelect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose services..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableEditServices.map((service) => (
+                        <SelectItem key={service.id} value={service.id.toString()}>
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {editSelectedServiceIds.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Selected Services</Label>
+                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
+                      {editSelectedServiceIds.map((serviceId) => {
+                        const service = services.find(s => s.id === serviceId);
+                        return service ? (
+                          <Badge
+                            key={service.id}
+                            variant="secondary"
+                            className="px-3 py-1.5 flex items-center gap-2"
+                          >
+                            {service.name}
+                            <XCircle
+                              className="w-3 h-3 cursor-pointer hover:text-destructive"
+                              onClick={() => removeEditService(service.id)}
                             />
                           </Badge>
                         ) : null;

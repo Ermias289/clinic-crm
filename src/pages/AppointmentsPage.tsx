@@ -552,7 +552,9 @@ const AppointmentsPage = () => {
       subtitle="Manage and track all patient appointments"
       actions={
         <div className="flex items-center gap-2">
-          <NotificationsButton userId={userId} />
+          <div className="hidden">
+            <NotificationsButton userId={userId} />
+          </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="dental" className="gap-2">

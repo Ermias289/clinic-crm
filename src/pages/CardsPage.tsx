@@ -473,7 +473,9 @@ const CardsPage = () => {
       subtitle="Manage patient membership cards"
       actions={
         <div className="flex items-center gap-2">
-          <NotificationsButton userId={userId} />
+          <div className="hidden">
+            <NotificationsButton userId={userId} />
+          </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button variant="dental">

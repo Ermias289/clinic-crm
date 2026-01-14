@@ -38,11 +38,24 @@ export const NotificationsButton = ({ userId }: NotificationsButtonProps) => {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
+  // Fetch notifications on mount and periodically
+  useEffect(() => {
+    if (userId) {
+      fetchNotifications();
+      // Refresh notifications every 30 seconds
+      const interval = setInterval(() => {
+        fetchNotifications();
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [userId]);
+
+  // Also fetch when dropdown opens
   useEffect(() => {
     if (userId && open) {
       fetchNotifications();
     }
-  }, [userId, open]);
+  }, [open]);
 
   const fetchNotifications = async () => {
     try {
