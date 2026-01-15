@@ -75,7 +75,6 @@ class DoctorSchedulePickerController extends GetxController {
     if (branches.length == 1 &&
         selectedBranch.value == null &&
         _allDoctors.isNotEmpty) {
-      print('DEBUG: Auto-selecting single branch after init complete');
       selectBranch(branches.first);
     }
   }
@@ -88,7 +87,7 @@ class DoctorSchedulePickerController extends GetxController {
 
       // Don't auto-select here - let loadDoctors handle it after doctors are loaded
     } catch (e) {
-      print('loadBranches error: $e');
+      // Error loading branches
     } finally {
       isLoadingBranches.value = false;
     }
@@ -98,29 +97,16 @@ class DoctorSchedulePickerController extends GetxController {
     errorMessage.value = null;
     isLoadingDoctors.value = true;
     try {
-      print('🔍 DoctorSchedulePickerController: Starting to load doctors...');
       final list = await _doctorRepository.getDoctors();
-      print('DEBUG: Loaded ${list.length} doctors from API');
 
       final activeDoctors = list.where((d) => d.isActive).toList();
-      print('DEBUG: ${activeDoctors.length} active doctors');
 
       _allDoctors.clear();
       _allDoctors.addAll(activeDoctors);
-      print('DEBUG: Stored ${_allDoctors.length} doctors in _allDoctors');
-
-      // Log each doctor's branches
-      for (final doctor in _allDoctors) {
-        final branchInfo =
-            doctor.branches?.map((b) => 'ID:${b.id} Name:${b.name}').toList() ??
-            ['No branches'];
-        print('DEBUG: Doctor ${doctor.fullName} - branches: $branchInfo');
-      }
 
       // IMPORTANT: After loading doctors, re-apply branch filter if branch is already selected
       final currentBranch = selectedBranch.value;
       if (currentBranch != null) {
-        print('DEBUG: Re-applying branch filter after loading doctors');
         // Temporarily clear the selected branch to force re-filtering
         selectedBranch.value = null;
         selectBranch(currentBranch);
@@ -128,7 +114,6 @@ class DoctorSchedulePickerController extends GetxController {
         // If no branch selected yet, doctors list remains empty
         // Requirement: "choose branch first then fetch doctors".
         doctors.clear();
-        print('DEBUG: No branch selected, keeping doctors list empty');
       }
 
       /*
@@ -148,38 +133,23 @@ class DoctorSchedulePickerController extends GetxController {
   }
 
   void selectBranch(BranchSettingModel branch) {
-    print('DEBUG: selectBranch called - Stack trace:');
-    print(StackTrace.current.toString().split('\n').take(5).join('\n'));
-
     if (selectedBranch.value?.id == branch.id) {
-      print('DEBUG: Branch already selected, skipping');
       return;
     }
 
     selectedBranch.value = branch;
-
-    print('DEBUG: Selected branch ID: ${branch.id}, Name: ${branch.name}');
-    print('DEBUG: Total doctors before filtering: ${_allDoctors.length}');
 
     // Filter doctors based on branch
     final filtered = <MedicalProfessional>[];
 
     for (int i = 0; i < _allDoctors.length; i++) {
       final doctor = _allDoctors[i];
-      print('DEBUG: Checking doctor ${i + 1}: ${doctor.fullName}');
-      print(
-        'DEBUG: Doctor branches: ${doctor.branches?.map((b) => 'ID:${b.id}').toList()}',
-      );
 
       if (doctor.branches == null || doctor.branches!.isEmpty) {
-        print('DEBUG: Doctor has no branches, including by default');
         filtered.add(doctor);
       } else {
         final hasMatchingBranch = doctor.branches!.any(
           (b) => b.id == branch.id,
-        );
-        print(
-          'DEBUG: Doctor has matching branch for ID ${branch.id}: $hasMatchingBranch',
         );
         if (hasMatchingBranch) {
           filtered.add(doctor);
@@ -187,20 +157,13 @@ class DoctorSchedulePickerController extends GetxController {
       }
     }
 
-    print('DEBUG: Filtered doctors count: ${filtered.length}');
-    print(
-      'DEBUG: Filtered doctor names: ${filtered.map((d) => d.fullName).toList()}',
-    );
-
     doctors.assignAll(filtered);
 
     // If only one doctor, auto-select
     if (doctors.length == 1) {
-      print('DEBUG: Auto-selecting single doctor: ${doctors.first.fullName}');
       selectDoctor(doctors.first);
     } else {
       selectedDoctor.value = null;
-      print('DEBUG: Multiple doctors available, user needs to select');
     }
 
     // Reset downstream selections
@@ -317,7 +280,6 @@ class DoctorSchedulePickerController extends GetxController {
     isLoadingAppointments.value = true;
 
     try {
-      print('🔍 Loading existing appointments for doctor $doctorId...');
       final appointments = await _appointmentRepository
           .getAppointmentsByDoctorId(doctorId);
 
@@ -346,17 +308,12 @@ class DoctorSchedulePickerController extends GetxController {
 
           return false; // Skip appointments we can't parse
         } catch (e) {
-          print('⚠️ Error parsing appointment date: $e');
           return false;
         }
       }).toList();
 
       existingAppointments.assignAll(futureAppointments);
-      print(
-        '✅ Loaded ${futureAppointments.length} future appointments for doctor $doctorId',
-      );
     } catch (e) {
-      print('❌ Error loading existing appointments: $e');
       // Don't show error to user - just continue with empty appointments list
       existingAppointments.clear();
     } finally {
@@ -372,11 +329,8 @@ class DoctorSchedulePickerController extends GetxController {
 
     final schedules = schedulesForSelectedDoctor;
     if (schedules.isEmpty) {
-      print('❌ No schedules found for selected doctor');
       return;
     }
-
-    print('🗓️ Processing ${schedules.length} schedules for date computation');
 
     final now = DateTime.now();
     final start = _dateOnly(now);
@@ -400,9 +354,6 @@ class DoctorSchedulePickerController extends GetxController {
 
       // If dayOfWeek is provided, only include matching days.
       final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
-      print(
-        'DEBUG: Processing schedule - Day: ${schedule.dayOfWeek}, Start: ${schedule.startTime}, End: ${schedule.endTime}, Parsed DOW: $targetDow',
-      );
 
       for (
         var day = clampedStart;
@@ -421,11 +372,6 @@ class DoctorSchedulePickerController extends GetxController {
 
     final sorted = dates.toList()..sort((a, b) => a.compareTo(b));
     availableDates.assignAll(sorted);
-
-    print('🗓️ Final available dates: ${availableDates.length}');
-    for (final date in availableDates.take(5)) {
-      print('  - ${date.toIso8601String().split('T')[0]}');
-    }
 
     // Auto-select first available date for convenience.
     if (availableDates.isNotEmpty) {
@@ -511,7 +457,7 @@ class DoctorSchedulePickerController extends GetxController {
           bookedSlots.add(bookedTime);
         }
       } catch (e) {
-        print('⚠️ Error parsing appointment time for filtering: $e');
+        // Error parsing appointment time
       }
     }
 
@@ -522,18 +468,7 @@ class DoctorSchedulePickerController extends GetxController {
       );
     }).toList();
 
-    print(
-      '📊 Date: ${date.toIso8601String().split('T')[0]} - Total slots: ${allSlots.length}, Booked: ${bookedSlots.length}, Available: ${availableSlots.length}',
-    );
-
     return availableSlots;
-  }
-
-  /// Helper to format TimeOfDay for debugging
-  String _formatTimeOfDay(TimeOfDay time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 
   List<TimeOfDay> _buildTimeSlotsForScheduleOnDate(
@@ -544,9 +479,6 @@ class DoctorSchedulePickerController extends GetxController {
     final to = _parseTimeOfDay(schedule.endTime);
 
     if (from == null || to == null) {
-      print(
-        '❌ Failed to parse start/end times: ${schedule.startTime} - ${schedule.endTime}',
-      );
       return const [];
     }
 
@@ -555,7 +487,6 @@ class DoctorSchedulePickerController extends GetxController {
 
     // If end is not after start, treat as invalid.
     if (toMin <= fromMin) {
-      print('❌ End time is not after start time: $fromMin - $toMin');
       return const [];
     }
 

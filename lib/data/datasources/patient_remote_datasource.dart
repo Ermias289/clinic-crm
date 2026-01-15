@@ -21,7 +21,6 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.post('/Patient', request.toJson());
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to create patient'} - ${response.bodyString}',
         );
@@ -39,7 +38,6 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient/$id');
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to get patient'} - ${response.bodyString}',
         );
@@ -57,7 +55,6 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient/byUserId/$userId');
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to get patient by user ID'} - ${response.bodyString}',
         );
@@ -75,7 +72,6 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient');
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to get patients'} - ${response.bodyString}',
         );
@@ -97,7 +93,6 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.put('/Patient/$id', request.toJson());
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to update patient'} - ${response.bodyString}',
         );
@@ -115,7 +110,6 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.delete('/Patient/$id');
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to delete patient'} - ${response.bodyString}',
         );

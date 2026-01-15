@@ -30,15 +30,9 @@ class AppointmentController extends GetxController {
     try {
       final eventService = Get.find<AppointmentEventService>();
       ever(eventService.refreshTrigger, (_) {
-        print(
-          '📅 AppointmentController: Received refresh trigger, refreshing appointments',
-        );
         refreshAppointments();
       });
     } catch (e) {
-      print(
-        '⚠️ AppointmentController: Could not find AppointmentEventService: $e',
-      );
     }
 
     // Periodic refresh disabled to improve performance
@@ -64,11 +58,6 @@ class AppointmentController extends GetxController {
     final userId = _box.read('userId');
     final token = _box.read('token');
     final user = _box.read('user');
-
-    print('🔍 Debug User Session:');
-    print('  - userId: $userId (${userId.runtimeType})');
-    print('  - token: ${token != null ? 'Present' : 'Missing'}');
-    print('  - user: $user');
   }
 
   Future<void> fetchUserCard() async {
@@ -90,7 +79,6 @@ class AppointmentController extends GetxController {
         return;
       }
 
-      print('🌐 Fetching user card for appointments view...');
       final apiClient = Get.find<ApiClient>();
       final response = await apiClient.get('/Card/cardByUserId/$userId');
 
@@ -98,15 +86,10 @@ class AppointmentController extends GetxController {
         userCard.value = CardModel.fromJson(
           response.body as Map<String, dynamic>,
         );
-        print(
-          '✅ Card loaded in AppointmentController: ${userCard.value?.cardNumber}',
-        );
       } else {
         userCard.value = null;
-        print('⚠️ No card found for user in AppointmentController');
       }
     } catch (e) {
-      print('❌ Error fetching card in AppointmentController: $e');
       userCard.value = null;
     }
   }
@@ -140,12 +123,10 @@ class AppointmentController extends GetxController {
         return;
       }
 
-      print('🔍 Fetching appointments for userId: $userId');
       final result = await repository.getAppointments(userId);
       appointments.assignAll(result);
     } catch (e) {
       error.value = e.toString();
-      print('❌ Appointment fetch error: $e');
       Get.snackbar('Error', 'Failed to fetch appointments: ${e.toString()}');
     } finally {
       isLoading.value = false;
@@ -164,7 +145,6 @@ class AppointmentController extends GetxController {
 
   /// Force refresh appointments (useful for testing or manual refresh)
   void forceRefresh() {
-    print('🔄 AppointmentController: Force refresh triggered');
     refreshAppointments();
   }
 }

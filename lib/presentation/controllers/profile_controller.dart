@@ -84,40 +84,6 @@ class ProfileController extends GetxController {
       final userId = box.read('userId');
 
       if (userId != null) {
-        // TEMPORARY: Mock user data for testing without backend
-        // TODO: Remove this before production
-        if (userId == 1) {
-          await Future.delayed(
-            const Duration(milliseconds: 300),
-          ); // Simulate API call
-
-          currentUser.value = UserModel(
-            id: 1,
-            username: 'testuser',
-            fullname: 'Test User',
-            fName: 'Test',
-            mName: 'Middle',
-            lName: 'User',
-            email: 'test@example.com',
-            phoneNumber: '+1234567890',
-            roleName: 'User',
-            userRoleId: 2,
-          );
-
-          // Populate form controllers
-          usernameController.text = 'testuser';
-          fullnameController.text = 'Test User';
-          fNameController.text = 'Test';
-          mNameController.text = 'Middle';
-          lNameController.text = 'User';
-          emailController.text = 'test@example.com';
-          phoneController.text = '+1234567890';
-
-          isLoading.value = false;
-          return;
-        }
-        // END TEMPORARY
-
         final user = await userDataSource.getUserById(userId);
         currentUser.value = user;
 
@@ -183,7 +149,6 @@ class ProfileController extends GetxController {
         colorText: Colors.green.shade900,
       );
     } catch (e) {
-      print('💥 Profile update error: $e');
       Get.snackbar(
         'Error',
         'Failed to update profile: ${e.toString()}',
@@ -244,7 +209,6 @@ class ProfileController extends GetxController {
         colorText: Colors.green.shade900,
       );
     } catch (e) {
-      print('💥 Password change error: $e');
       Get.snackbar(
         'Error',
         'Failed to change password: ${e.toString()}',

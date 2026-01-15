@@ -17,23 +17,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<LoginResponseModel> login(LoginRequestModel request) async {
-    print('🔐 Attempting login for: ${request.phoneOrEmail}');
-    print('🌐 API endpoint: ${apiClient.baseUrl}/Auth/login');
 
     try {
       final response = await apiClient.post('/Auth/login', request.toJson());
-      print('📡 Response status: ${response.statusCode}');
-      print('📡 Response hasError: ${response.hasError}');
 
       if (response.hasError) {
-        print('❌ Login error: ${response.statusText}');
         throw Exception(response.statusText ?? 'Login failed');
       }
 
-      print('✅ Login successful');
       return LoginResponseModel.fromJson(response.body);
     } catch (e) {
-      print('💥 Login exception: $e');
       rethrow;
     }
   }
@@ -42,7 +35,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<RegisterResponseModel> register(RegisterRequestModel request) async {
     try {
       final response = await apiClient.post('/Auth/register', request.toJson());
-      print('DEBUG REG: Status ${response.statusCode}, Body: ${response.body}');
 
       if (response.hasError) {
         String errorMsg = 'Registration failed';
@@ -71,7 +63,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
       return response.body['id'];
     } catch (e) {
-      print('Error fetching role: $e');
       return 5; // Fallback
     }
   }

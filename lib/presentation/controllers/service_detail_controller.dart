@@ -36,7 +36,6 @@ class ServiceDetailController extends GetxController {
       doctors.value = allDoctors.where((doctor) => doctor.isActive).toList();
     } catch (e) {
       errorMessage.value = 'Failed to load doctors: ${e.toString()}';
-      print('Error loading doctors: $e');
     } finally {
       isLoadingDoctors.value = false;
     }

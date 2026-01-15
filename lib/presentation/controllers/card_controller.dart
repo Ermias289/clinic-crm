@@ -129,7 +129,6 @@ class CardController extends GetxController {
         existingCard.value = null;
         hasPatientId.value = false;
       }
-      print('Error checking existing card: $e');
     } finally {
       // Check if controller was disposed before setting loading state
       if (!_isDisposed) {
@@ -331,7 +330,6 @@ class CardController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
       );
-      print('❌ Submit Reactivation Payment Error: $e');
     } finally {
       isLoading.value = false;
     }
@@ -604,7 +602,6 @@ class CardController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
       );
-      print('❌ Submit Card Request Error: $e');
     } finally {
       isLoading.value = false;
     }

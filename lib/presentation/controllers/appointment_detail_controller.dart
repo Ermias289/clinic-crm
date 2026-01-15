@@ -33,7 +33,6 @@ class AppointmentDetailController extends GetxController {
         Get.back(result: true);
       }
     } catch (e) {
-      print('Error cancelling appointment: $e');
       Get.snackbar(
         'Error',
         'Failed to cancel appointment. Please try again.',

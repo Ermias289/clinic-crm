@@ -48,8 +48,6 @@ class OTPVerificationController extends GetxController {
       );
       await apiClient.get('/OTP/resendOTP?recipientEmail=$encodedEmail');
     } catch (e) {
-      print("Failed to send initial OTP: $e");
-      // Don't block UI, maybe it was sent by register logic
     }
   }
 
@@ -112,7 +110,6 @@ class OTPVerificationController extends GetxController {
         Get.offAllNamed(Routes.LOGIN);
       }
     } catch (e) {
-      print('DEBUG: Exception during OTP verification: $e');
       Get.snackbar('Error', 'An error occurred: $e');
     } finally {
       isLoading.value = false;

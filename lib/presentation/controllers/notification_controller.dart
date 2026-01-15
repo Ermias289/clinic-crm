@@ -48,13 +48,11 @@ class NotificationController extends GetxController {
         return;
       }
 
-      print('🔔 Fetching notifications for userId: $userId');
       final result = await repository.getUserNotifications(userId);
       notifications.assignAll(result);
       _updateUnreadCount();
     } catch (e) {
       error.value = e.toString();
-      print('❌ Notification fetch error: $e');
       Get.snackbar('Error', 'Failed to fetch notifications: ${e.toString()}');
     } finally {
       isLoading.value = false;
@@ -94,7 +92,6 @@ class NotificationController extends GetxController {
         _updateUnreadCount();
       }
     } catch (e) {
-      print('❌ Error marking notification as read: $e');
       Get.snackbar('Error', 'Failed to mark notification as read');
     }
   }
@@ -130,7 +127,6 @@ class NotificationController extends GetxController {
         Get.snackbar('Success', 'All notifications marked as read');
       }
     } catch (e) {
-      print('❌ Error marking all notifications as read: $e');
       Get.snackbar('Error', 'Failed to mark all notifications as read');
     }
   }

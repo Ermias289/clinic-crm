@@ -9,11 +9,8 @@ class AuthInterceptor {
       final token = box.read('token');
       if (token != null) {
       request.headers['Authorization'] = 'Bearer $token';
-        print('🔑 Auth token added to request: ${request.url}');
       } else {
-        print('⚠️ No auth token found for request: ${request.url}');
       }
-      print('🚀 Request URL: ${request.url}');
       return request;
     });
 

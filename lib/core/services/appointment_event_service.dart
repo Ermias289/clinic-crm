@@ -17,17 +17,11 @@ class AppointmentEventService extends GetxService {
 
   /// Notify that a new appointment was created
   void notifyAppointmentCreated() {
-    print(
-      '📅 AppointmentEventService: New appointment created, triggering refresh',
-    );
     triggerAppointmentRefresh();
   }
 
   /// Notify that appointments data might be stale
   void notifyAppointmentsStale() {
-    print(
-      '📅 AppointmentEventService: Appointments data is stale, triggering refresh',
-    );
     triggerAppointmentRefresh();
   }
 }

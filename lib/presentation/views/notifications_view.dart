@@ -314,7 +314,6 @@ class NotificationsView extends GetView<NotificationController> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print('🔄 Manual refresh triggered');
           controller.refreshNotifications();
         },
         backgroundColor: AppColors.primaryBlue,

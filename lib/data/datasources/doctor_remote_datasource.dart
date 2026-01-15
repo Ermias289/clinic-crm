@@ -1,5 +1,4 @@
 import '../../core/api_client.dart';
-import '../../core/network_helper.dart';
 import '../../domain/models/medical_professional_model.dart';
 
 /// Remote datasource for:
@@ -29,23 +28,15 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
   @override
   Future<List<MedicalProfessional>> getDoctors() async {
     try {
-      print('🔍 Fetching doctors from API...');
       final response = await apiClient.get('/MedicalProfessional');
 
-      print('📊 Doctor API Response Status: ${response.statusCode}');
-      print('📊 Doctor API Response Body Type: ${response.body.runtimeType}');
-
       if (response.hasError) {
-        print('❌ Doctor API Error: ${response.statusText}');
         throw Exception(response.statusText ?? 'Failed to fetch doctors');
       }
 
       final body = response.body;
-      print('📊 Processing doctor response body...');
 
       if (body is List) {
-        print('📊 Found ${body.length} doctors in response');
-
         final doctors = <MedicalProfessional>[];
         for (int i = 0; i < body.length; i++) {
           try {
@@ -55,19 +46,12 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
                 Map<String, dynamic>.from(doctorJson as Map),
               );
               doctors.add(doctor);
-              print(
-                '✅ Parsed doctor ${i + 1}: ${doctor.fullName} (ID: ${doctor.id})',
-              );
-            } else {
-              print('⚠️ Skipping null doctor at index $i');
             }
           } catch (e) {
-            print('❌ Error parsing doctor at index $i: $e');
             // Continue processing other doctors
           }
         }
 
-        print('✅ Successfully parsed ${doctors.length} doctors');
         return doctors;
       }
 
@@ -75,7 +59,6 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       // e.g. { "data": [...] }
       if (body is Map && body['data'] is List) {
         final List data = body['data'] as List;
-        print('📊 Found wrapped data with ${data.length} doctors');
 
         final doctors = <MedicalProfessional>[];
         for (int i = 0; i < data.length; i++) {
@@ -86,26 +69,17 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
                 Map<String, dynamic>.from(doctorJson as Map),
               );
               doctors.add(doctor);
-              print(
-                '✅ Parsed wrapped doctor ${i + 1}: ${doctor.fullName} (ID: ${doctor.id})',
-              );
-            } else {
-              print('⚠️ Skipping null doctor at index $i in wrapped data');
             }
           } catch (e) {
-            print('❌ Error parsing wrapped doctor at index $i: $e');
             // Continue processing other doctors
           }
         }
 
-        print('✅ Successfully parsed ${doctors.length} wrapped doctors');
         return doctors;
       }
 
-      print('❌ Unexpected response format for doctors: ${body.runtimeType}');
       throw Exception('Unexpected response format for doctors');
     } catch (e) {
-      print('❌ Exception in getDoctors: $e');
       throw Exception('Error fetching doctors: $e');
     }
   }

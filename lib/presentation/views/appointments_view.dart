@@ -446,12 +446,6 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                             .dentistryService
                                                             ?.name ??
                                                         'Service';
-                                                    print(
-                                                      '🎯 Displaying service name: "$serviceName"',
-                                                    );
-                                                    print(
-                                                      '🎯 dentistryService object: ${appointment.dentistryService}',
-                                                    );
                                                     return Text(
                                                       serviceName,
                                                       style: AppTextStyles

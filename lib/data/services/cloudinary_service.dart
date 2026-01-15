@@ -24,11 +24,8 @@ class CloudinaryService {
       return response.secureUrl;
     } on CloudinaryException catch (e) {
       // Handle Cloudinary specific exceptions
-      print(e.message);
-      print(e.request);
       return null;
     } catch (e) {
-      print('Error uploading image: $e');
       return null;
     }
   }

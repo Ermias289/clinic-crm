@@ -22,32 +22,6 @@ class LoginController extends GetxController {
 
     isLoading.value = true;
 
-    // TEMPORARY: Mock login for testing without backend
-    // TODO: Remove this before production
-    if (emailController.text == 'aaa' && passwordController.text == 'aaa') {
-      await Future.delayed(
-        const Duration(milliseconds: 500),
-      ); // Simulate API call
-
-      // Mock user data
-      await box.write('token', 'mock_token_12345');
-      await box.write('user', 'Test User');
-      await box.write('user', 'Test User');
-      await box.write('userId', 3); // Matches SeedData.cs User ID
-
-      // Mark login time for services reload detection
-      await box.write('last_login_time', DateTime.now().millisecondsSinceEpoch);
-
-      // Small delay to ensure token is properly saved
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      isLoading.value = false;
-      // Redirect to dashboard and set services tab as active
-      Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
-      return;
-    }
-    // END TEMPORARY
-
     try {
       final request = LoginRequestModel(
         phoneOrEmail: emailController.text,

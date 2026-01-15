@@ -23,7 +23,6 @@ class DashboardCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: () {
-          print('DEBUG: DashboardCard tapped: $title'); // Debug print
           onTap();
         },
         borderRadius: BorderRadius.circular(16),

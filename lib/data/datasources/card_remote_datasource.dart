@@ -32,7 +32,6 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       final response = await apiClient.get('/CardSetting');
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to fetch card settings'} - ${response.bodyString}',
         );
@@ -51,7 +50,6 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       final response = await apiClient.post('/Card', request.toJson());
 
       if (response.hasError) {
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to request card'} - ${response.bodyString}',
         );
@@ -74,7 +72,6 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
         if (response.statusCode == 404) {
           return [];
         }
-        print('❌ Error Body: ${response.bodyString}');
         throw Exception(
           '${response.statusText ?? 'Failed to fetch payments'} - ${response.bodyString}',
         );

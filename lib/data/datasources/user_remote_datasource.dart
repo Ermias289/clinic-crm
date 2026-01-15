@@ -28,15 +28,10 @@ class UserRemoteDataSource {
   }
 
   Future<UserModel> updateUser(int id, Map<String, dynamic> data) async {
-    print('🔄 Updating user $id with data: $data');
     final response = await client.put('/User/$id', data);
     
-    print('📡 Update response status: ${response.statusCode}');
-    print('📡 Update response hasError: ${response.hasError}');
     
     if (response.hasError) {
-      print('❌ Update error: ${response.statusText}');
-      print('❌ Update error body: ${response.body}');
       throw Exception(response.statusText ?? 'Update failed');
     }
 

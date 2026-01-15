@@ -25,7 +25,6 @@ class PaymentController extends GetxController {
   void _clearCachedPatientData() {
     // Remove any cached patient ID to ensure we fetch fresh data
     _box.remove('patientId');
-    print('🧹 Cleared cached patient data');
   }
 
   Future<void> fetchPayments() async {
@@ -41,14 +40,11 @@ class PaymentController extends GetxController {
         return;
       }
 
-      print('🔍 Fetching payments for patient ID: $patientId');
       final paymentList = await repository.getPaymentsByPatientId(patientId);
 
       payments.value = paymentList;
-      print('✅ Successfully fetched ${paymentList.length} payments');
     } catch (e) {
       error.value = 'Failed to load payment history: ${e.toString()}';
-      print('❌ Error fetching payments: $e');
     } finally {
       isLoading.value = false;
     }
@@ -64,7 +60,6 @@ class PaymentController extends GetxController {
       // Don't use cached patientId as it might belong to a different user
       final userIdRaw = _box.read('userId');
       if (userIdRaw == null) {
-        print('❌ No userId found in storage');
         return null;
       }
 
@@ -75,19 +70,15 @@ class PaymentController extends GetxController {
         try {
           userId = int.parse(userIdRaw);
         } catch (e) {
-          print('❌ Error parsing userId: $e');
           return null;
         }
       } else {
-        print('❌ Invalid userId type: ${userIdRaw.runtimeType}');
         return null;
       }
 
-      print('🔍 Getting patient ID for current user: $userId');
 
       // Try the new Patient/byUserId endpoint first (more direct)
       if (!Get.isRegistered<ApiClient>()) {
-        print('❌ ApiClient not registered');
         return null;
       }
 
@@ -104,24 +95,18 @@ class PaymentController extends GetxController {
           final patientId = patientData['id'];
 
           if (patientId != null) {
-            print(
-              '✅ Found patient ID $patientId for user $userId via Patient endpoint',
-            );
             return patientId;
           }
         }
       } catch (e) {
-        print('⚠️ Patient endpoint failed, trying Card endpoint: $e');
       }
 
       // Fallback to card endpoint if patient endpoint fails
       final response = await apiClient.get('/Card/cardByUserId/$userId');
 
       if (response.hasError) {
-        print('❌ Error fetching card for user $userId: ${response.statusText}');
         // If user doesn't have a card/patient record, return null
         if (response.statusCode == 404) {
-          print('ℹ️ User $userId does not have a patient record');
           return null;
         }
         return null;
@@ -131,16 +116,11 @@ class PaymentController extends GetxController {
       final patientId = cardData['patient']?['id'];
 
       if (patientId != null) {
-        print(
-          '✅ Found patient ID $patientId for user $userId via Card endpoint',
-        );
         return patientId;
       }
 
-      print('❌ No patient ID found in card data for user $userId');
       return null;
     } catch (e) {
-      print('❌ Error getting patient ID: $e');
       return null;
     }
   }

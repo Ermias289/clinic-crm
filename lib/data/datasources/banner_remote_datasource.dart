@@ -13,7 +13,6 @@ class BannerRemoteDataSourceImpl implements BannerRemoteDataSource {
   @override
   Future<List<BannerModel>> getAllActiveBanners() async {
     try {
-      print('🎯 Fetching active banners from API');
       final response = await apiClient.get('/Banner');
 
       if (response.statusCode == 200) {
@@ -23,14 +22,11 @@ class BannerRemoteDataSourceImpl implements BannerRemoteDataSource {
             .where((banner) => banner.isActive) // Filter only active banners
             .toList();
 
-        print('✅ Successfully fetched ${banners.length} active banners');
         return banners;
       } else {
-        print('❌ Failed to fetch banners: ${response.statusCode}');
         throw Exception('Failed to fetch banners: ${response.statusCode}');
       }
     } catch (e) {
-      print('💥 Banner fetch exception: $e');
       throw Exception('Failed to fetch banners: $e');
     }
   }

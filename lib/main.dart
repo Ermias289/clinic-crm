@@ -30,11 +30,6 @@ void main() async {
   final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
   Get.put(MedicalServiceController(medicalRepo, cardRepo), permanent: true);
   
-  
-  // Debug logging
-  print('📱 App starting...');
-  print('🔧 API_BASE_URL: ${dotenv.env['API_BASE_URL']}');
-  
   runApp(const MyApp());
 }
 

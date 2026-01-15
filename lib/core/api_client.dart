@@ -12,14 +12,9 @@ class ApiClient extends GetConnect {
     httpClient.baseUrl = baseUrl;
     httpClient.timeout = const Duration(seconds: 30);
 
-    // Debug logging
-    print('🌐 API Client initialized with baseUrl: $baseUrl');
-
-
     httpClient.addResponseModifier((request, response) {
-      print('🛬 Response: ${response.statusCode} ${response.bodyString}');
       if (response.hasError) {
-        print('❌ Error: ${response.statusText}');
+        // Error occurred
       }
       return response;
     });
