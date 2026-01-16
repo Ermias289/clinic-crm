@@ -55,9 +55,6 @@ class AppointmentController extends GetxController {
   // }
 
   void debugUserSession() {
-    final userId = _box.read('userId');
-    final token = _box.read('token');
-    final user = _box.read('user');
   }
 
   Future<void> fetchUserCard() async {

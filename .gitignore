@@ -30,3 +30,11 @@ build/
 
 # API Reference
 api_reference.json
+
+# Keystore files (NEVER commit these!)
+*.jks
+*.keystore
+android/key.properties
+
+# Environment files with sensitive data
+.env
