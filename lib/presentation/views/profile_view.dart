@@ -50,7 +50,11 @@ class ProfileView extends GetView<ProfileController> {
           backgroundColor: AppColors.backgroundLight,
           body:
               controller.isLoading.value && controller.currentUser.value == null
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.fountainBlue,
+                  ),
+                )
               : Column(
                   children: [
                     // Header - Fixed at top

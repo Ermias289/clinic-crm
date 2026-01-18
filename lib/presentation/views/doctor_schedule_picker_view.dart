@@ -1243,7 +1243,10 @@ class _LoadingCard extends StatelessWidget {
           const SizedBox(
             width: 18,
             height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2.5),
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: AppColors.fountainBlue,
+            ),
           ),
           const SizedBox(width: 12),
           Text(label, style: AppTextStyles.bodyMedium),

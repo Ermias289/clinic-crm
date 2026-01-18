@@ -25,7 +25,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
       body: Obx(() {
         if (controller.isLoading.value) {
           return const Center(
-            child: CircularProgressIndicator(color: AppColors.primaryBlue),
+            child: CircularProgressIndicator(color: AppColors.fountainBlue),
           );
         }
 
@@ -317,7 +317,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
             ],
 
             // Payment Proof Image (exclude AUTO-PREPARE status)
-            if (payment.paymentProof.isNotEmpty && 
+            if (payment.paymentProof.isNotEmpty &&
                 payment.status.toLowerCase() != 'auto-prepared') ...[
               const SizedBox(height: 12),
               Text(
@@ -351,10 +351,10 @@ class PaymentHistoryView extends GetView<PaymentController> {
                           color: AppColors.backgroundLight,
                           child: Center(
                             child: CircularProgressIndicator(
-                              color: AppColors.primaryBlue,
+                              color: AppColors.fountainBlue,
                               value: loadingProgress.expectedTotalBytes != null
                                   ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
+                                        loadingProgress.expectedTotalBytes!
                                   : null,
                             ),
                           ),
@@ -504,10 +504,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
                           ),
                           IconButton(
                             onPressed: () => Get.back(),
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                            ),
+                            icon: const Icon(Icons.close, color: Colors.white),
                           ),
                         ],
                       ),
@@ -533,10 +530,11 @@ class PaymentHistoryView extends GetView<PaymentController> {
                               color: AppColors.backgroundLight,
                               child: Center(
                                 child: CircularProgressIndicator(
-                                  color: AppColors.primaryBlue,
-                                  value: loadingProgress.expectedTotalBytes != null
+                                  color: AppColors.fountainBlue,
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
                                       ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
+                                            loadingProgress.expectedTotalBytes!
                                       : null,
                                 ),
                               ),

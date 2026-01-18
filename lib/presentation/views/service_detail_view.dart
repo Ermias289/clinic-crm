@@ -308,7 +308,7 @@ class ServiceDetailView extends StatelessWidget {
     return SizedBox(
       height: 120,
       child: const Center(
-        child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        child: CircularProgressIndicator(color: AppColors.fountainBlue),
       ),
     );
   }

@@ -184,7 +184,7 @@ class _ServicesListView extends StatelessWidget {
               if (controller.isLoading.value) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    color: AppColors.primaryBlue,
+                    color: AppColors.fountainBlue,
                   ),
                 );
               }

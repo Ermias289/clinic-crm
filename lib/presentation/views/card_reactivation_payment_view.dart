@@ -278,7 +278,9 @@ class CardReactivationPaymentView extends StatelessWidget {
                         Obx(() {
                           if (controller.isBankLoading.value) {
                             return const Center(
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(
+                                color: AppColors.fountainBlue,
+                              ),
                             );
                           }
 

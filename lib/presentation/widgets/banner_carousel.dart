@@ -100,7 +100,7 @@ class BannerCarousel extends StatelessWidget {
                               ),
                               child: const Center(
                                 child: CircularProgressIndicator(
-                                  color: AppColors.primaryBlue,
+                                  color: AppColors.fountainBlue,
                                 ),
                               ),
                             );

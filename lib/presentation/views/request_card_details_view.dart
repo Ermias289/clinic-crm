@@ -281,7 +281,9 @@ class RequestCardDetailsView extends GetView<CardController> {
         body: SafeArea(
           child: Obx(() {
             if (controller.isCheckingCard.value) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.fountainBlue),
+              );
             }
 
             return Column(

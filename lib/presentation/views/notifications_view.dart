@@ -51,7 +51,7 @@ class NotificationsView extends GetView<NotificationController> {
           child: Obx(() {
             if (controller.isLoading.value) {
               return const Center(
-                child: CircularProgressIndicator(color: AppColors.primaryBlue),
+                child: CircularProgressIndicator(color: AppColors.fountainBlue),
               );
             }
 

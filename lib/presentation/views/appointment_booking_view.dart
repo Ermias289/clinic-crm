@@ -83,7 +83,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         setState(() {
           userCard = CardModel.fromJson(response.body as Map<String, dynamic>);
         });
-      } else {;
+      } else {
+        ;
         setState(() {
           userCard = null;
         });
@@ -291,7 +292,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       // Show loading
       Get.dialog(
         const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+          child: CircularProgressIndicator(color: AppColors.fountainBlue),
         ),
         barrierDismissible: false,
       );
@@ -355,15 +356,13 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       // Notify that a new appointment was created
       try {
         AppointmentEventService.to.notifyAppointmentCreated();
-      } catch (e) {
-      }
+      } catch (e) {}
 
       // Refresh appointments list before navigating back
       try {
         final appointmentController = Get.find<AppointmentController>();
         await appointmentController.refreshAppointments();
-      } catch (e) {
-      }
+      } catch (e) {}
 
       // Navigate back to dashboard
       Get.until((route) => route.isFirst);
@@ -650,7 +649,9 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
             ),
           ],
         ),
-        child: const Center(child: CircularProgressIndicator()),
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColors.fountainBlue),
+        ),
       );
     }
 

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import '../../core/theme/app_colors.dart';
 import '../../data/models/card_setting_model.dart';
 import '../../data/models/card_model.dart';
 import '../../data/models/request_card_model.dart';
@@ -13,7 +14,6 @@ import '../../data/repositories/card_repository_impl.dart';
 import '../../data/repositories/patient_repository_impl.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';
 import '../../config/app_routes.dart';
-import '../../core/theme/app_colors.dart';
 import 'package:get_storage/get_storage.dart';
 import 'profile_controller.dart';
 

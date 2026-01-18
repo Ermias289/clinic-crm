@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import '../../core/theme/app_colors.dart';
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/models/user_model.dart';
 
@@ -266,7 +267,10 @@ class ProfileController extends GetxController {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.fountainBlue,
+                      ),
                     )
                   : const Text('Change Password'),
             ),

@@ -7,19 +7,18 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      
+
       // Color Scheme
       colorScheme: ColorScheme.light(
         primary: AppColors.primaryBlue,
-        secondary: AppColors.accentBlue,
+        secondary: AppColors.fountainBlue, // Use fountain blue for secondary
         surface: AppColors.cardBackground,
-        background: AppColors.backgroundLight,
         error: Colors.red.shade700,
       ),
-      
+
       // Scaffold
       scaffoldBackgroundColor: AppColors.backgroundLight,
-      
+
       // AppBar
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.primaryBlue,
@@ -32,17 +31,15 @@ class AppTheme {
           color: Colors.white,
         ),
       ),
-      
+
       // Card
       cardTheme: CardThemeData(
         color: AppColors.cardBackground,
         elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        shadowColor: Colors.black.withOpacity(0.08),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shadowColor: Colors.black.withValues(alpha: 0.08),
       ),
-      
+
       // Elevated Button
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -56,17 +53,15 @@ class AppTheme {
           textStyle: AppTextStyles.button,
         ),
       ),
-      
+
       // Text Button
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primaryBlue,
-          textStyle: AppTextStyles.button.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: AppTextStyles.button.copyWith(fontWeight: FontWeight.w500),
         ),
       ),
-      
+
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -81,17 +76,11 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: AppColors.primaryBlue,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: Colors.red.shade700,
-            width: 1,
-          ),
+          borderSide: BorderSide(color: Colors.red.shade700, width: 1),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -100,17 +89,12 @@ class AppTheme {
         labelStyle: AppTextStyles.bodyMedium.copyWith(
           color: AppColors.textSecondary,
         ),
-        hintStyle: AppTextStyles.bodyMedium.copyWith(
-          color: AppColors.textHint,
-        ),
+        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
       ),
-      
+
       // Icon Theme
-      iconTheme: const IconThemeData(
-        color: AppColors.primaryBlue,
-        size: 24,
-      ),
-      
+      iconTheme: const IconThemeData(color: AppColors.primaryBlue, size: 24),
+
       // Text Theme
       textTheme: const TextTheme(
         displayLarge: AppTextStyles.h1,

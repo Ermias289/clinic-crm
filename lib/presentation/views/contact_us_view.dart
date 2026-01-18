@@ -141,7 +141,7 @@ class ContactUsView extends GetView<ContactUsController> {
               if (controller.isLoading.value) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    color: AppColors.primaryBlue,
+                    color: AppColors.fountainBlue,
                   ),
                 );
               }
@@ -415,7 +415,7 @@ class ContactUsView extends GetView<ContactUsController> {
                       if (loadingProgress == null) return child;
                       return Center(
                         child: CircularProgressIndicator(
-                          color: AppColors.primaryBlue,
+                          color: AppColors.fountainBlue,
                           strokeWidth: 2,
                         ),
                       );

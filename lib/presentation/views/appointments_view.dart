@@ -188,7 +188,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Lucid Dental Clinic',
+                                          'Ahadu Dental Clinic',
                                           style: AppTextStyles.h3.copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
@@ -303,7 +303,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                 style: AppTextStyles.bodySmall
                                                     .copyWith(
                                                       color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       fontSize: 10,
                                                     ),
                                                 maxLines: 1,
@@ -349,7 +350,11 @@ class _AppointmentsViewState extends State<AppointmentsView>
                   Expanded(
                     child: Obx(() {
                       if (controller.isLoading.value) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.fountainBlue,
+                          ),
+                        );
                       }
 
                       if (controller.appointments.isEmpty) {
@@ -455,7 +460,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                                 FontWeight.bold,
                                                           ),
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     );
                                                   },
                                                 ),
@@ -470,18 +476,23 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                         vertical: 4,
                                                       ),
                                                   decoration: BoxDecoration(
-                                                    color:
-                                                        AppColors.backgroundLight,
+                                                    color: AppColors
+                                                        .backgroundLight,
                                                     borderRadius:
-                                                        BorderRadius.circular(8),
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                     border: Border.all(
                                                       color: AppColors.textHint
-                                                          .withValues(alpha: 0.3),
+                                                          .withValues(
+                                                            alpha: 0.3,
+                                                          ),
                                                     ),
                                                   ),
                                                   child: Text(
                                                     appointment.reference!,
-                                                    style: AppTextStyles.bodySmall
+                                                    style: AppTextStyles
+                                                        .bodySmall
                                                         .copyWith(
                                                           color: AppColors
                                                               .textSecondary,
@@ -537,22 +548,24 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                       .toLowerCase() ==
                                                   'completed'
                                               ? Colors.green.withOpacity(0.1)
-                                              : AppColors.primaryBlue.withOpacity(
-                                                  0.1,
-                                                ),
-                                          borderRadius: BorderRadius.circular(20),
+                                              : AppColors.primaryBlue
+                                                    .withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Text(
                                           appointment.status ?? 'Scheduled',
-                                          style: AppTextStyles.bodySmall.copyWith(
-                                            color:
-                                                (appointment.status ?? '')
-                                                        .toLowerCase() ==
-                                                    'completed'
-                                                ? Colors.green
-                                                : AppColors.primaryBlue,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color:
+                                                    (appointment.status ?? '')
+                                                            .toLowerCase() ==
+                                                        'completed'
+                                                    ? Colors.green
+                                                    : AppColors.primaryBlue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -625,8 +638,10 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                               Flexible(
                                                 child: Text(
                                                   '${appointment.dentistryService!.durationInMinutes} min',
-                                                  style: AppTextStyles.bodyMedium,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  style:
+                                                      AppTextStyles.bodyMedium,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],

@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// App color palette aligned with Lucid Dental branding
+/// App color palette aligned with Ahadu Dental Clinic branding
 class AppColors {
-  // Primary Colors (kept names, adjusted values)
-  static const Color primaryBlue = Color.fromARGB(255, 81, 7, 113);
-  static const Color primaryBlueDark = Color.fromARGB(255, 50, 7, 84);
-  static const Color primaryBlueLight = Color.fromARGB(255, 110, 2, 143);
+  // Primary Colors - Ahadu Black theme
+  static const Color primaryBlue = Color(0xFF000000); // Ahadu Black
+  static const Color primaryBlueDark = Color(0xFF000000); // Ahadu Black
+  static const Color primaryBlueLight = Color(0xFF000000); // Ahadu Black
 
-  // Accent Colors (adjusted to not fight brand)
-  static const Color accentBlue = Color.fromARGB(
-    255,
-    135,
-    80,
-    170,
-  ); // soft purple accent
+  // Accent Colors - Fountain Blue for loading and accents
+  static const Color accentBlue = Color(0xFF5DADE2); // Fountain Blue
+  static const Color fountainBlue = Color(
+    0xFF5DADE2,
+  ); // Fountain Blue for loading
   static const Color successGreen = Color(0xFF43A047); // softened green
   static const Color warningOrange = Color(0xFFF9A825); // muted orange
 
@@ -29,9 +27,13 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6B6B6B);
   static const Color textHint = Color(0xFF9E9E9E);
 
-  // Gradient (unchanged structure)
+  // Gradient - White gradient for Ahadu theme
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryBlue, primaryBlueLight],
+    colors: [
+      Color(0xFFFFFFFF), // White 45%
+      Color(0xFFFFFFFF), // White 15%
+    ],
+    stops: [0.45, 0.15],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -39,7 +41,7 @@ class AppColors {
   // Shadow (softened)
   static List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withValues(alpha: 0.06),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
@@ -47,7 +49,7 @@ class AppColors {
 
   static List<BoxShadow> softShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.04),
+      color: Colors.black.withValues(alpha: 0.04),
       blurRadius: 8,
       offset: const Offset(0, 2),
     ),

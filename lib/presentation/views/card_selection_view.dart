@@ -138,7 +138,11 @@ class CardSelectionView extends GetView<CardController> {
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.fountainBlue,
+                  ),
+                );
               }
 
               if (controller.cardSettings.isEmpty) {

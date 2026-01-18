@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.luciddental.app">
+    package="com.ahadudentalclinic.app">
     
     <!-- Internet permission for API calls -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -16,7 +16,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:label="Lucid Dental Clinic"
+        android:label="Ahadu Dental Clinic"
         android:name="${applicationName}"
         android:usesCleartextTraffic="false"
         android:networkSecurityConfig="@xml/network_security_config"
