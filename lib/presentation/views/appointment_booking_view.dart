@@ -83,7 +83,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         setState(() {
           userCard = CardModel.fromJson(response.body as Map<String, dynamic>);
         });
-      } else {;
+      } else {
+        ;
         setState(() {
           userCard = null;
         });
@@ -102,7 +103,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
 
   Future<void> _openDoctorSchedulePicker() async {
     final result = await Get.toNamed(
-      Routes.DOCTOR_SCHEDULE_PICKER,
+      Routes.doctorSchedulePicker,
       arguments: service,
     );
 
@@ -298,9 +299,14 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
 
       final apiClient = Get.find<ApiClient>();
 
-      // Get patient ID from storage
-      final box = GetStorage();
-      final patientId = box.read('userId') ?? 0;
+      // Get actual patient ID (not userId)
+      final patientId = await _getPatientId();
+      if (patientId == null) {
+        Get.back(); // Close loading dialog
+        throw Exception(
+          'Patient not found. Please ensure you have a valid patient record.',
+        );
+      }
 
       // Format date and time for API
       final dateOnly = DateFormat('yyyy-MM-dd').format(selectedDate!);
@@ -355,15 +361,13 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       // Notify that a new appointment was created
       try {
         AppointmentEventService.to.notifyAppointmentCreated();
-      } catch (e) {
-      }
+      } catch (e) {}
 
       // Refresh appointments list before navigating back
       try {
         final appointmentController = Get.find<AppointmentController>();
         await appointmentController.refreshAppointments();
-      } catch (e) {
-      }
+      } catch (e) {}
 
       // Navigate back to dashboard
       Get.until((route) => route.isFirst);
@@ -691,7 +695,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => Get.toNamed(Routes.CARDS),
+              onPressed: () => Get.toNamed(Routes.cards),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,
@@ -862,5 +866,71 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         ],
       ),
     );
+  }
+
+  Future<int?> _getPatientId() async {
+    try {
+      // Always get the current user's patient ID dynamically
+      final box = GetStorage();
+      final userIdRaw = box.read('userId');
+      if (userIdRaw == null) {
+        return null;
+      }
+
+      int userId;
+      if (userIdRaw is int) {
+        userId = userIdRaw;
+      } else if (userIdRaw is String) {
+        try {
+          userId = int.parse(userIdRaw);
+        } catch (e) {
+          return null;
+        }
+      } else {
+        return null;
+      }
+
+      final apiClient = Get.find<ApiClient>();
+
+      try {
+        // First try the direct patient endpoint
+        final patientResponse = await apiClient.get(
+          '/Patient/byUserId/$userId',
+        );
+
+        if (!patientResponse.hasError) {
+          final patientData = patientResponse.body;
+          final patientId = patientData['id'];
+
+          if (patientId != null) {
+            return patientId;
+          }
+        }
+      } catch (e) {
+        // Continue to fallback
+      }
+
+      // Fallback to card endpoint if patient endpoint fails
+      final response = await apiClient.get('/Card/cardByUserId/$userId');
+
+      if (response.hasError) {
+        // If user doesn't have a card/patient record, return null
+        if (response.statusCode == 404) {
+          return null;
+        }
+        return null;
+      }
+
+      final cardData = response.body;
+      final patientId = cardData['patient']?['id'];
+
+      if (patientId != null) {
+        return patientId;
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 }

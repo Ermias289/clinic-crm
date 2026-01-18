@@ -59,7 +59,7 @@ class ForgotPasswordController extends GetxController {
 
       // Navigate to reset password screen and pass the email along
       Get.toNamed(
-        Routes.RESET_PASSWORD,
+        Routes.resetPassword,
         arguments: {'email': rawEmail.toLowerCase()},
       );
     } catch (e) {
@@ -67,7 +67,7 @@ class ForgotPasswordController extends GetxController {
           'Network error. Please check your connection and try again.';
       // Still navigate to allow user to try
       Get.toNamed(
-        Routes.RESET_PASSWORD,
+        Routes.resetPassword,
         arguments: {'email': rawEmail.toLowerCase()},
       );
     } finally {
@@ -76,7 +76,7 @@ class ForgotPasswordController extends GetxController {
   }
 
   void goToLogin() {
-    Get.offAllNamed(Routes.LOGIN);
+    Get.offAllNamed(Routes.login);
   }
 
   /// Tries to extract a human friendly message from varying backend responses.

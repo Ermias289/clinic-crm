@@ -225,7 +225,7 @@ class DashboardView extends GetView<DashboardController> {
                               icon: Icons.credit_card,
                               title: 'My Cards',
                               iconColor: AppColors.primaryBlue,
-                              onTap: () => Get.toNamed(Routes.CARDS),
+                              onTap: () => Get.toNamed(Routes.cards),
                             ),
                             DashboardCard(
                               icon: Icons.settings_outlined,

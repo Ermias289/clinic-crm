@@ -35,7 +35,7 @@ class NotificationBadge extends StatelessWidget {
                     )
                   : null,
               child: InkWell(
-                onTap: () => Get.toNamed(Routes.NOTIFICATIONS),
+                onTap: () => Get.toNamed(Routes.notifications),
                 child: Icon(
                   Icons.notifications_outlined,
                   color: iconColor ?? Colors.white,

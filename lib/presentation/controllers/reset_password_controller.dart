@@ -108,7 +108,7 @@ class ResetPasswordController extends GetxController {
 
       // Navigate to login page
       Get.offNamedUntil(
-        Routes.LOGIN,
+        Routes.login,
         (route) => false,
         arguments: {'success': message},
       );

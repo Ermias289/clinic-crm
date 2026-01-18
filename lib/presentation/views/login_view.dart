@@ -168,7 +168,7 @@ class LoginView extends GetView<LoginController> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () => Get.toNamed(Routes.FORGOT_PASSWORD),
+                      onPressed: () => Get.toNamed(Routes.forgotPassword),
                       child: Text(
                         "Forgot Password?",
                         style: AppTextStyles.bodySmall.copyWith(

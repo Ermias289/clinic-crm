@@ -93,7 +93,7 @@ class MedicalServiceController extends GetxController {
 
   Future<void> onServiceSelected(MedicalService service) async {
     // Navigate to service detail page instead of directly to booking
-    Get.toNamed(Routes.SERVICE_DETAIL, arguments: service);
+    Get.toNamed(Routes.serviceDetail, arguments: service);
   }
 
   // Method to force refresh (for pull-to-refresh)

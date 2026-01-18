@@ -124,7 +124,7 @@ class RegisterController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
         );
         Get.offNamed(
-          Routes.OTP_VERIFICATION,
+          Routes.otpVerification,
           arguments: emailController.text.trim(),
         );
       } else {

@@ -303,7 +303,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                 style: AppTextStyles.bodySmall
                                                     .copyWith(
                                                       color: Colors.white,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       fontSize: 10,
                                                     ),
                                                 maxLines: 1,
@@ -395,7 +396,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                           return GestureDetector(
                             onTap: () async {
                               final result = await Get.toNamed(
-                                Routes.APPOINTMENT_DETAILS,
+                                Routes.appointmentDetails,
                                 arguments: appointment,
                               );
                               if (result == true) {
@@ -455,7 +456,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                                 FontWeight.bold,
                                                           ),
                                                       maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
                                                     );
                                                   },
                                                 ),
@@ -470,18 +472,23 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                         vertical: 4,
                                                       ),
                                                   decoration: BoxDecoration(
-                                                    color:
-                                                        AppColors.backgroundLight,
+                                                    color: AppColors
+                                                        .backgroundLight,
                                                     borderRadius:
-                                                        BorderRadius.circular(8),
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                     border: Border.all(
                                                       color: AppColors.textHint
-                                                          .withValues(alpha: 0.3),
+                                                          .withValues(
+                                                            alpha: 0.3,
+                                                          ),
                                                     ),
                                                   ),
                                                   child: Text(
                                                     appointment.reference!,
-                                                    style: AppTextStyles.bodySmall
+                                                    style: AppTextStyles
+                                                        .bodySmall
                                                         .copyWith(
                                                           color: AppColors
                                                               .textSecondary,
@@ -537,22 +544,24 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                                       .toLowerCase() ==
                                                   'completed'
                                               ? Colors.green.withOpacity(0.1)
-                                              : AppColors.primaryBlue.withOpacity(
-                                                  0.1,
-                                                ),
-                                          borderRadius: BorderRadius.circular(20),
+                                              : AppColors.primaryBlue
+                                                    .withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Text(
                                           appointment.status ?? 'Scheduled',
-                                          style: AppTextStyles.bodySmall.copyWith(
-                                            color:
-                                                (appointment.status ?? '')
-                                                        .toLowerCase() ==
-                                                    'completed'
-                                                ? Colors.green
-                                                : AppColors.primaryBlue,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color:
+                                                    (appointment.status ?? '')
+                                                            .toLowerCase() ==
+                                                        'completed'
+                                                    ? Colors.green
+                                                    : AppColors.primaryBlue,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -625,8 +634,10 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                               Flexible(
                                                 child: Text(
                                                   '${appointment.dentistryService!.durationInMinutes} min',
-                                                  style: AppTextStyles.bodyMedium,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  style:
+                                                      AppTextStyles.bodyMedium,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ],
@@ -648,7 +659,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
             ),
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => Get.toNamed(Routes.PAYMENT_HISTORY),
+            onPressed: () => Get.toNamed(Routes.paymentHistory),
             backgroundColor: AppColors.primaryBlue,
             icon: const Icon(Icons.payment),
             label: const Text('Payment History'),

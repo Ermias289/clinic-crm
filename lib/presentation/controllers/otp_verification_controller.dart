@@ -47,8 +47,7 @@ class OTPVerificationController extends GetxController {
         email.value.toLowerCase().trim(),
       );
       await apiClient.get('/OTP/resendOTP?recipientEmail=$encodedEmail');
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> resendOtp() async {
@@ -107,7 +106,7 @@ class OTPVerificationController extends GetxController {
       } else {
         Get.snackbar('Success', 'Email verified successfully!');
         // Navigate to Login
-        Get.offAllNamed(Routes.LOGIN);
+        Get.offAllNamed(Routes.login);
       }
     } catch (e) {
       Get.snackbar('Error', 'An error occurred: $e');

@@ -35,100 +35,100 @@ import '../presentation/views/about_us_view.dart';
 import '../presentation/bindings/about_us_binding.dart';
 
 class AppPages {
-  static const INITIAL = Routes.ONBOARDING;
+  static const initial = Routes.onboarding;
 
   static final routes = [
     GetPage(
-      name: Routes.ONBOARDING,
+      name: Routes.onboarding,
       page: () => const OnboardingView(),
       binding: OnboardingBinding(),
     ),
     GetPage(
-      name: Routes.LOGIN,
+      name: Routes.login,
       page: () => const LoginView(),
       binding: AuthBinding(),
     ),
     GetPage(
-      name: Routes.REGISTER,
+      name: Routes.register,
       page: () => RegisterView(),
       binding: AuthBinding(),
     ),
     GetPage(
-      name: Routes.FORGOT_PASSWORD,
+      name: Routes.forgotPassword,
       page: () => const ForgotPasswordView(),
       binding: ForgotPasswordBinding(),
     ),
     GetPage(
-      name: Routes.RESET_PASSWORD,
+      name: Routes.resetPassword,
       page: () => const ResetPasswordView(),
       binding: ResetPasswordBinding(),
     ),
     GetPage(
-      name: Routes.DASHBOARD,
+      name: Routes.dashboard,
       page: () => const MainNavigationView(),
       binding: MainNavigationBinding(),
     ),
     GetPage(
-      name: Routes.CARDS,
+      name: Routes.cards,
       page: () => const CardSelectionView(),
       binding: CardBinding(),
     ),
     GetPage(
-      name: Routes.REQUEST_CARD_DETAILS,
+      name: Routes.requestCardDetails,
       page: () => RequestCardDetailsView(),
       binding: CardBinding(),
     ),
     GetPage(
-      name: Routes.REQUEST_CARD_PAYMENT,
+      name: Routes.requestCardPayment,
       page: () => const RequestCardPaymentView(),
       binding: CardBinding(),
     ),
     GetPage(
-      name: Routes.CARD_REACTIVATION_PAYMENT,
+      name: Routes.cardReactivationPayment,
       page: () => const CardReactivationPaymentView(),
       binding: CardBinding(),
     ),
     GetPage(
-      name: Routes.SERVICES,
+      name: Routes.services,
       page: () => ServicesListView(),
       binding: MedicalServiceBinding(),
     ),
     GetPage(
-      name: Routes.SERVICE_DETAIL,
+      name: Routes.serviceDetail,
       page: () => const ServiceDetailView(),
       binding: ServiceDetailBinding(),
     ),
     GetPage(
-      name: Routes.BOOK_APPOINTMENT,
+      name: Routes.bookAppointment,
       page: () => const AppointmentBookingView(),
     ),
     GetPage(
-      name: Routes.DOCTOR_SCHEDULE_PICKER,
+      name: Routes.doctorSchedulePicker,
       page: () => const DoctorSchedulePickerView(),
       binding: DoctorSchedulePickerBinding(),
     ),
     GetPage(
-      name: Routes.OTP_VERIFICATION,
+      name: Routes.otpVerification,
       page: () => const OTPVerificationView(),
       binding: OTPVerificationBinding(),
     ),
     GetPage(
-      name: Routes.NOTIFICATIONS,
+      name: Routes.notifications,
       page: () => const NotificationsView(),
       binding: NotificationBinding(),
     ),
     GetPage(
-      name: Routes.PAYMENT_HISTORY,
+      name: Routes.paymentHistory,
       page: () => const PaymentHistoryView(),
       binding: PaymentBinding(),
     ),
     GetPage(
-      name: Routes.APPOINTMENT_DETAILS,
+      name: Routes.appointmentDetails,
       page: () => const AppointmentDetailView(),
       binding: AppointmentDetailBinding(),
     ),
     GetPage(
-      name: Routes.ABOUT_US,
+      name: Routes.aboutUs,
       page: () => const AboutUsView(),
       binding: AboutUsBinding(),
     ),

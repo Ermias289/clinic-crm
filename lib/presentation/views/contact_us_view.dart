@@ -330,7 +330,7 @@ class ContactUsView extends GetView<ContactUsController> {
                         title: 'About Us',
                         subtitle: 'Learn more about our mission and values',
                         onTap: () {
-                          Get.toNamed(Routes.ABOUT_US);
+                          Get.toNamed(Routes.aboutUs);
                         },
                       ),
 

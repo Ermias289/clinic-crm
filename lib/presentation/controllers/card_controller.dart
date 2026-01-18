@@ -236,7 +236,7 @@ class CardController extends GetxController {
       selectedPaymentProof.value = null; // Clear any previous proof
 
       // Step 4: Navigate to reactivation payment view
-      Get.toNamed(Routes.CARD_REACTIVATION_PAYMENT);
+      Get.toNamed(Routes.cardReactivationPayment);
 
       Get.snackbar(
         'Payment Required',
@@ -311,7 +311,7 @@ class CardController extends GetxController {
       }
 
       // Step 4: Navigate back to dashboard
-      Get.offAllNamed(Routes.DASHBOARD, arguments: {'initialTab': 2});
+      Get.offAllNamed(Routes.dashboard, arguments: {'initialTab': 2});
 
       Get.snackbar(
         'Reactivation Payment Submitted',
@@ -374,7 +374,7 @@ class CardController extends GetxController {
     selectedCard.value = cardSetting;
     _clearForm();
     await _preFillFromProfile();
-    Get.toNamed(Routes.REQUEST_CARD_DETAILS);
+    Get.toNamed(Routes.requestCardDetails);
   }
 
   void validateAndProceed() {
@@ -404,7 +404,7 @@ class CardController extends GetxController {
       return;
     }
 
-    Get.toNamed(Routes.REQUEST_CARD_PAYMENT);
+    Get.toNamed(Routes.requestCardPayment);
   }
 
   void _clearForm() {
@@ -583,7 +583,7 @@ class CardController extends GetxController {
       await cardRepository.createPaymentRequest(paymentRequest);
 
       // Success - Navigate to dashboard (don't refresh card data to avoid disposal issues)
-      Get.offAllNamed(Routes.DASHBOARD, arguments: {'initialTab': 2});
+      Get.offAllNamed(Routes.dashboard, arguments: {'initialTab': 2});
 
       Get.snackbar(
         'Success',

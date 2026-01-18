@@ -48,12 +48,12 @@ class ServiceDetailController extends GetxController {
   void onDoctorSelected(MedicalProfessional doctor) {
     // Navigate to appointment booking with service only
     // The doctor selection will be handled in the appointment booking flow
-    Get.toNamed(Routes.BOOK_APPOINTMENT, arguments: service);
+    Get.toNamed(Routes.bookAppointment, arguments: service);
   }
 
   void onBookAppointment() {
     // Navigate to appointment booking with service only
     // User can select doctor in the booking flow
-    Get.toNamed(Routes.BOOK_APPOINTMENT, arguments: service);
+    Get.toNamed(Routes.bookAppointment, arguments: service);
   }
 }

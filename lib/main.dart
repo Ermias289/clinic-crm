@@ -14,7 +14,6 @@ import 'data/datasources/card_remote_datasource.dart';
 import 'data/repositories/card_repository_impl.dart';
 import 'presentation/controllers/medical_service_controller.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
@@ -22,14 +21,16 @@ void main() async {
   final apiClient = Get.put(ApiClient());
 
   // Ensure medical services controller & its dependencies are available globally
-  final medicalRemote =
-      MedicalServiceRemoteDataSourceImpl(apiClient: apiClient);
-  final medicalRepo =
-      MedicalServiceRepositoryImpl(remoteDataSource: medicalRemote);
+  final medicalRemote = MedicalServiceRemoteDataSourceImpl(
+    apiClient: apiClient,
+  );
+  final medicalRepo = MedicalServiceRepositoryImpl(
+    remoteDataSource: medicalRemote,
+  );
   final cardRemote = CardRemoteDataSourceImpl(apiClient: apiClient);
   final cardRepo = CardRepositoryImpl(remoteDataSource: cardRemote);
   Get.put(MedicalServiceController(medicalRepo, cardRepo), permanent: true);
-  
+
   runApp(const MyApp());
 }
 
@@ -40,12 +41,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final box = GetStorage();
     final onboardingComplete = box.read('onboarding_complete') ?? false;
-    
+
     return GetMaterialApp(
       title: 'Clinic CRM',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute: onboardingComplete ? Routes.LOGIN : Routes.ONBOARDING,
+      initialRoute: onboardingComplete ? Routes.login : Routes.onboarding,
       getPages: [
         ...AppPages.routes,
         GetPage(
@@ -60,5 +61,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
