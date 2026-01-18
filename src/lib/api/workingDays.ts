@@ -40,4 +40,21 @@ export const workingDayService = {
     const promises = workdays.map(workday => workingDayService.update(workday));
     return Promise.all(promises);
   },
+
+  create: async (data: Omit<UpdateWorkingDayDTO, 'id'>): Promise<WorkingDayDTO> => {
+    console.log("Sending workday creation:", JSON.stringify(data, null, 2));
+    try {
+      const response = await apiClient.post<WorkingDayDTO>('/api/WorkingDaySetting', data);
+      console.log("Workday creation response:", JSON.stringify(response.data, null, 2));
+      return response.data;
+    } catch (error) {
+      console.error("Workday creation error:", error);
+      throw error;
+    }
+  },
+
+  createMultiple: async (workdays: Array<Omit<UpdateWorkingDayDTO, 'id'>>): Promise<WorkingDayDTO[]> => {
+    const promises = workdays.map(workday => workingDayService.create(workday));
+    return Promise.all(promises);
+  }
 };

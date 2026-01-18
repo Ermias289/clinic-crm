@@ -45,13 +45,13 @@ const CompanySettingsPage = () => {
   const loadCompanySettings = async () => {
     try {
       setLoading(true);
-      
+
       // Load company settings and workdays separately
       const [companyData, workdaysData] = await Promise.all([
         companySettingService.get(),
         workingDayService.getAll()
       ]);
-      
+
       setCompanyData(companyData);
       setFormData({
         name: companyData.name || "",
@@ -66,7 +66,29 @@ const CompanySettingsPage = () => {
         locationOnMap: companyData.locationOnMap || "",
         logo: companyData.logo || "",
       });
-      setWorkdays(workdaysData || []);
+
+      // Initialize workdays with defaults if missing
+      const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      const defaultOpening = "2:00";
+      const defaultClosing = "11:00";
+
+      const existingDaysMap = new Map((workdaysData || []).map(d => [d.day, d]));
+
+      const fullWorkdays = DAYS.map(dayName => {
+        if (existingDaysMap.has(dayName)) {
+          return existingDaysMap.get(dayName)!;
+        }
+        return {
+          id: 0, // 0 indicates new record
+          day: dayName,
+          openingTime: defaultOpening,
+          closingTime: defaultClosing,
+          isWorkingDay: dayName !== "Sunday", // Open 6 days by default
+          companySettingId: companyData.id
+        } as WorkingDayDTO;
+      });
+
+      setWorkdays(fullWorkdays);
     } catch (error) {
       console.error("Failed to load company settings:", error);
       toast({
@@ -86,9 +108,9 @@ const CompanySettingsPage = () => {
     }));
   };
 
-  const handleWorkdayChange = (dayId: number, field: keyof WorkingDayDTO, value: string | boolean) => {
-    setWorkdays(prev => prev.map(workday => 
-      workday.id === dayId 
+  const handleWorkdayChange = (dayName: string, field: keyof WorkingDayDTO, value: string | boolean) => {
+    setWorkdays(prev => prev.map(workday =>
+      workday.day === dayName
         ? { ...workday, [field]: value }
         : workday
     ));
@@ -97,20 +119,20 @@ const CompanySettingsPage = () => {
   const formatTimeForInput = (time: string) => {
     // Convert backend time format to HTML input format
     if (!time) return "";
-    
+
     // Handle "2:00" format from backend - convert to "02:00" for HTML input
     if (time.includes(':')) {
       const [hours, minutes] = time.split(':');
       return `${hours.padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}`;
     }
-    
+
     return time;
   };
 
   const formatTimeForAPI = (time: string) => {
     // Convert HTML input time back to backend format
     if (!time) return "0:00";
-    
+
     // Convert "02:00" back to "2:00" format (matching original API response)
     const [hours, minutes] = time.split(':');
     return `${parseInt(hours)}:${minutes || '00'}`;
@@ -166,15 +188,19 @@ const CompanySettingsPage = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       // Prepare company settings update (without workdays)
       const companyUpdateData: UpdateCompanySettingDTO = {
         id: companyData?.id || 0,
         ...formData,
       };
 
-      // Prepare workdays update
-      const workdaysUpdateData: UpdateWorkingDayDTO[] = workdays.map(workday => ({
+      // Split workdays into new (id=0) and existing
+      const newWorkdays = workdays.filter(w => w.id === 0);
+      const existingWorkdays = workdays.filter(w => w.id !== 0);
+
+      // Prepare updates for existing workdays
+      const workdaysUpdateData: UpdateWorkingDayDTO[] = existingWorkdays.map(workday => ({
         id: workday.id,
         day: workday.day,
         openingTime: formatTimeForAPI(workday.openingTime),
@@ -182,15 +208,32 @@ const CompanySettingsPage = () => {
         isWorkingDay: workday.isWorkingDay,
       }));
 
-      // Update both company settings and workdays
-      const [updatedCompanyData, updatedWorkdays] = await Promise.all([
-        companySettingService.update(companyUpdateData),
-        workingDayService.updateMultiple(workdaysUpdateData)
-      ]);
-      
-      setCompanyData(updatedCompanyData);
-      setWorkdays(updatedWorkdays);
-      
+      // Prepare creation data for new workdays
+      const workdaysCreateData = newWorkdays.map(workday => ({
+        day: workday.day,
+        openingTime: formatTimeForAPI(workday.openingTime),
+        closingTime: formatTimeForAPI(workday.closingTime),
+        isWorkingDay: workday.isWorkingDay,
+      }));
+
+      // Update company settings and workdays (update existing, create new)
+      const promises: Promise<any>[] = [
+        companySettingService.update(companyUpdateData)
+      ];
+
+      if (workdaysUpdateData.length > 0) {
+        promises.push(workingDayService.updateMultiple(workdaysUpdateData));
+      }
+
+      if (workdaysCreateData.length > 0) {
+        promises.push(workingDayService.createMultiple(workdaysCreateData));
+      }
+
+      await Promise.all(promises);
+
+      // Reload to get new IDs
+      loadCompanySettings();
+
       toast({
         title: "Settings Saved",
         description: "Company settings and working hours have been updated successfully.",
@@ -233,9 +276,9 @@ const CompanySettingsPage = () => {
             <div className="flex items-center gap-6">
               <div className="w-24 h-24 rounded-xl bg-primary/10 flex items-center justify-center border-2 border-dashed border-primary/30 overflow-hidden">
                 {formData.logo ? (
-                  <img 
-                    src={getImageUrl(formData.logo)} 
-                    alt="Company Logo" 
+                  <img
+                    src={getImageUrl(formData.logo)}
+                    alt="Company Logo"
                     className="w-full h-full object-cover rounded-xl"
                     onError={(e) => {
                       // Hide image on error and show fallback
@@ -289,16 +332,16 @@ const CompanySettingsPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Company Name</Label>
-                <Input 
-                  id="name" 
+                <Input
+                  id="name"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="prefix">Company Prefix</Label>
-                <Input 
-                  id="prefix" 
+                <Input
+                  id="prefix"
                   value={formData.prefix}
                   onChange={(e) => handleInputChange("prefix", e.target.value)}
                   placeholder="e.g., BSC"
@@ -307,34 +350,34 @@ const CompanySettingsPage = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
-              <Textarea 
-                id="address" 
+              <Textarea
+                id="address"
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
-                rows={2} 
+                rows={2}
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="city">City</Label>
-                <Input 
-                  id="city" 
+                <Input
+                  id="city"
                   value={formData.city}
                   onChange={(e) => handleInputChange("city", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="subCity">Sub City</Label>
-                <Input 
-                  id="subCity" 
+                <Input
+                  id="subCity"
                   value={formData.subCity}
                   onChange={(e) => handleInputChange("subCity", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="country">Country</Label>
-                <Input 
-                  id="country" 
+                <Input
+                  id="country"
                   value={formData.country}
                   onChange={(e) => handleInputChange("country", e.target.value)}
                 />
@@ -353,17 +396,17 @@ const CompanySettingsPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
+                <Input
+                  id="email"
+                  type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input 
-                  id="phoneNumber" 
+                <Input
+                  id="phoneNumber"
                   value={formData.phoneNumber}
                   onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
                 />
@@ -371,16 +414,16 @@ const CompanySettingsPage = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="emergencyPhoneNumber">Emergency Phone Number</Label>
-              <Input 
-                id="emergencyPhoneNumber" 
+              <Input
+                id="emergencyPhoneNumber"
                 value={formData.emergencyPhoneNumber}
                 onChange={(e) => handleInputChange("emergencyPhoneNumber", e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="locationOnMap">Location on Map</Label>
-              <Input 
-                id="locationOnMap" 
+              <Input
+                id="locationOnMap"
                 value={formData.locationOnMap}
                 onChange={(e) => handleInputChange("locationOnMap", e.target.value)}
                 placeholder="Google Maps URL or coordinates"
@@ -400,14 +443,14 @@ const CompanySettingsPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {workdays.map((workday) => (
-              <div key={workday.id} className="flex items-center gap-4 p-4 border rounded-lg">
+              <div key={workday.day} className="flex items-center gap-4 p-4 border rounded-lg">
                 <div className="w-24 font-medium">
                   {workday.day}
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={workday.isWorkingDay}
-                    onCheckedChange={(checked) => handleWorkdayChange(workday.id, 'isWorkingDay', checked)}
+                    onCheckedChange={(checked) => handleWorkdayChange(workday.day, 'isWorkingDay', checked)}
                   />
                   <span className="text-sm text-muted-foreground">
                     {workday.isWorkingDay ? 'Open' : 'Closed'}
@@ -416,22 +459,22 @@ const CompanySettingsPage = () => {
                 {workday.isWorkingDay && (
                   <>
                     <div className="flex items-center gap-2">
-                      <Label htmlFor={`opening-${workday.id}`} className="text-sm">From:</Label>
+                      <Label htmlFor={`opening-${workday.day}`} className="text-sm">From:</Label>
                       <Input
-                        id={`opening-${workday.id}`}
+                        id={`opening-${workday.day}`}
                         type="time"
                         value={formatTimeForInput(workday.openingTime)}
-                        onChange={(e) => handleWorkdayChange(workday.id, 'openingTime', formatTimeForAPI(e.target.value))}
+                        onChange={(e) => handleWorkdayChange(workday.day, 'openingTime', formatTimeForAPI(e.target.value))}
                         className="w-32"
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label htmlFor={`closing-${workday.id}`} className="text-sm">To:</Label>
+                      <Label htmlFor={`closing-${workday.day}`} className="text-sm">To:</Label>
                       <Input
-                        id={`closing-${workday.id}`}
+                        id={`closing-${workday.day}`}
                         type="time"
                         value={formatTimeForInput(workday.closingTime)}
-                        onChange={(e) => handleWorkdayChange(workday.id, 'closingTime', formatTimeForAPI(e.target.value))}
+                        onChange={(e) => handleWorkdayChange(workday.day, 'closingTime', formatTimeForAPI(e.target.value))}
                         className="w-32"
                       />
                     </div>
@@ -443,8 +486,8 @@ const CompanySettingsPage = () => {
         </Card>
 
         <div className="flex justify-end">
-          <Button 
-            variant="dental" 
+          <Button
+            variant="dental"
             onClick={handleSave}
             disabled={saving}
           >
