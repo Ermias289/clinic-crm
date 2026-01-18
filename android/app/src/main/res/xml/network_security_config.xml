@@ -5,4 +5,4 @@
         <domain includeSubdomains="true">termsandconditions.nexabusinessgroup.com</domain>
         <domain includeSubdomains="true">nexabusinessgroup.com</domain>
     </domain-config>
-</network-security-config>
+</network-security-config>  
