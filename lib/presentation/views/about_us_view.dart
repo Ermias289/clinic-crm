@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../controllers/about_us_controller.dart';
@@ -438,9 +439,27 @@ class AboutUsView extends GetView<AboutUsController> {
 
                         const SizedBox(height: 20),
                         ElevatedButton(
-                          onPressed: () {
-                            // Navigate back to Contact Us page
-                            Get.back();
+                          onPressed: () async {
+                            // Launch the Nexa Business Group website
+                            try {
+                              final Uri url = Uri.parse(
+                                'https://www.nexabusinessgroup.com',
+                              );
+                              await launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } catch (e) {
+                              // Show error message if URL can't be launched
+                              Get.snackbar(
+                                'Error',
+                                'Could not launch website. Please check your internet connection.',
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                                duration: const Duration(seconds: 3),
+                              );
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,

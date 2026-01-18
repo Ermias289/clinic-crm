@@ -3,5 +3,6 @@
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api.luciddental.com</domain>
         <domain includeSubdomains="true">termsandconditions.nexabusinessgroup.com</domain>
+        <domain includeSubdomains="true">nexabusinessgroup.com</domain>
     </domain-config>
 </network-security-config>
