@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../config/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
@@ -264,7 +265,6 @@ class ContactUsView extends GetView<ContactUsController> {
                               final Uri launchUri = Uri(
                                 scheme: 'mailto',
                                 path: setting.email!,
-                              
                               );
                               await launchUrl(
                                 launchUri,
@@ -323,6 +323,18 @@ class ContactUsView extends GetView<ContactUsController> {
                       ),
 
                       const SizedBox(height: 24),
+
+                      // About Us Navigation Card
+                      _buildContactCard(
+                        icon: Icons.info_outline,
+                        title: 'About Us',
+                        subtitle: 'Learn more about our mission and values',
+                        onTap: () {
+                          Get.toNamed(Routes.ABOUT_US);
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
 
                       // Emergency Contact fallback (using regular phone if no emergency number)
                       if (setting.emergencyPhoneNumber?.isEmpty == true &&

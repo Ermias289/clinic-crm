@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../controllers/register_controller.dart';
 import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -12,12 +12,23 @@ class RegisterView extends GetView<RegisterController> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // Validation functions
-  String? _validateRequired(String? value) {
-    if (value == null || value.isEmpty) return 'This field is required';
-    return null;
+  // Method to launch Terms and Conditions URL
+  Future<void> _launchTermsAndConditions() async {
+    final Uri url = Uri.parse(
+      'https://termsandconditions.nexabusinessgroup.com/',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      Get.snackbar(
+        'Error',
+        'Could not open Terms and Conditions',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
+  // Validation functions
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) return 'This field is required';
     if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value))
@@ -257,6 +268,75 @@ class RegisterView extends GetView<RegisterController> {
                       prefixIcon: Icons.lock_outline_rounded,
                       obscureText: true,
                       validator: _validateConfirmPassword,
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Terms and Conditions Agreement
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.info_outline,
+                                color: AppColors.primaryBlue,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Terms & Conditions',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          RichText(
+                            text: TextSpan(
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                                height: 1.4,
+                              ),
+                              children: [
+                                const TextSpan(
+                                  text:
+                                      'By clicking "Create Account", you agree to our ',
+                                ),
+                                WidgetSpan(
+                                  child: GestureDetector(
+                                    onTap: _launchTermsAndConditions,
+                                    child: Text(
+                                      'Terms and Conditions',
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.primaryBlue,
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const TextSpan(
+                                  text:
+                                      '. Please read them carefully before proceeding.',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     const SizedBox(height: 24),

@@ -31,6 +31,8 @@ import '../presentation/views/payment_history_view.dart';
 import '../presentation/bindings/payment_binding.dart';
 import '../presentation/views/appointment_detail_view.dart';
 import '../presentation/bindings/appointment_detail_binding.dart';
+import '../presentation/views/about_us_view.dart';
+import '../presentation/bindings/about_us_binding.dart';
 
 class AppPages {
   static const INITIAL = Routes.ONBOARDING;
@@ -124,6 +126,11 @@ class AppPages {
       name: Routes.APPOINTMENT_DETAILS,
       page: () => const AppointmentDetailView(),
       binding: AppointmentDetailBinding(),
+    ),
+    GetPage(
+      name: Routes.ABOUT_US,
+      page: () => const AboutUsView(),
+      binding: AboutUsBinding(),
     ),
   ];
 }

@@ -18,4 +18,5 @@ abstract class Routes {
   static const NOTIFICATIONS = '/notifications';
   static const PAYMENT_HISTORY = '/payment-history';
   static const APPOINTMENT_DETAILS = '/appointment-details';
+  static const ABOUT_US = '/about-us';
 }
