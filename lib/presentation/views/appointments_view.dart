@@ -188,7 +188,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Ahadu Dental Clinic',
+                                          'Seid Dental Clinic',
                                           style: AppTextStyles.h3.copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,

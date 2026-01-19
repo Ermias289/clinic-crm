@@ -1,4 +1,4 @@
-package com.ahadudentalclinic.app
+package com.seiddentalclinic.app
 
 import io.flutter.embedding.android.FlutterActivity
 

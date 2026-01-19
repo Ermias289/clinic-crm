@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-/// App color palette aligned with Ahadu Dental Clinic branding
+/// App color palette aligned with Seid Dental Clinic branding
 class AppColors {
-  // Primary Colors - Ahadu Black theme
-  static const Color primaryBlue = Color(0xFF000000); // Ahadu Black
-  static const Color primaryBlueDark = Color(0xFF000000); // Ahadu Black
-  static const Color primaryBlueLight = Color(0xFF000000); // Ahadu Black
+  // Primary Colors - Seid White Blue theme
+  static const Color primaryBlue = Color(0xFF2196F3); // Seid Blue
+  static const Color primaryBlueDark = Color(0xFF1976D2); // Seid Blue Dark
+  static const Color primaryBlueLight = Color(0xFF64B5F6); // Seid Blue Light
 
   // Accent Colors - Fountain Blue for loading and accents
   static const Color accentBlue = Color(0xFF5DADE2); // Fountain Blue
@@ -16,10 +16,8 @@ class AppColors {
   static const Color warningOrange = Color(0xFFF9A825); // muted orange
 
   // Background Colors
-  static const Color backgroundLight = Color(0xFFF5F6FA);
-  static const Color backgroundWhite = Color(
-    0xFFE6D9EF,
-  ); // soft lavender-gray (logo highlight)
+  static const Color backgroundLight = Color(0xFFF8FAFE); // Light blue tint
+  static const Color backgroundWhite = Color(0xFFFFFFFF); // Pure white
   static const Color cardBackground = Color(0xFFFFFFFF);
 
   // Text Colors (slight refinement for readability)
@@ -27,13 +25,13 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6B6B6B);
   static const Color textHint = Color(0xFF9E9E9E);
 
-  // Gradient - White gradient for Ahadu theme
+  // Gradient - White Blue gradient for Seid theme
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [
-      Color(0xFFFFFFFF), // White 45%
-      Color(0xFFFFFFFF), // White 15%
+      Color(0xFFFFFFFF), // White
+      Color(0xFF2196F3), // Seid Blue
     ],
-    stops: [0.45, 0.15],
+    stops: [0.0, 1.0],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

@@ -154,7 +154,7 @@ class RegisterView extends GetView<RegisterController> {
                             ),
                           ),
                           Text(
-                            "Join Ahadu dental clinic family",
+                            "Join Seid dental clinic family",
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 14,

@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
     final onboardingComplete = box.read('onboarding_complete') ?? false;
 
     return GetMaterialApp(
-      title: 'Ahadu Dental Clinic',
+      title: 'Seid Dental Clinic',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       initialRoute: onboardingComplete ? Routes.LOGIN : Routes.ONBOARDING,
