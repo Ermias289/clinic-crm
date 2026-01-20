@@ -106,7 +106,7 @@ class ServiceDetailView extends StatelessWidget {
           colors: [
             AppColors.primaryBlue,
             AppColors.primaryBlueLight,
-            AppColors.accentBlue,
+            AppColors.accentGreen,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -193,7 +193,7 @@ class ServiceDetailView extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryBlue.withValues(alpha: 0.1),
-            AppColors.accentBlue.withValues(alpha: 0.1),
+            AppColors.accentGreen.withValues(alpha: 0.1),
           ],
         ),
       ),
@@ -251,7 +251,7 @@ class ServiceDetailView extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time, color: AppColors.accentBlue, size: 20),
+                Icon(Icons.access_time, color: AppColors.accentGreen, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Duration: ${controller.service.durationInMinutes} minutes',
@@ -490,13 +490,13 @@ class ServiceDetailView extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.accentBlue.withValues(alpha: 0.1),
+                    color: AppColors.accentGreen.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     doctor.educationalBackground!,
                     style: AppTextStyles.caption.copyWith(
-                      color: AppColors.accentBlue,
+                      color: AppColors.accentGreen,
                       fontSize: 10,
                       fontWeight: FontWeight.w500,
                     ),
@@ -547,7 +547,7 @@ class ServiceDetailView extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryBlue.withValues(alpha: 0.1),
-            AppColors.accentBlue.withValues(alpha: 0.1),
+            AppColors.accentGreen.withValues(alpha: 0.1),
           ],
         ),
       ),

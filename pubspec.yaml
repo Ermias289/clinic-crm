@@ -1,5 +1,5 @@
-name: lucid_dental
-description: "Lucid Dental Clinic - Your comprehensive dental care companion app for appointments, services, and health management."
+name: truecare_dental
+description: "True Care Dental and Implant Clinic - Your comprehensive dental care companion app for appointments, services, and health management."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -106,8 +106,8 @@ flutter_launcher_icons:
   web:
     generate: true
     image_path: "assets/icon/app_icon.png"
-    background_color: "#hexcode"
-    theme_color: "#hexcode"
+    background_color: "#1F3A5F"
+    theme_color: "#7CB342"
   windows:
     generate: true
     image_path: "assets/icon/app_icon.png"

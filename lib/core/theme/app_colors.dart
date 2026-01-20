@@ -1,42 +1,45 @@
 import 'package:flutter/material.dart';
 
-/// App color palette aligned with Lucid Dental branding
+/// App color palette aligned with True Care Dental and Implant Clinic branding
 class AppColors {
-  // Primary Colors (kept names, adjusted values)
-  static const Color primaryBlue = Color.fromARGB(255, 81, 7, 113);
-  static const Color primaryBlueDark = Color.fromARGB(255, 50, 7, 84);
-  static const Color primaryBlueLight = Color.fromARGB(255, 110, 2, 143);
+  // Primary Colors - Navy Blue (#1F3A5F)
+  static const Color primaryBlue = Color(0xFF1F3A5F); // Navy Blue
+  static const Color primaryBlueDark = Color(0xFF152B47); // Darker Navy
+  static const Color primaryBlueLight = Color(0xFF2A4A77); // Lighter Navy
 
-  // Accent Colors (adjusted to not fight brand)
-  static const Color accentBlue = Color.fromARGB(
-    255,
-    135,
-    80,
-    170,
-  ); // soft purple accent
-  static const Color successGreen = Color(0xFF43A047); // softened green
-  static const Color warningOrange = Color(0xFFF9A825); // muted orange
+  // Accent Colors - Mint Green (#7CB342)
+  static const Color accentGreen = Color(0xFF7CB342); // Mint Green
+  static const Color accentGreenLight = Color(0xFF8BC34A); // Lighter Mint
+  static const Color accentGreenDark = Color(0xFF689F38); // Darker Mint
+
+  // Additional Colors
+  static const Color successGreen = Color(0xFF43A047); // Success green
+  static const Color warningOrange = Color(0xFFF9A825); // Warning orange
 
   // Background Colors
-  static const Color backgroundLight = Color(0xFFF5F6FA);
-  static const Color backgroundWhite = Color(
-    0xFFE6D9EF,
-  ); // soft lavender-gray (logo highlight)
-  static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color backgroundLight = Color(0xFFF8F9FA); // Light background
+  static const Color backgroundWhite = Color(0xFFFFFFFF); // Pure white
+  static const Color cardBackground = Color(0xFFFFFFFF); // Card background
 
-  // Text Colors (slight refinement for readability)
-  static const Color textPrimary = Color(0xFF1F1F1F);
-  static const Color textSecondary = Color(0xFF6B6B6B);
-  static const Color textHint = Color(0xFF9E9E9E);
+  // Text Colors
+  static const Color textPrimary = Color(0xFF1F3A5F); // Navy blue text
+  static const Color textSecondary = Color(0xFF6B6B6B); // Secondary text
+  static const Color textHint = Color(0xFF9E9E9E); // Hint text
 
-  // Gradient (unchanged structure)
+  // Gradient using brand colors
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [primaryBlue, primaryBlueLight],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Shadow (softened)
+  static const LinearGradient accentGradient = LinearGradient(
+    colors: [accentGreen, accentGreenLight],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // Shadow
   static List<BoxShadow> cardShadow = [
     BoxShadow(
       color: Colors.black.withValues(alpha: 0.06),

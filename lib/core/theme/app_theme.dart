@@ -11,7 +11,7 @@ class AppTheme {
       // Color Scheme
       colorScheme: ColorScheme.light(
         primary: AppColors.primaryBlue,
-        secondary: AppColors.accentBlue,
+        secondary: AppColors.accentGreen,
         surface: AppColors.cardBackground,
         background: AppColors.backgroundLight,
         error: Colors.red.shade700,

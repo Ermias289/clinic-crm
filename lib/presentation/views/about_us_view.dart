@@ -32,7 +32,7 @@ class AboutUsView extends GetView<AboutUsController> {
                 colors: [
                   AppColors.primaryBlue,
                   AppColors.primaryBlueLight,
-                  AppColors.accentBlue,
+                  AppColors.accentGreen,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

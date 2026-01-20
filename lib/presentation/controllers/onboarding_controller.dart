@@ -22,7 +22,7 @@ class OnboardingController extends GetxController {
       title: 'Personalized Patient Care',
       description:
           'At Lucid, we provide individualized treatment plans tailored to your unique dental needs',
-      iconColor: AppColors.accentBlue,
+      iconColor: AppColors.accentGreen,
     ),
     OnboardingPageModel(
       icon: Icons.calendar_today_outlined,
