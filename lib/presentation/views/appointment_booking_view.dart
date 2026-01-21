@@ -869,8 +869,6 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       ),
     );
   }
-}
-
   Future<int?> _getPatientId() async {
     try {
       // Always get the current user's patient ID dynamically
@@ -936,3 +934,5 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       return null;
     }
   }
+}
+
