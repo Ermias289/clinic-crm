@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 /// App color palette aligned with LibDentalClinic branding
 class AppColors {
   // Primary Colors - Blue from logo gradient
-  static const Color primaryBlue = Color(0xFF4A7FD9); // Main blue from logo
+  static const Color primaryBlue = Color(0xFF3C66B0); // Main blue from logo
   static const Color primaryBlueDark = Color(
-    0xFF3A6BC7,
+    0xFF2E528E,
   ); // Darker blue from logo
   static const Color primaryBlueLight = Color(
-    0xFF6B9AE8,
+    0xFF5A86C8,
   ); // Lighter blue from logo
 
   // Accent Colors - Teal/Cyan from logo dot
-  static const Color accentTeal = Color(0xFF00BCD4); // Teal accent from logo
-  static const Color accentTealLight = Color(0xFF26C6DA); // Lighter teal
-  static const Color accentTealDark = Color(0xFF00ACC1); // Darker teal
+  static const Color accentTeal = Color(0xFF229FBD); // Teal accent from logo
+  static const Color accentTealLight = Color(0xFF35B2CE); // Lighter teal
+  static const Color accentTealDark = Color(0xFF1A8BA9); // Darker teal
 
   // Additional Colors
   static const Color successGreen = Color(0xFF43A047); // Success green
