@@ -1,4 +1,4 @@
-package com.truecaredentalclinic.app
+package com.libdentalclinic.app
 
 import io.flutter.embedding.android.FlutterActivity
 

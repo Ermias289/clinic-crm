@@ -12,7 +12,7 @@ class OnboardingController extends GetxController {
   final List<OnboardingPageModel> pages = [
     OnboardingPageModel(
       icon: Icons.medical_services_rounded,
-      title: 'Welcome to True Care Dental Clinic',
+      title: 'Welcome to Lib Dental Clinic',
       description:
           'Experience exceptional dental care with our state-of-the-art facility and expert team',
       iconColor: AppColors.primaryBlue,
@@ -21,21 +21,21 @@ class OnboardingController extends GetxController {
       icon: Icons.people_outline,
       title: 'Personalized Patient Care',
       description:
-          'At True Care, we provide individualized treatment plans tailored to your unique dental needs',
-      iconColor: AppColors.accentGreen,
+          'At Lib, we provide individualized treatment plans tailored to your unique dental needs',
+      iconColor: AppColors.accentTeal,
     ),
     OnboardingPageModel(
       icon: Icons.calendar_today_outlined,
       title: 'Easy Appointment Booking',
       description:
-          'Schedule your visits at True Care Dental Clinic with our convenient online booking system',
+          'Schedule your visits at Lib Dental Clinic with our convenient online booking system',
       iconColor: AppColors.successGreen,
     ),
     OnboardingPageModel(
       icon: Icons.analytics_outlined,
       title: 'Track Your Dental Health',
       description:
-          'Monitor your treatment progress and maintain optimal oral health with True Care\'s comprehensive care',
+          'Monitor your treatment progress and maintain optimal oral health with Lib\'s comprehensive care',
       iconColor: AppColors.warningOrange,
     ),
   ];

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
 
-/// App color palette aligned with True Care Dental and Implant Clinic branding
+/// App color palette aligned with LibDentalClinic branding
 class AppColors {
-  // Primary Colors - Navy Blue (#1F3A5F)
-  static const Color primaryBlue = Color(0xFF1F3A5F); // Navy Blue
-  static const Color primaryBlueDark = Color(0xFF152B47); // Darker Navy
-  static const Color primaryBlueLight = Color(0xFF2A4A77); // Lighter Navy
+  // Primary Colors - Blue from logo gradient
+  static const Color primaryBlue = Color(0xFF4A7FD9); // Main blue from logo
+  static const Color primaryBlueDark = Color(
+    0xFF3A6BC7,
+  ); // Darker blue from logo
+  static const Color primaryBlueLight = Color(
+    0xFF6B9AE8,
+  ); // Lighter blue from logo
 
-  // Accent Colors - Mint Green (#7CB342)
-  static const Color accentGreen = Color(0xFF7CB342); // Mint Green
-  static const Color accentGreenLight = Color(0xFF8BC34A); // Lighter Mint
-  static const Color accentGreenDark = Color(0xFF689F38); // Darker Mint
+  // Accent Colors - Teal/Cyan from logo dot
+  static const Color accentTeal = Color(0xFF00BCD4); // Teal accent from logo
+  static const Color accentTealLight = Color(0xFF26C6DA); // Lighter teal
+  static const Color accentTealDark = Color(0xFF00ACC1); // Darker teal
 
   // Additional Colors
   static const Color successGreen = Color(0xFF43A047); // Success green
@@ -26,15 +30,15 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6B6B6B); // Secondary text
   static const Color textHint = Color(0xFF9E9E9E); // Hint text
 
-  // Gradient using brand colors
+  // Gradient using brand colors from logo
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryBlue, primaryBlueLight],
+    colors: [primaryBlueDark, primaryBlue, primaryBlueLight],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [accentGreen, accentGreenLight],
+    colors: [accentTeal, accentTealLight],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

@@ -1,5 +1,5 @@
-name: truecare_dental
-description: "True Care Dental and Implant Clinic - Your comprehensive dental care companion app for appointments, services, and health management."
+name: lib_dental
+description: "Lib Dental and Implant Clinic - Your comprehensive dental care companion app for appointments, services, and health management."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -100,18 +100,18 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/app_icon.png"
+  image_path: "assets/icon/lib-01.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   remove_alpha_ios: true
   web:
     generate: true
-    image_path: "assets/icon/app_icon.png"
-    background_color: "#1F3A5F"
-    theme_color: "#7CB342"
+    image_path: "assets/icon/lib-01.png"
+    background_color: "#4A7FD9"
+    theme_color: "#00BCD4"
   windows:
     generate: true
-    image_path: "assets/icon/app_icon.png"
+    image_path: "assets/icon/lib-01.png"
     icon_size: 48 # min:48, max:256, default: 48
   macos:
     generate: true
-    image_path: "assets/icon/app_icon.png"
+    image_path: "assets/icon/lib-01.png"

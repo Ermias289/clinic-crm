@@ -317,7 +317,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
             ],
 
             // Payment Proof Image (exclude AUTO-PREPARE status)
-            if (payment.paymentProof.isNotEmpty && 
+            if (payment.paymentProof.isNotEmpty &&
                 payment.status.toLowerCase() != 'auto-prepared') ...[
               const SizedBox(height: 12),
               Text(
@@ -354,7 +354,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
                               color: AppColors.primaryBlue,
                               value: loadingProgress.expectedTotalBytes != null
                                   ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
+                                        loadingProgress.expectedTotalBytes!
                                   : null,
                             ),
                           ),
@@ -428,7 +428,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
         icon = Icons.block;
         break;
       default:
-        backgroundColor = AppColors.accentGreen;
+        backgroundColor = AppColors.accentTeal;
         textColor = Colors.white;
         icon = Icons.info;
     }
@@ -504,10 +504,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
                           ),
                           IconButton(
                             onPressed: () => Get.back(),
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.white,
-                            ),
+                            icon: const Icon(Icons.close, color: Colors.white),
                           ),
                         ],
                       ),
@@ -534,9 +531,10 @@ class PaymentHistoryView extends GetView<PaymentController> {
                               child: Center(
                                 child: CircularProgressIndicator(
                                   color: AppColors.primaryBlue,
-                                  value: loadingProgress.expectedTotalBytes != null
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
                                       ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
+                                            loadingProgress.expectedTotalBytes!
                                       : null,
                                 ),
                               ),

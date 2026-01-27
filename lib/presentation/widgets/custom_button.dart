@@ -25,7 +25,7 @@ class CustomButton extends StatelessWidget {
       case ButtonType.primary:
         return AppColors.primaryBlue;
       case ButtonType.secondary:
-        return AppColors.accentGreen;
+        return AppColors.accentTeal;
       case ButtonType.success:
         return AppColors.successGreen;
     }

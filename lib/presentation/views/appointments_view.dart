@@ -110,7 +110,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                         colors: [
                           AppColors.primaryBlue,
                           AppColors.primaryBlueLight,
-                          AppColors.accentGreen,
+                          AppColors.accentTeal,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -188,7 +188,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'True Care Dental Clinic',
+                                          'Lib Dental Clinic',
                                           style: AppTextStyles.h3.copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,

@@ -34,7 +34,7 @@ class CardSelectionView extends GetView<CardController> {
                 colors: [
                   AppColors.primaryBlue,
                   AppColors.primaryBlueLight,
-                  AppColors.accentGreen,
+                  AppColors.accentTeal,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,

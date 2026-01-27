@@ -34,7 +34,7 @@ class ResetPasswordView extends GetView<ResetPasswordController> {
                   colors: [
                     AppColors.primaryBlue,
                     AppColors.primaryBlueLight,
-                    AppColors.accentGreen,
+                    AppColors.accentTeal,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,

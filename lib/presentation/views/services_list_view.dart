@@ -74,7 +74,7 @@ class _ServicesListView extends StatelessWidget {
                 colors: [
                   AppColors.primaryBlue,
                   AppColors.primaryBlueLight,
-                  AppColors.accentGreen,
+                  AppColors.accentTeal,
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -317,7 +317,7 @@ class _ServicesListView extends StatelessWidget {
                           gradient: LinearGradient(
                             colors: [
                               AppColors.primaryBlue.withValues(alpha: 0.1),
-                              AppColors.accentGreen.withValues(alpha: 0.1),
+                              AppColors.accentTeal.withValues(alpha: 0.1),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
@@ -342,7 +342,7 @@ class _ServicesListView extends StatelessWidget {
                             gradient: LinearGradient(
                               colors: [
                                 AppColors.primaryBlue.withValues(alpha: 0.1),
-                                AppColors.accentGreen.withValues(alpha: 0.1),
+                                AppColors.accentTeal.withValues(alpha: 0.1),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -393,13 +393,13 @@ class _ServicesListView extends StatelessWidget {
                           const Icon(
                             Icons.access_time_rounded,
                             size: 14,
-                            color: AppColors.accentGreen,
+                            color: AppColors.accentTeal,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${service.durationInMinutes} mins',
                             style: AppTextStyles.caption.copyWith(
-                              color: AppColors.accentGreen,
+                              color: AppColors.accentTeal,
                               fontWeight: FontWeight.w600,
                               fontSize: 11,
                             ),

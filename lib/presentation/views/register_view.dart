@@ -96,7 +96,7 @@ class RegisterView extends GetView<RegisterController> {
                   colors: [
                     AppColors.primaryBlue,
                     AppColors.primaryBlueLight,
-                    AppColors.accentGreen,
+                    AppColors.accentTeal,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -154,7 +154,7 @@ class RegisterView extends GetView<RegisterController> {
                             ),
                           ),
                           Text(
-                            "Join True Care Dental Clinic family",
+                            "Join Lib Dental Clinic family",
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 14,

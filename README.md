@@ -2,9 +2,9 @@
 
 A comprehensive Flutter mobile application for True Care Dental and Implant Clinic, providing patients with easy access to dental services, appointment booking, and clinic management features.
 
-## 🏥 About True Care Dental and Implant Clinic
+## 🏥 About Lib Dental and Implant Clinic
 
-True Care Dental and Implant Clinic is dedicated to providing exceptional dental care with a focus on patient comfort and advanced dental technology.
+Lib Dental and Implant Clinic is dedicated to providing exceptional dental care with a focus on patient comfort and advanced dental technology.
 
 ## 🎨 Brand Colors
 

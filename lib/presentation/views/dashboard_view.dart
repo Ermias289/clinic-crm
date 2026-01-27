@@ -179,15 +179,15 @@ class DashboardView extends GetView<DashboardController> {
                             DashboardCard(
                               icon: Icons.calendar_today_outlined,
                               title: 'Appointments',
-                              iconColor: AppColors.accentGreen,
+                              iconColor: AppColors.accentTeal,
                               onTap: () {
                                 Get.snackbar(
                                   'Coming Soon',
                                   'Appointment scheduling feature is under development',
                                   snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: AppColors.accentGreen
-                                      .withOpacity(0.1),
-                                  colorText: AppColors.accentGreen,
+                                  backgroundColor: AppColors.accentTeal
+                                      .withValues(alpha: 0.1),
+                                  colorText: AppColors.accentTeal,
                                 );
                               },
                             ),
