@@ -29,7 +29,7 @@ namespace Clinic_CRM.Helpers
             await SeedCompanySetting();
             await SeedRoles();
             await SeedUser();
-            await SeedCardType();
+            //await SeedCardType();
             //await SeedPatients();
 
 
@@ -100,13 +100,13 @@ namespace Clinic_CRM.Helpers
                     Logo = "file_997207_2025_12_23_17_13_26.png",
                     Prefix = "LDC",
                     Email = "",
-                    EmergencyPhoneNumber = "+2510909090909",
-                    PhoneNumber = "+2510909090909",
+                    EmergencyPhoneNumber = "+251976232425",
+                    PhoneNumber = "+251976232425",
                     Address = "Bole Dembel",
                     City = "Addis Ababa",
                     Country = "Ethiopia",
                     SubCity = "Bole",
-                    LocationOnMap = "non for now"
+                    LocationOnMap = "https://www.google.com/maps/d/u/0/edit?mid=1Wesmk9OEYTwdodZ6i_ZmTDrRsIVvy1o&usp=sharing"
                 };
                 _context.CompanySetting.Add(companySetting);
             }
@@ -192,12 +192,12 @@ namespace Clinic_CRM.Helpers
             {
                 new CreateUserAccountDTO
                 {
-                    FName = "Nexa Tech",
+                    FName = "Admin",
                     LName = "Super Admin",
-                    Username = "Nexa",
+                    Username = "Admin",
                     Email = "example@gmail.com",
-                    PhoneNumber = "+251984534724",
-                    Password = "12345",
+                    PhoneNumber = "+251900000000",
+                    Password = "admin123",
                     UserRoleId = superAdminRole?.Id,
                 },
             };
@@ -221,79 +221,81 @@ namespace Clinic_CRM.Helpers
         }
 
 
+        //Card Type Seed is Removed  To be added later when needed by the admin
 
-        async Task SeedCardType()
-        {
-            var exostingTypes = await _context.CardTypes.ToListAsync();
-            var cardTypes = new CardType[]
-            {
-                new CardType{Name = "Regular", Description = "Standard membership card"},
-                new CardType{Name = "Gold", Description = "Premium gold membership with priority access"},
-                new CardType{Name = "Platinum", Description = "Exclusive platinum membership with full benefits"}
-            };
 
-            foreach (var cardType in cardTypes)
-            {
-                if (!exostingTypes.Any(x => x.Name.ToLower() == cardType.Name.ToLower()))
-                {
-                    _context.CardTypes.Add(cardType);
-                }
-            }
+        //async Task SeedCardType()
+        //{
+        //    var exostingTypes = await _context.CardTypes.ToListAsync();
+        //    var cardTypes = new CardType[]
+        //    {
+        //        new CardType{Name = "Regular", Description = "Standard membership card"},
+        //        new CardType{Name = "Gold", Description = "Premium gold membership with priority access"},
+        //        new CardType{Name = "Platinum", Description = "Exclusive platinum membership with full benefits"}
+        //    };
 
-            await _context.SaveChangesAsync();
-            await SeedCardSetting();
-        }
+        //    foreach (var cardType in cardTypes)
+        //    {
+        //        if (!exostingTypes.Any(x => x.Name.ToLower() == cardType.Name.ToLower()))
+        //        {
+        //            _context.CardTypes.Add(cardType);
+        //        }
+        //    }
 
-        async Task SeedCardSetting()
-        {
-            var existingSettings = await _context.CardSettings.Include(x => x.CardType).ToListAsync();
-            var regularType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Regular");
-            var goldType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Gold");
-            var platinumType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Platinum");
+        //    await _context.SaveChangesAsync();
+        //    await SeedCardSetting();
+        //}
 
-            var settings = new List<CardSetting>();
+        //async Task SeedCardSetting()
+        //{
+        //    var existingSettings = await _context.CardSettings.Include(x => x.CardType).ToListAsync();
+        //    var regularType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Regular");
+        //    var goldType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Gold");
+        //    var platinumType = await _context.CardTypes.FirstOrDefaultAsync(x => x.Name == "Platinum");
 
-            if (regularType != null)
-            {
-                settings.Add(new CardSetting
-                {
-                    CardTypeId = regularType.Id,
-                    Price = 500,
-                    ExpirationDuration = 1// 1 Year
-                });
-            }
+        //    var settings = new List<CardSetting>();
 
-            if (goldType != null)
-            {
-                settings.Add(new CardSetting
-                {
-                    CardTypeId = goldType.Id,
-                    Price = 1500,
-                    ExpirationDuration = 365 // 1 Year
-                });
-            }
+        //    if (regularType != null)
+        //    {
+        //        settings.Add(new CardSetting
+        //        {
+        //            CardTypeId = regularType.Id,
+        //            Price = 500,
+        //            ExpirationDuration = 1// 1 Year
+        //        });
+        //    }
 
-            if (platinumType != null)
-            {
-                settings.Add(new CardSetting
-                {
-                    CardTypeId = platinumType.Id,
-                    Price = 3000,
-                    ExpirationDuration = 730 // 2 Years
-                });
-            }
+        //    if (goldType != null)
+        //    {
+        //        settings.Add(new CardSetting
+        //        {
+        //            CardTypeId = goldType.Id,
+        //            Price = 1500,
+        //            ExpirationDuration = 365 // 1 Year
+        //        });
+        //    }
 
-            foreach (var setting in settings)
-            {
-                // Check if a setting for this card type already exists with the same price/duration
-                if (!existingSettings.Any(x => x.CardTypeId == setting.CardTypeId && x.Price == setting.Price))
-                {
-                    _context.CardSettings.Add(setting);
-                }
-            }
-            
-            await _context.SaveChangesAsync();
-        }
+        //    if (platinumType != null)
+        //    {
+        //        settings.Add(new CardSetting
+        //        {
+        //            CardTypeId = platinumType.Id,
+        //            Price = 3000,
+        //            ExpirationDuration = 730 // 2 Years
+        //        });
+        //    }
+
+        //    foreach (var setting in settings)
+        //    {
+        //        // Check if a setting for this card type already exists with the same price/duration
+        //        if (!existingSettings.Any(x => x.CardTypeId == setting.CardTypeId && x.Price == setting.Price))
+        //        {
+        //            _context.CardSettings.Add(setting);
+        //        }
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //}
 
 
     }

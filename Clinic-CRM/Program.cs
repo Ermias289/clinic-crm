@@ -144,7 +144,7 @@ using (var scope = app.Services.CreateScope())
         if (pending != null && pending.Any())
         {
             logger.LogInformation("Applying {Count} pending migrations...", pending.Count());
-            db.Database.Migrate();   // <-- applies migrations
+            //db.Database.Migrate();   // <-- applies migrations
         }
         else
         {

@@ -34,7 +34,17 @@ namespace Clinic_CRM.Services.AppointmentServices
             //Load the service
             var service = await _context.MedicalServices.FindAsync(app.DentistryId);
 
-            
+            var prevApp = await _context.Appointments
+                 .Where(x => x.BranchId == dto.BranchId &&
+                            x.MedicalProfessionalId == dto.MedicalProfessionalId &&
+                            x.Day == dto.Day &&
+                            x.Status == APPOINTMENT_STATUS.SCHEDULED)
+                .Select(x => new
+                {
+                    x.ReservationTime,
+                    Duration = x.Dentistry.DurationInMinutes
+                })
+                .ToListAsync();
 
             if (_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
             {
@@ -91,13 +101,14 @@ namespace Clinic_CRM.Services.AppointmentServices
 
             // Check if doctor has schedule on that day and time
             var scheduleAvailable = doc.DoctorSchedules?
-                .Any(s =>
+                .Where(s =>
                     s.WeekDay.ToLower() == appointmentWeekDay &&
                     s.StartTime <= app.ReservationTime &&
                     s.EndTime >= app.ReservationTime
-                ) ?? false;
+                )
+                .FirstOrDefault();
 
-            if (!scheduleAvailable)
+            if (scheduleAvailable == null)
                 throw new KeyNotFoundException("The doctor isn't available at this time.");
 
             // Check company working hours
@@ -113,10 +124,31 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (!companyOpen)
                 throw new KeyNotFoundException("The clinic is not open on this date.");
 
+            if (app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes) > scheduleAvailable.EndTime)
+            {
+                throw new KeyNotFoundException("The selected service duration exceeds the available time slot. Please choose an earlier time or a shorter service.");
+            }
+
+            //Check Overlap
+
+            var appStart = app.ReservationTime;
+            var appEnd = app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes);
+
+            if (prevApp.Any(x =>
+            {
+                var xStart = x.ReservationTime;
+                var xEnd = x.ReservationTime.AddMinutes(x.Duration);
+                return appStart < xEnd && appEnd > xStart;
+            }))
+            {
+                throw new KeyNotFoundException("There is an appointment overlap on this time slot. Please choose another time slot.");
+            }
+
             var prefix = await _context.CompanySetting
                 .AsNoTracking()
                 .Select(x => x.Prefix)
                 .FirstOrDefaultAsync() ?? "";
+
             // Set status
             app.Status = APPOINTMENT_STATUS.SCHEDULED;
             app.ScheduledAt = DateTime.UtcNow;
@@ -460,6 +492,7 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .Include(x => x.Dentistry)
                 .Include(x => x.BranchSetting)
                 .Where(x => x.PatientId == Id)
+                .OrderByDescending(x => x.ScheduledAt)
                 .ToListAsync();
         }
 
@@ -476,6 +509,7 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .Include(x => x.Dentistry)
                 .Include(x => x.BranchSetting)
                 .Where(x => x.PatientId == patient.Id)
+                .OrderByDescending(x => x.ScheduledAt)
                 .ToListAsync();
         }
 
@@ -487,8 +521,69 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .Include(x => x.Dentistry)
                 .Include(x => x.BranchSetting)
                 .Where(x => x.MedicalProfessionalId == Id)
+                .OrderByDescending(x => x.ScheduledAt)
                 .ToListAsync();
         }
+
+        public async Task<List<TimeOnly>> GetFreeAppointmentHours(int docId, DateOnly day, int branchId)
+        {
+            var daySchedule = await _context.DoctorSchedules
+                .Where(x => x.MedicalProfessionalId == docId &&
+                        x.WeekDay.ToLower() == day.DayOfWeek.ToString().ToLower())
+                .FirstOrDefaultAsync();
+
+            if (daySchedule == null)
+                throw new KeyNotFoundException("No Medical Professional Schedule Found.");
+
+
+            var appointments = await _context.Appointments
+                .Where(x => x.BranchId == branchId &&
+                            x.MedicalProfessionalId == docId &&
+                            x.Day == day &&
+                            x.Status == APPOINTMENT_STATUS.SCHEDULED)
+                .Select(x => new
+                {
+                    x.ReservationTime,
+                    Duration = x.Dentistry.DurationInMinutes
+                })
+                .ToListAsync();
+
+
+            //if (Enum.TryParse<DayOfWeek>(daySchedule.WeekDay, true, out var scheduledDay))
+            //{
+            //    appointments = [.. appointments.Where(x => x.Day.DayOfWeek.ToString().Equals(daySchedule.WeekDay, StringComparison.OrdinalIgnoreCase))];
+            //}
+
+            DateTime now = DateTime.UtcNow;
+            // 2026-01-28 14:35:42
+
+            TimeOnly time = TimeOnly.FromDateTime(now);
+
+            var freeSlots = new List<TimeOnly>();
+            var slotDuration = 30; // standard appointment slot
+            var tempTime = daySchedule.StartTime;
+
+            while (tempTime <= daySchedule.EndTime)
+            {
+                var slotEnd = tempTime.AddMinutes(slotDuration);
+
+                bool overlaps = appointments.Any(a =>
+                     tempTime < a.ReservationTime.AddMinutes(a.Duration) &&
+                     slotEnd > a.ReservationTime
+                );
+
+                if (!overlaps && tempTime > time) // clearer than !(time >= tempTime)
+                {
+                    freeSlots.Add(tempTime);
+                }
+
+                tempTime = tempTime.AddMinutes(slotDuration);
+
+            }
+
+            return freeSlots;
+        }
+
 
     }
 }

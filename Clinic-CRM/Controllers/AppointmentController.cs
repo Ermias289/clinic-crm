@@ -181,7 +181,18 @@ namespace Clinic_CRM.Controllers
             {
                 return this.ParseException(ex);
             }
-        }   
+        }
 
+        [HttpGet("getFreeSlots")]
+        public async Task<ActionResult> GetFreeAppointmentHours(int docId, DateOnly day, int branchId)
+        {
+            try
+            {
+                return Ok(await _appointmentService.GetFreeAppointmentHours(docId, day, branchId));
+            }catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
     }
 }

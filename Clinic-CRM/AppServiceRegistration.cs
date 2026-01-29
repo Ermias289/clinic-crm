@@ -7,6 +7,7 @@ using Clinic_CRM.Services.CardServices;
 using Clinic_CRM.Services.CardSettingServices;
 using Clinic_CRM.Services.CardTypeServices;
 using Clinic_CRM.Services.CompanySettingServices;
+using Clinic_CRM.Services.DashBoardServices;
 using Clinic_CRM.Services.DoctorScheduleServices;
 using Clinic_CRM.Services.EmailService;
 using Clinic_CRM.Services.FileUploadServices;
@@ -93,6 +94,9 @@ namespace Clinic_CRM
 
             //Banner
             services.AddScoped<IBannerService, BannerService>();
+
+            //DashBoard
+            services.AddScoped<IDashBoardService, DashBoardService>();
         }
     }
 }

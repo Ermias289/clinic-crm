@@ -10,5 +10,6 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
         Task<DoctorSchedule> GetDoctorScheduleById(int Id);
         Task<List<DoctorSchedule>> GetAllDoctorSchedules();
         Task<DoctorSchedule> DeleteDoctorSchedule(int Id);
+        Task<List<DoctorSchedule>> GetDoctorSchedulesByDoctorId(int docId);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Clinic_CRM.DTOs.DoctorScheduleDTOs;
 using Clinic_CRM.Helpers;
+using Clinic_CRM.Models;
 using Clinic_CRM.Services.DoctorScheduleServices;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.AspNetCore.Http;
@@ -106,6 +107,26 @@ namespace Clinic_CRM.Controllers
             }
         }
 
-        
+
+        [HttpGet("getByDocId{Id}")]
+        public async Task<ActionResult> GetDoctorSchedulesByDoctorId(int Id)
+        {
+            try
+            {
+                var currentUser = _userService.GetCurrentUser();
+
+                if (currentUser == null || (currentUser.UserRole.Name != USER_ROLES.SUPER_ADMIN && !currentUser.UserRole.CanViewDoctorSchedule))
+                    throw new UnauthorizedAccessException();
+
+                return Ok(await _doctorSchedule.GetDoctorSchedulesByDoctorId(Id));
+            }
+            catch (Exception ex)
+            {
+                return this.ParseException(ex);
+            }
+        }
+
+
+
     }
 }

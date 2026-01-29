@@ -15,5 +15,6 @@ namespace Clinic_CRM.Services.AppointmentServices
         Task<List<Appointment>> GetAppointmentsByPatientId(int Id);
         Task<List<Appointment>> GetAppointmentByUserId(int userId);
         Task<List<Appointment>> GetAppointmentsByDocId(int Id);
+        Task<List<TimeOnly>> GetFreeAppointmentHours(int docId, DateOnly day, int branchId);
     }
 }

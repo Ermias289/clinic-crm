@@ -116,5 +116,14 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
 
             return doc;
         }
+
+        public async Task<List<DoctorSchedule>> GetDoctorSchedulesByDoctorId(int docId)
+        {
+            return await _context.DoctorSchedules
+                .Include(x => x.MedicalProfessionals)
+                .Include(x => x.BranchSetting)
+                .Where(x => x.MedicalProfessionalId == docId)
+                .ToListAsync();
+        }
     }
 }
