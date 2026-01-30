@@ -17,6 +17,7 @@ using Clinic_CRM.Services.NotificationServices;
 using Clinic_CRM.Services.OTPGenerator;
 using Clinic_CRM.Services.PatientServices;
 using Clinic_CRM.Services.PaymentServices;
+using Clinic_CRM.Services.PaymentTypeServices;
 using Clinic_CRM.Services.UserOnBoardingSettingServices;
 using Clinic_CRM.Services.UserRoleServices;
 using Clinic_CRM.Services.UserServices;
@@ -97,6 +98,9 @@ namespace Clinic_CRM
 
             //DashBoard
             services.AddScoped<IDashBoardService, DashBoardService>();
+
+            //Payment Type
+            services.AddScoped<IPaymentTypeService, PaymentTypeService>();
         }
     }
 }

@@ -161,7 +161,7 @@ namespace Clinic_CRM.Helpers
                     CanViewBank = true,
                     CanViewBankAccount = true,
                     CanReadNotification = true,
-                    CanViewNotification = true
+                    CanViewNotification = true,
                 }
             };
 

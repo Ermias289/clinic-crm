@@ -112,6 +112,12 @@ namespace Clinic_CRM.Models
         public bool CanViewNotification { get; set; } = false;
 
 
+        //Payment Type
+        public bool CanAddPaymentType { get; set; } = false;
+        public bool CanEditPaymentType { get; set; } = false;
+        public bool CanViewPaymentType { get; set; } = false;
+
+
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

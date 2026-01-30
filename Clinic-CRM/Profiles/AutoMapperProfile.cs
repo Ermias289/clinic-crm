@@ -12,6 +12,7 @@ using Clinic_CRM.DTOs.MedicalProfessionalDTOs;
 using Clinic_CRM.DTOs.MedicalServiceDTOs;
 using Clinic_CRM.DTOs.PatientDTOs;
 using Clinic_CRM.DTOs.PaymentDTOs;
+using Clinic_CRM.DTOs.PaymentTypeDTOs;
 using Clinic_CRM.DTOs.UserDTOs;
 using Clinic_CRM.DTOs.UserOnBoardingSettingDTOs;
 using Clinic_CRM.DTOs.UserRoleDTOs;
@@ -143,6 +144,14 @@ namespace Clinic_CRM.Profiles
             CreateMap<AddBankAccountDTO, BankAccount>();
             CreateMap<UpdateBankAccountDTO, BankAccount>();
             CreateMap<BankAccount, UpdateBankAccountDTO>();
+
+
+            //Payment Type
+            CreateMap<AddPaymentTypeDTO, PaymentType>();
+            CreateMap<PaymentType, AddPaymentTypeDTO>();
+            CreateMap<UpdatePaymentTypeDTO, PaymentType>();
+            CreateMap<PaymentType, UpdatePaymentTypeDTO>();
+
         }
     }
 }

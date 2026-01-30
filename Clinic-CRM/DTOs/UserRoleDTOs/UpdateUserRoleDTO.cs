@@ -9,5 +9,10 @@
 
         public bool CanEditCompanySettings { get; set; }
         public bool CanViewCompanySettings { get; set; }
+        public bool CanAddPaymentType { get; set; } = false;
+        public bool CanEditPaymentType { get; set; } = false;
+        public bool CanViewPaymentType { get; set; } = false;
+
+
     }
 }

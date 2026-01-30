@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Clinic_CRM.Models.Settings;
 
 namespace Clinic_CRM.Models
 {
@@ -14,8 +15,10 @@ namespace Clinic_CRM.Models
         public decimal UnPaidAmount { get; set; } = 0;
         public decimal PaidAmount { get; set; } = 0;
         public string PaymentProof { get; set; } = string.Empty;
-        public bool IsInsuranceCovered { get; set; } = false;
+        public bool IsInsured { get; set; } = false;
 
+        public PaymentType? PaymentType { get; set; }
+        public int? PaymentTypeId { get; set; }
         public decimal RequestedAmount { get; set; } = 0;
         public User RequestedBy { get; set; }
         public int? RequestedById { get; set; }

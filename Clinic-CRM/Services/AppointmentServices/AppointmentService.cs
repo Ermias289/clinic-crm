@@ -124,25 +124,25 @@ namespace Clinic_CRM.Services.AppointmentServices
             if (!companyOpen)
                 throw new KeyNotFoundException("The clinic is not open on this date.");
 
-            if (app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes) > scheduleAvailable.EndTime)
-            {
-                throw new KeyNotFoundException("The selected service duration exceeds the available time slot. Please choose an earlier time or a shorter service.");
-            }
+            //if (app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes) > scheduleAvailable.EndTime)
+            //{
+            //    throw new KeyNotFoundException("The selected service duration exceeds the available time slot. Please choose an earlier time or a shorter service.");
+            //}
 
-            //Check Overlap
+            ////Check Overlap
 
-            var appStart = app.ReservationTime;
-            var appEnd = app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes);
+            //var appStart = app.ReservationTime;
+            //var appEnd = app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes);
 
-            if (prevApp.Any(x =>
-            {
-                var xStart = x.ReservationTime;
-                var xEnd = x.ReservationTime.AddMinutes(x.Duration);
-                return appStart < xEnd && appEnd > xStart;
-            }))
-            {
-                throw new KeyNotFoundException("There is an appointment overlap on this time slot. Please choose another time slot.");
-            }
+            //if (prevApp.Any(x =>
+            //{
+            //    var xStart = x.ReservationTime;
+            //    var xEnd = x.ReservationTime.AddMinutes(x.Duration);
+            //    return appStart < xEnd && appEnd > xStart;
+            //}))
+            //{
+            //    throw new KeyNotFoundException("There is an appointment overlap on this time slot. Please choose another time slot.");
+            //}
 
             var prefix = await _context.CompanySetting
                 .AsNoTracking()
