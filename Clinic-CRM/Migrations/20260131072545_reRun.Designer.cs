@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic_CRM.Migrations
 {
     [DbContext(typeof(Context))]
-    [Migration("20251228165246_update")]
-    partial class update
+    [Migration("20260131072545_reRun")]
+    partial class reRun
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -107,6 +107,12 @@ namespace Clinic_CRM.Migrations
                     b.Property<TimeOnly>("ReservationTime")
                         .HasColumnType("time");
 
+                    b.Property<DateTime>("ScheduledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ScheduledById")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -127,6 +133,8 @@ namespace Clinic_CRM.Migrations
                     b.HasIndex("MedicalProfessionalId");
 
                     b.HasIndex("PatientId");
+
+                    b.HasIndex("ScheduledById");
 
                     b.ToTable("Appointments");
                 });
@@ -564,6 +572,9 @@ namespace Clinic_CRM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("PaymentTypeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Reference")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -606,6 +617,8 @@ namespace Clinic_CRM.Migrations
                     b.HasIndex("CardId");
 
                     b.HasIndex("CheckedById");
+
+                    b.HasIndex("PaymentTypeId");
 
                     b.HasIndex("RejectedById");
 
@@ -659,6 +672,26 @@ namespace Clinic_CRM.Migrations
                     b.HasIndex("BankId");
 
                     b.ToTable("BankAccounts");
+                });
+
+            modelBuilder.Entity("Clinic_CRM.Models.Settings.Banner", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Banners");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.BranchSetting", b =>
@@ -781,6 +814,14 @@ namespace Clinic_CRM.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("EmergencyPhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LocationOnMap")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Logo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -807,6 +848,27 @@ namespace Clinic_CRM.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("CompanySetting");
+                });
+
+            modelBuilder.Entity("Clinic_CRM.Models.Settings.PaymentType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentTypes");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.UserOnBoardingSetting", b =>
@@ -989,6 +1051,9 @@ namespace Clinic_CRM.Migrations
                     b.Property<bool>("CanAddPatient")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("CanAddPaymentType")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("CanAddRole")
                         .HasColumnType("bit");
 
@@ -1053,6 +1118,9 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanEditPatient")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanEditPaymentType")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanEditRole")
@@ -1125,6 +1193,9 @@ namespace Clinic_CRM.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewPatient")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanViewPaymentType")
                         .HasColumnType("bit");
 
                     b.Property<bool>("CanViewRole")
@@ -1229,6 +1300,10 @@ namespace Clinic_CRM.Migrations
                         .WithMany()
                         .HasForeignKey("PatientId");
 
+                    b.HasOne("Clinic_CRM.Models.User", "ScheduledBy")
+                        .WithMany()
+                        .HasForeignKey("ScheduledById");
+
                     b.Navigation("BranchSetting");
 
                     b.Navigation("CanceledBy");
@@ -1240,6 +1315,8 @@ namespace Clinic_CRM.Migrations
                     b.Navigation("MedicalProfessional");
 
                     b.Navigation("Patient");
+
+                    b.Navigation("ScheduledBy");
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Card", b =>
@@ -1340,6 +1417,10 @@ namespace Clinic_CRM.Migrations
                         .HasForeignKey("CheckedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Clinic_CRM.Models.Settings.PaymentType", "PaymentType")
+                        .WithMany()
+                        .HasForeignKey("PaymentTypeId");
+
                     b.HasOne("Clinic_CRM.Models.User", "RejectedBy")
                         .WithMany()
                         .HasForeignKey("RejectedById");
@@ -1356,6 +1437,8 @@ namespace Clinic_CRM.Migrations
                     b.Navigation("Card");
 
                     b.Navigation("CheckedBy");
+
+                    b.Navigation("PaymentType");
 
                     b.Navigation("RejectedBy");
 

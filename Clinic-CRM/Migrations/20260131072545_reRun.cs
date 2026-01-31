@@ -6,11 +6,39 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Clinic_CRM.Migrations
 {
     /// <inheritdoc />
-    public partial class MigrationRestore : Migration
+    public partial class reRun : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Banks",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Logo = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Banks", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Banners",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Banners", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "CardTypes",
                 columns: table => new
@@ -35,11 +63,13 @@ namespace Clinic_CRM.Migrations
                     Logo = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Prefix = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EmergencyPhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     City = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SubCity = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LocationOnMap = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -49,38 +79,12 @@ namespace Clinic_CRM.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MedicalProfessionals",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Specialty = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LicenseNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EducationalBackground = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    YearsOfExperience = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    RequiresUserAccount = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MedicalProfessionals", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "MedicalServices",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    ServiceReference = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DurationInMinutes = table.Column<int>(type: "int", nullable: false),
@@ -91,6 +95,54 @@ namespace Clinic_CRM.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MedicalServices", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OTPs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OtpHash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OTPs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentTypes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentTypes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -166,12 +218,44 @@ namespace Clinic_CRM.Migrations
                     CanAddMedicalService = table.Column<bool>(type: "bit", nullable: false),
                     CanUpdateMedicalService = table.Column<bool>(type: "bit", nullable: false),
                     CanViewMedicalService = table.Column<bool>(type: "bit", nullable: false),
+                    CanAddBank = table.Column<bool>(type: "bit", nullable: false),
+                    CanEditBank = table.Column<bool>(type: "bit", nullable: false),
+                    CanViewBank = table.Column<bool>(type: "bit", nullable: false),
+                    CanAddBankAccount = table.Column<bool>(type: "bit", nullable: false),
+                    CanEditBankAccount = table.Column<bool>(type: "bit", nullable: false),
+                    CanViewBankAccount = table.Column<bool>(type: "bit", nullable: false),
+                    CanReadNotification = table.Column<bool>(type: "bit", nullable: false),
+                    CanViewNotification = table.Column<bool>(type: "bit", nullable: false),
+                    CanAddPaymentType = table.Column<bool>(type: "bit", nullable: false),
+                    CanEditPaymentType = table.Column<bool>(type: "bit", nullable: false),
+                    CanViewPaymentType = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UserRoles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BankAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BankId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BankAccounts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BankAccounts_Banks_BankId",
+                        column: x => x.BankId,
+                        principalTable: "Banks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -244,30 +328,6 @@ namespace Clinic_CRM.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MedicalProfessionalMedicalService",
-                columns: table => new
-                {
-                    MedicalProfessionalsId = table.Column<int>(type: "int", nullable: false),
-                    MedicalServicesId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MedicalProfessionalMedicalService", x => new { x.MedicalProfessionalsId, x.MedicalServicesId });
-                    table.ForeignKey(
-                        name: "FK_MedicalProfessionalMedicalService_MedicalProfessionals_MedicalProfessionalsId",
-                        column: x => x.MedicalProfessionalsId,
-                        principalTable: "MedicalProfessionals",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_MedicalProfessionalMedicalService_MedicalServices_MedicalServicesId",
-                        column: x => x.MedicalServicesId,
-                        principalTable: "MedicalServices",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -282,6 +342,7 @@ namespace Clinic_CRM.Migrations
                     PasswordHash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     PasswordSalt = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     UserRoleId = table.Column<int>(type: "int", nullable: false),
+                    IsEmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -292,30 +353,6 @@ namespace Clinic_CRM.Migrations
                         name: "FK_Users_UserRoles_UserRoleId",
                         column: x => x.UserRoleId,
                         principalTable: "UserRoles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BranchSettingMedicalProfessional",
-                columns: table => new
-                {
-                    BranchesId = table.Column<int>(type: "int", nullable: false),
-                    MedicalProfessionalsId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BranchSettingMedicalProfessional", x => new { x.BranchesId, x.MedicalProfessionalsId });
-                    table.ForeignKey(
-                        name: "FK_BranchSettingMedicalProfessional_BranchSettings_BranchesId",
-                        column: x => x.BranchesId,
-                        principalTable: "BranchSettings",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_BranchSettingMedicalProfessional_MedicalProfessionals_MedicalProfessionalsId",
-                        column: x => x.MedicalProfessionalsId,
-                        principalTable: "MedicalProfessionals",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -340,6 +377,92 @@ namespace Clinic_CRM.Migrations
                         name: "FK_BranchSettingMedicalService_MedicalServices_DentistryServicesId",
                         column: x => x.DentistryServicesId,
                         principalTable: "MedicalServices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MedicalProfessionals",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Prefix = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    JobTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Specialty = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LicenseNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EducationalBackground = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    YearsOfExperience = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RequiresUserAccount = table.Column<bool>(type: "bit", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MedicalProfessionals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MedicalProfessionals_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserNotifications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    NotificationId = table.Column<int>(type: "int", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    ReadAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserNotifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserNotifications_Notifications_NotificationId",
+                        column: x => x.NotificationId,
+                        principalTable: "Notifications",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserNotifications_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BranchSettingMedicalProfessional",
+                columns: table => new
+                {
+                    BranchesId = table.Column<int>(type: "int", nullable: false),
+                    MedicalProfessionalsId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BranchSettingMedicalProfessional", x => new { x.BranchesId, x.MedicalProfessionalsId });
+                    table.ForeignKey(
+                        name: "FK_BranchSettingMedicalProfessional_BranchSettings_BranchesId",
+                        column: x => x.BranchesId,
+                        principalTable: "BranchSettings",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BranchSettingMedicalProfessional_MedicalProfessionals_MedicalProfessionalsId",
+                        column: x => x.MedicalProfessionalsId,
+                        principalTable: "MedicalProfessionals",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -376,12 +499,36 @@ namespace Clinic_CRM.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MedicalProfessionalMedicalService",
+                columns: table => new
+                {
+                    MedicalProfessionalsId = table.Column<int>(type: "int", nullable: false),
+                    MedicalServicesId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MedicalProfessionalMedicalService", x => new { x.MedicalProfessionalsId, x.MedicalServicesId });
+                    table.ForeignKey(
+                        name: "FK_MedicalProfessionalMedicalService_MedicalProfessionals_MedicalProfessionalsId",
+                        column: x => x.MedicalProfessionalsId,
+                        principalTable: "MedicalProfessionals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MedicalProfessionalMedicalService_MedicalServices_MedicalServicesId",
+                        column: x => x.MedicalServicesId,
+                        principalTable: "MedicalServices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Appointments",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DentistryServiceId = table.Column<int>(type: "int", nullable: false),
+                    Reference = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     DentistryId = table.Column<int>(type: "int", nullable: false),
                     MedicalProfessionalId = table.Column<int>(type: "int", nullable: false),
                     PatientId = table.Column<int>(type: "int", nullable: true),
@@ -390,11 +537,15 @@ namespace Clinic_CRM.Migrations
                     ReservationTime = table.Column<TimeOnly>(type: "time", nullable: false),
                     Day = table.Column<DateOnly>(type: "date", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ScheduledById = table.Column<int>(type: "int", nullable: true),
+                    ScheduledAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CompletedById = table.Column<int>(type: "int", nullable: true),
                     CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CanceledById = table.Column<int>(type: "int", nullable: true),
                     CanceledAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CancelReason = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    CancelReason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdateAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -411,8 +562,8 @@ namespace Clinic_CRM.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Appointments_MedicalServices_DentistryServiceId",
-                        column: x => x.DentistryServiceId,
+                        name: "FK_Appointments_MedicalServices_DentistryId",
+                        column: x => x.DentistryId,
                         principalTable: "MedicalServices",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -424,6 +575,11 @@ namespace Clinic_CRM.Migrations
                     table.ForeignKey(
                         name: "FK_Appointments_Users_CompletedById",
                         column: x => x.CompletedById,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Appointments_Users_ScheduledById",
+                        column: x => x.ScheduledById,
                         principalTable: "Users",
                         principalColumn: "Id");
                 });
@@ -526,8 +682,10 @@ namespace Clinic_CRM.Migrations
                     UnPaidAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PaidAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PaymentProof = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsInsuranceCovered = table.Column<bool>(type: "bit", nullable: false),
+                    PaymentTypeId = table.Column<int>(type: "int", nullable: true),
                     RequestedAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    RequestedById = table.Column<int>(type: "int", nullable: false),
+                    RequestedById = table.Column<int>(type: "int", nullable: true),
                     RequestedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ApprovedById = table.Column<int>(type: "int", nullable: true),
@@ -554,6 +712,11 @@ namespace Clinic_CRM.Migrations
                         principalTable: "Cards",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Payments_PaymentTypes_PaymentTypeId",
+                        column: x => x.PaymentTypeId,
+                        principalTable: "PaymentTypes",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Payments_Users_ApprovedById",
                         column: x => x.ApprovedById,
@@ -601,9 +764,9 @@ namespace Clinic_CRM.Migrations
                 column: "CompletedById");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_DentistryServiceId",
+                name: "IX_Appointments_DentistryId",
                 table: "Appointments",
-                column: "DentistryServiceId");
+                column: "DentistryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Appointments_MedicalProfessionalId",
@@ -614,6 +777,16 @@ namespace Clinic_CRM.Migrations
                 name: "IX_Appointments_PatientId",
                 table: "Appointments",
                 column: "PatientId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Appointments_ScheduledById",
+                table: "Appointments",
+                column: "ScheduledById");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BankAccounts_BankId",
+                table: "BankAccounts",
+                column: "BankId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BranchSettingMedicalProfessional_MedicalProfessionalsId",
@@ -671,6 +844,11 @@ namespace Clinic_CRM.Migrations
                 column: "MedicalServicesId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MedicalProfessionals_UserId",
+                table: "MedicalProfessionals",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Patients_CardId1",
                 table: "Patients",
                 column: "CardId1");
@@ -701,6 +879,11 @@ namespace Clinic_CRM.Migrations
                 column: "CheckedById");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Payments_PaymentTypeId",
+                table: "Payments",
+                column: "PaymentTypeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Payments_RejectedById",
                 table: "Payments",
                 column: "RejectedById");
@@ -709,6 +892,17 @@ namespace Clinic_CRM.Migrations
                 name: "IX_Payments_RequestedById",
                 table: "Payments",
                 column: "RequestedById");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserNotifications_NotificationId",
+                table: "UserNotifications",
+                column: "NotificationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserNotifications_UserId_NotificationId",
+                table: "UserNotifications",
+                columns: new[] { "UserId", "NotificationId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_UserRoleId",
@@ -747,6 +941,12 @@ namespace Clinic_CRM.Migrations
                 name: "Appointments");
 
             migrationBuilder.DropTable(
+                name: "BankAccounts");
+
+            migrationBuilder.DropTable(
+                name: "Banners");
+
+            migrationBuilder.DropTable(
                 name: "BranchSettingMedicalProfessional");
 
             migrationBuilder.DropTable(
@@ -762,13 +962,22 @@ namespace Clinic_CRM.Migrations
                 name: "MedicalProfessionalMedicalService");
 
             migrationBuilder.DropTable(
+                name: "OTPs");
+
+            migrationBuilder.DropTable(
                 name: "Payments");
+
+            migrationBuilder.DropTable(
+                name: "UserNotifications");
 
             migrationBuilder.DropTable(
                 name: "UserOnBoardingSettings");
 
             migrationBuilder.DropTable(
                 name: "Workdays");
+
+            migrationBuilder.DropTable(
+                name: "Banks");
 
             migrationBuilder.DropTable(
                 name: "BranchSettings");
@@ -778,6 +987,12 @@ namespace Clinic_CRM.Migrations
 
             migrationBuilder.DropTable(
                 name: "MedicalServices");
+
+            migrationBuilder.DropTable(
+                name: "PaymentTypes");
+
+            migrationBuilder.DropTable(
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "CompanySetting");

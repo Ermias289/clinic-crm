@@ -127,8 +127,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
         public async Task<MedicalProfessional> GetMedicalProfessionalById(int Id)
         {
             var doc = await _context.MedicalProfessionals
-                .Include(x => x.Branches)
-                .Include(x => x.MedicalServices)
+                .AsNoTracking()
                 .Select(x => new MedicalProfessional
                 {
                     Id = x.Id,
@@ -195,7 +194,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
         public async Task<List<MedicalProfessional>> GetAllMedicalProfessionals()
         {
-            return await _context.MedicalProfessionals.Include(x => x.MedicalServices).Include(x => x.Branches)
+            return await _context.MedicalProfessionals.AsNoTracking()
                  .Select(x => new MedicalProfessional
                  {
                      Id = x.Id,

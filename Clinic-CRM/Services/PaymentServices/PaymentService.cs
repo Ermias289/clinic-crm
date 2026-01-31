@@ -242,7 +242,7 @@ namespace Clinic_CRM.Services.PaymentServices
 
             if(user != null)
                 await _notify.SendUserAsync(
-                    $"Payment Ckecked",
+                    $"Payment Checked",
                     $"Your Payment has request with reference number {payment.Reference} has been checked.",
                     NOTIFICATION_CONSTANTS.PAYMENT,
                     new List<int> { user.Id }

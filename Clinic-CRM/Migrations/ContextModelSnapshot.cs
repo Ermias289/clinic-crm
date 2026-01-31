@@ -559,7 +559,7 @@ namespace Clinic_CRM.Migrations
                     b.Property<decimal>("ExpectedAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<bool>("IsInsured")
+                    b.Property<bool>("IsInsuranceCovered")
                         .HasColumnType("bit");
 
                     b.Property<decimal>("PaidAmount")

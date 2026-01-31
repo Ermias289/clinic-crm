@@ -43,8 +43,8 @@ namespace Clinic_CRM.Services.MedicalServices
         public async Task<List<MedicalService>> GetAllMedicalServices()
         {
             return await _context.MedicalServices
-                .Include(x => x.MedicalProfessionals)
-                .Include(x => x.Branches)
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Select(x => new MedicalService
                 {
                     Id = x.Id,
@@ -53,29 +53,27 @@ namespace Clinic_CRM.Services.MedicalServices
                     CreatedAt = x.CreatedAt,
                     ServicePicture = x.ServicePicture,
                     Description = x.Description,
-                    UpdatedAt = x.UpdatedAt,
                     ServiceReference = x.ServiceReference,
 
-                    MedicalProfessionals = x.MedicalProfessionals.Select(mp => new MedicalProfessional
+
+                    MedicalProfessionals = x.MedicalProfessionals.Where(mp => mp.Status == "Active") .Select(mp => new MedicalProfessional
                     {
                         FName = mp.FName,
                         LName = mp.LName,
                         MName = mp.MName,
                         LicenseNumber = mp.LicenseNumber,
-                        DoctorSchedules = mp.DoctorSchedules,
                         CreatedAt = mp.CreatedAt,
                         EducationalBackground = mp.EducationalBackground,
                         Email = mp.Email,
                         Id = mp.Id,
                         JobTitle = mp.JobTitle,
-                        Prefix = mp.Prefix,
+                        //Prefix = mp.Prefix,
                         Specialty = mp.Specialty,
-                        Status = mp.Status,
+                        //Status = mp.Status,
                         YearsOfExperience = mp.YearsOfExperience,
                         UserId = mp.UserId,
                         ProfilePicture = mp.ProfilePicture,
                         PhoneNumber = mp.PhoneNumber,
-                        UpdatedAt = mp.UpdatedAt,
                     }).ToList(),
 
                     Branches = x.Branches.Select(x => new BranchSetting
@@ -177,8 +175,51 @@ namespace Clinic_CRM.Services.MedicalServices
                         (branchId == null || x.Id == branchId) &&
                         (docId == null || x.Id == docId)
                  )
-                .Include(x => x.Branches)
-                .Include(x => x.MedicalProfessionals)
+                .AsNoTracking()
+                .Select(x => new MedicalService
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    DurationInMinutes = x.DurationInMinutes,
+                    CreatedAt = x.CreatedAt,
+                    ServicePicture = x.ServicePicture,
+                    Description = x.Description,
+                    UpdatedAt = x.UpdatedAt,
+                    ServiceReference = x.ServiceReference,
+
+                    MedicalProfessionals = x.MedicalProfessionals.Select(mp => new MedicalProfessional
+                    {
+                        FName = mp.FName,
+                        LName = mp.LName,
+                        MName = mp.MName,
+                        LicenseNumber = mp.LicenseNumber,
+                        DoctorSchedules = mp.DoctorSchedules,
+                        CreatedAt = mp.CreatedAt,
+                        EducationalBackground = mp.EducationalBackground,
+                        Email = mp.Email,
+                        Id = mp.Id,
+                        JobTitle = mp.JobTitle,
+                        Prefix = mp.Prefix,
+                        Specialty = mp.Specialty,
+                        Status = mp.Status,
+                        YearsOfExperience = mp.YearsOfExperience,
+                        UserId = mp.UserId,
+                        ProfilePicture = mp.ProfilePicture,
+                        PhoneNumber = mp.PhoneNumber,
+                        UpdatedAt = mp.UpdatedAt,
+                    }).ToList(),
+
+                    Branches = x.Branches.Select(x => new BranchSetting
+                    {
+                        Id = x.Id,
+                        Address = x.Address,
+                        City = x.City,
+                        Location = x.Location,
+                        Name = x.Name,
+                        SubCity = x.SubCity,
+                        PhoneNumber = x.PhoneNumber,
+                    }).ToList(),
+                })
                 .ToListAsync();
 
             return service;

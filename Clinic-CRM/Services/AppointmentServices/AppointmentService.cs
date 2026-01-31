@@ -28,174 +28,266 @@ namespace Clinic_CRM.Services.AppointmentServices
 
         public async Task<Appointment> MakeAppointment(AddAppointmentDTO dto)
         {
-            // Map DTO to entity
+            var currentUser = _userService.GetCurrentUser();
             var app = _mapper.Map<Appointment>(dto);
 
-            //Load the service
-            var service = await _context.MedicalServices.FindAsync(app.DentistryId);
+            // 🧠 Load service, doctor, and workday in parallel
+            var serviceTask = await _context.MedicalServices
+                .Where(s => s.Id == dto.DentistryId)
+                .Select(s => new { s.Id, s.Name, s.DurationInMinutes })
+                .FirstOrDefaultAsync();
 
-            var prevApp = await _context.Appointments
-                 .Where(x => x.BranchId == dto.BranchId &&
-                            x.MedicalProfessionalId == dto.MedicalProfessionalId &&
-                            x.Day == dto.Day &&
-                            x.Status == APPOINTMENT_STATUS.SCHEDULED)
-                .Select(x => new
+            if(serviceTask == null)
+                throw new KeyNotFoundException("Medical service not found.");
+
+            var doctorTask = await _context.MedicalProfessionals
+                .Include(d => d.DoctorSchedules)
+                .Where(d => d.Id == dto.MedicalProfessionalId)
+                .Select(d => new
                 {
-                    x.ReservationTime,
-                    Duration = x.Dentistry.DurationInMinutes
+                    d.Id,
+                    d.Prefix,
+                    d.FName,
+                    Schedules = d.DoctorSchedules
                 })
-                .ToListAsync();
+                .FirstOrDefaultAsync();
 
-            if (_userService.GetCurrentUser().UserRole.Name == USER_ROLES.PATIENT)
+            if(doctorTask == null)
+                throw new KeyNotFoundException("Doctor not found.");
+
+            var workdayTask = await _context.Workdays
+                .Where(w => w.Day.ToLower() == dto.Day.DayOfWeek.ToString().ToLower())
+                .Select(w => new { w.IsWorkingDay, w.OpeningTime, w.ClosingTime })
+                .FirstOrDefaultAsync();
+
+            if(workdayTask == null)
+                throw new KeyNotFoundException("Workday information not found.");
+
+            // 👤 Patient resolution
+            if (currentUser.UserRole.Name == USER_ROLES.PATIENT)
             {
-                var userpatient = await _context.Patients.Where(x => x.UserId == _userService.GetCurrentUser().Id).FirstOrDefaultAsync();
-                app.PatientId = userpatient?.Id;
+                var patientId = await _context.Patients
+                    .Where(p => p.UserId == currentUser.Id)
+                    .Select(p => p.Id)
+                    .FirstOrDefaultAsync();
+
+                if (patientId == 0)
+                    throw new KeyNotFoundException("Patient profile not found.");
+
+                app.PatientId = patientId;
             }
 
-            var patient = await _context.Patients.Where(x => x.Id == dto.PatientId).FirstOrDefaultAsync();
+            // 💳 Load patient + card + card settings in ONE query
+            var patientData = await _context.Patients
+                .Where(p => p.Id == app.PatientId)
+                .Include(p=> p.Card)
+                .Include(p => p.User)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.FName,
+                    p.Card
+                 
+                })
+                .FirstOrDefaultAsync();
 
-            if (patient == null)
-                throw new KeyNotFoundException("Patient Not Found");
+            if (patientData == null)
+                throw new KeyNotFoundException("Patient not found.");
 
-            // Check patient's card
             var card = await _context.Cards
-                .Where(c => c.PatientId == app.PatientId)
+                .Where(c => c.PatientId == patientData.Id)
                 .FirstOrDefaultAsync();
 
             if (card == null)
-                throw new KeyNotFoundException("Patient does not have a card. Please get a card to make an appointment.");
+                throw new KeyNotFoundException("Patient does not have a card.");
 
-            var cardtype = await _context.CardTypes.FindAsync(card.CardTypeId);
+            var cardSettings = await _context.CardSettings
+                .Where(cs => cs.CardTypeId == card.CardTypeId)
+                .FirstOrDefaultAsync();
 
-            var cardSetting = await _context.CardSettings
-                           .Where(c => c.CardType.Name == cardtype.Name)
-                           .FirstOrDefaultAsync();
+            if(cardSettings == null)
+                throw new KeyNotFoundException("Card settings not found for patient's card type.");
 
-            if (cardSetting == null)
-                throw new KeyNotFoundException("Card Setting Not Found");
+            var expiryDate = DateOnly.FromDateTime(card.ActivatedAt.AddDays(cardSettings.ExpirationDuration));
 
-            var cardExpiryDate = DateOnly.FromDateTime(card.ActivatedAt.AddDays(cardSetting.ExpirationDuration));
+            if (dto.Day > expiryDate)
+                throw new InvalidOperationException($"Card expires on {expiryDate:yyyy-MM-dd}.");
 
-            // appointmentDate = the date user selected
-            if (app.Day > cardExpiryDate)
+            // 🕒 Doctor schedule check
+            var weekday = dto.Day.DayOfWeek.ToString().ToLower();
+
+            var schedule = doctorTask.Schedules.FirstOrDefault(s =>
+                s.WeekDay.ToLower() == weekday &&
+                s.StartTime <= dto.ReservationTime &&
+                s.EndTime >= dto.ReservationTime);
+
+            if (schedule == null)
+                throw new KeyNotFoundException("Doctor not available at this time.");
+
+            // 🏥 Clinic working hours check
+            if (workdayTask == null || !workdayTask.IsWorkingDay ||
+                workdayTask.OpeningTime > dto.ReservationTime ||
+                workdayTask.ClosingTime < dto.ReservationTime)
+                throw new KeyNotFoundException("Clinic is closed at this time.");
+
+            var serviceDuration = serviceTask.DurationInMinutes;
+            var appStart = dto.ReservationTime;
+            var appEnd = appStart.AddMinutes(serviceDuration);
+
+            if (appEnd > schedule.EndTime)
+                throw new KeyNotFoundException("Service exceeds doctor's available time.");
+
+            // 🔁 Overlap check
+            var overlapping = await _context.Appointments
+                .Where(x => x.BranchId == dto.BranchId &&
+                            x.MedicalProfessionalId == dto.MedicalProfessionalId &&
+                            x.Day == dto.Day &&
+                            x.Status == APPOINTMENT_STATUS.SCHEDULED)
+                .Select(x => new { x.ReservationTime, x.Dentistry.DurationInMinutes })
+                .ToListAsync();
+
+            if (overlapping != null && overlapping.Any(x =>
             {
-                throw new InvalidOperationException(
-                    $"Your card will expire on {cardExpiryDate:yyyy-MM-dd}. Please choose an appointment date before this date."
-                );
-            }
+                var start = x.ReservationTime;
+                var end = start.AddMinutes(x.DurationInMinutes);
+                return appStart < end && appEnd > start;
+            }))
+                throw new KeyNotFoundException("Time slot already booked.");
 
-
-            if (service == null)
-                throw new KeyNotFoundException("Medical service not found.");
-
-            // Load doctor with schedules
-            var doc = await _context.MedicalProfessionals
-                .Include(d => d.DoctorSchedules)
-                .FirstOrDefaultAsync(d => d.Id == app.MedicalProfessionalId);
-
-            if (doc == null)
-                throw new KeyNotFoundException("Doctor not found.");
-
-            // Compute appointment weekday
-            var appointmentWeekDay = app.Day.DayOfWeek.ToString().ToLower();
-
-            // Check if doctor has schedule on that day and time
-            var scheduleAvailable = doc.DoctorSchedules?
-                .Where(s =>
-                    s.WeekDay.ToLower() == appointmentWeekDay &&
-                    s.StartTime <= app.ReservationTime &&
-                    s.EndTime >= app.ReservationTime
-                )
-                .FirstOrDefault();
-
-            if (scheduleAvailable == null)
-                throw new KeyNotFoundException("The doctor isn't available at this time.");
-
-            // Check company working hours
-            var companyOpen = await _context.Workdays
-                              .Where(x =>
-                                  x.Day.ToLower() == appointmentWeekDay.ToLower() &&
-                                  x.IsWorkingDay &&
-                                  x.OpeningTime <= app.ReservationTime &&
-                                  x.ClosingTime >= app.ReservationTime
-                              )
-                              .AnyAsync();
-
-            if (!companyOpen)
-                throw new KeyNotFoundException("The clinic is not open on this date.");
-
-            //if (app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes) > scheduleAvailable.EndTime)
-            //{
-            //    throw new KeyNotFoundException("The selected service duration exceeds the available time slot. Please choose an earlier time or a shorter service.");
-            //}
-
-            ////Check Overlap
-
-            //var appStart = app.ReservationTime;
-            //var appEnd = app.ReservationTime.AddMinutes(app.Dentistry.DurationInMinutes);
-
-            //if (prevApp.Any(x =>
-            //{
-            //    var xStart = x.ReservationTime;
-            //    var xEnd = x.ReservationTime.AddMinutes(x.Duration);
-            //    return appStart < xEnd && appEnd > xStart;
-            //}))
-            //{
-            //    throw new KeyNotFoundException("There is an appointment overlap on this time slot. Please choose another time slot.");
-            //}
-
+            // 🏷 Generate reference prefix
             var prefix = await _context.CompanySetting
                 .AsNoTracking()
                 .Select(x => x.Prefix)
                 .FirstOrDefaultAsync() ?? "";
 
-            // Set status
             app.Status = APPOINTMENT_STATUS.SCHEDULED;
-            app.ScheduledAt = DateTime.UtcNow;
-            app.ScheduledById = _userService.GetCurrentUserNoInclude().Id;
+            app.ScheduledAt = DateTime.Now;
+            app.ScheduledById = currentUser.Id;
 
-            // Add appointment
             _context.Appointments.Add(app);
             await _context.SaveChangesAsync();
+
             app.Reference = $"{prefix}/{PREFIX.APPOINTMENT}/{app.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{app.CreatedAt.Year}";
+            await _context.SaveChangesAsync();
 
-            var medicalPro = await _context.MedicalProfessionals.Include(x => x.User).Where(x => x.Id == app.MedicalProfessionalId).Select(x => x.UserId).FirstOrDefaultAsync();
-            var patientn = await _context.Patients.Include(x => x.User).Where(x => x.Id == app.PatientId).Select(x => x.UserId).FirstOrDefaultAsync();
+            // 🔔 Notifications (lightweight queries)
+            // 🔔 --- SAFE NOTIFICATIONS START ---
 
-            var medicalUser = await _context.Users.FindAsync(medicalPro);
-            var patientUser = await _context.Users.FindAsync(patientn);
-            if (patientUser != null)
+            // Load navigation properties first
+            await _context.Entry(app).Reference(a => a.Patient).LoadAsync();
+            await _context.Entry(app).Reference(a => a.MedicalProfessional).LoadAsync();
+
+            // Get the UserIds for medical professional and patient
+            var medicalProId = await _context.MedicalProfessionals
+                .Where(x => x.Id == app.MedicalProfessionalId && x.UserId != 0)
+                .Select(x => x.UserId)
+                .FirstOrDefaultAsync();
+
+            var notifypatientId = await _context.Patients
+                .Where(x => x.Id == app.PatientId && x.UserId != 0)
+                .Select(x => x.UserId)
+                .FirstOrDefaultAsync();
+
+            // Load actual User entities safely
+            User? medicalUser = null;
+            User? patientUser = null;
+
+            if (medicalProId != 0)
             {
-                await _notify.SendUserAsync(
-                  $"Appointment for {app.Dentistry.Name} Service",
-                  $"Dear {app.Patient.FName}, You have successfully made an appointment for {app.Day} at {app.ReservationTime}. Please arrive on time as scheduled. If you need to make any changes, contact the clinic in advance.",
-                  NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { patientUser.Id }
-                  );
+                medicalUser = await _context.Users.FindAsync(medicalProId);
             }
 
-            if (medicalUser != null)
+            if (notifypatientId != 0)
             {
-                await _notify.SendUserAsync(
-                  $"New Appointment",
-                  $"Dear {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName}, You have a new appointment for {app.Day} at {app.ReservationTime} with patient {app.Patient.FName}. If you need to make any changes, contact the clinic in advance.",
-                  NOTIFICATION_CONSTANTS.APPOINTMENT,
-                  new List<int> { medicalUser.Id }
-                  );
+                patientUser = await _context.Users.FindAsync(notifypatientId);
             }
 
-            var receptions = await _context.Users.Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST || x.UserRole.Name == USER_ROLES.ADMIN || x.UserRole.Name == USER_ROLES.SUPER_ADMIN).Select(x => x.Id).ToListAsync();
 
-            if (receptions.Count > 0)
-                await _notify.SendUserAsync(
-                    $"New Appointment",
-                    $"There is a new appointment for {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName} with patient {app.Patient.FName}. Please prepare accordingly.",
-                    NOTIFICATION_CONSTANTS.APPOINTMENT,
-                    receptions
+            var pId = await _context.Patients
+                .Where(x => x.Id == app.PatientId && x.UserId != 0)
+                .Select(x => x.UserId)
+                .FirstOrDefaultAsync();
+
+            var user = await _context.Users
+                .Where(x => x.Id == pId)
+                .FirstOrDefaultAsync();
+
+            var service = await _context.MedicalServices
+                .Where(x => x.Id == app.DentistryId)
+                .FirstOrDefaultAsync();
+
+            var doc = await _context.MedicalProfessionals
+                .Where(x => x.Id == medicalProId)
+                .FirstOrDefaultAsync();
+            // --- 1️⃣ Notify patient ---
+            try
+            {
+                if (patientUser != null)
+                {
+                    await _notify.SendUserAsync(
+                        $"Appointment for {service?.Name} Service",
+                        $"Dear {patientUser.FName}, You have successfully made an appointment for {app.Day} at {app.ReservationTime}. Please arrive on time as scheduled. If you need to make any changes, contact the clinic in advance.",
+                        NOTIFICATION_CONSTANTS.APPOINTMENT,
+                        new List<int> { patientUser.Id }
                     );
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send patient notification: {ex.Message}");
+            }
+
+            // --- 2️⃣ Notify medical professional ---
+            try
+            {
+                if (medicalUser != null)
+                {
+                    await _notify.SendUserAsync(
+                        $"New Appointment",
+                        $"Dear {doc?.FName}, You have a new appointment for {app.Day} at {app.ReservationTime} with patient {app.Patient.FName}. If you need to make any changes, contact the clinic in advance.",
+                        NOTIFICATION_CONSTANTS.APPOINTMENT,
+                        new List<int> { medicalUser.Id }
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send medical professional notification: {ex.Message}");
+            }
+
+            // --- 3️⃣ Notify receptionists / admins / super admins ---
+            try
+            {
+                var receptions = await _context.Users
+                    .Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST
+                             || x.UserRole.Name == USER_ROLES.ADMIN
+                             || x.UserRole.Name == USER_ROLES.SUPER_ADMIN)
+                    .Select(x => x.Id)
+                    .ToListAsync();
+
+                if (receptions.Count > 0)
+                {
+                    await _notify.SendUserAsync(
+                        $"New Appointment",
+                        $"There is a new appointment for {app.MedicalProfessional.Prefix} {app.MedicalProfessional.FName} with patient {app.Patient.FName}. Please prepare accordingly.",
+                        NOTIFICATION_CONSTANTS.APPOINTMENT,
+                        receptions
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send receptionist/admin notification: {ex.Message}");
+            }
+
+            // 🔔 --- SAFE NOTIFICATIONS END ---
+
+
 
             return app;
+
         }
+
 
         public async Task<Appointment> UpdateAppointment(UpdateAppointmentDTO dto)
         {
@@ -554,10 +646,11 @@ namespace Clinic_CRM.Services.AppointmentServices
             //    appointments = [.. appointments.Where(x => x.Day.DayOfWeek.ToString().Equals(daySchedule.WeekDay, StringComparison.OrdinalIgnoreCase))];
             //}
 
-            DateTime now = DateTime.UtcNow;
+            DateTime now = DateTime.Now;
             // 2026-01-28 14:35:42
 
             TimeOnly time = TimeOnly.FromDateTime(now);
+            DateOnly today = DateOnly.FromDateTime(now);
 
             var freeSlots = new List<TimeOnly>();
             var slotDuration = 30; // standard appointment slot
@@ -572,7 +665,8 @@ namespace Clinic_CRM.Services.AppointmentServices
                      slotEnd > a.ReservationTime
                 );
 
-                if (!overlaps && tempTime > time) // clearer than !(time >= tempTime)
+                
+                if (!overlaps && (tempTime > time || day != today)) // clearer than !(time >= tempTime)
                 {
                     freeSlots.Add(tempTime);
                 }

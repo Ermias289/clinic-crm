@@ -15,7 +15,7 @@ namespace Clinic_CRM.Models
         public decimal UnPaidAmount { get; set; } = 0;
         public decimal PaidAmount { get; set; } = 0;
         public string PaymentProof { get; set; } = string.Empty;
-        public bool IsInsured { get; set; } = false;
+        public bool IsInsuranceCovered { get; set; } = false;
 
         public PaymentType? PaymentType { get; set; }
         public int? PaymentTypeId { get; set; }
