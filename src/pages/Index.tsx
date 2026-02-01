@@ -629,70 +629,71 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Most Booked Services */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Most Booked Services</CardTitle>
-            <p className="text-sm text-muted-foreground">Overall most popular services</p>
-          </CardHeader>
-          <CardContent>
-            {serviceData.length > 0 ? (
-              <>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie
-                      data={serviceData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40} // Reduced inner radius for more space
-                      outerRadius={70} // Reduced outer radius
-                      paddingAngle={2}
-                      dataKey="value"
-                      label={(entry) => `${entry.name}\n${entry.value}`} // Name and value on separate lines
-                      labelLine={true}
-                    >
-                      {serviceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value, name, props) => {
-                        const fullName = props.payload?.fullName || name;
-                        return [`${value} bookings`, fullName];
-                      }}
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(0, 0%, 100%)', 
-                        border: '1px solid hsl(200, 20%, 90%)',
-                        borderRadius: '8px',
-                        maxWidth: '250px' // Limit tooltip width
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="space-y-2 mt-4">
-                  {serviceData.map((service, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div 
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
-                          style={{ backgroundColor: service.color }} 
-                        />
-                        <span className="text-muted-foreground truncate">
-                          {service.fullName}
-                        </span>
+          {/* Most Booked Services */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Most Booked Services</CardTitle>
+              <p className="text-sm text-muted-foreground">Overall most popular services</p>
+            </CardHeader>
+            <CardContent>
+              {serviceData.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={serviceData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={70}
+                        paddingAngle={2}
+                        dataKey="value"
+                        // Removed the label prop to hide service names from pie chart
+                        // label={(entry) => `${entry.name}\n${entry.value}`}
+                        labelLine={false}
+                      >
+                        {serviceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value, name, props) => {
+                          const fullName = props.payload?.fullName || name;
+                          return [`${value} bookings`, fullName];
+                        }}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(0, 0%, 100%)', 
+                          border: '1px solid hsl(200, 20%, 90%)',
+                          borderRadius: '8px',
+                          maxWidth: '250px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 mt-4">
+                    {serviceData.map((service, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div 
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                            style={{ backgroundColor: service.color }} 
+                          />
+                          <span className="text-muted-foreground truncate">
+                            {service.fullName}
+                          </span>
+                        </div>
+                        <span className="font-medium flex-shrink-0 ml-2">{service.value} bookings</span>
                       </div>
-                      <span className="font-medium flex-shrink-0 ml-2">{service.value} bookings</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                  <p>No service booking data available</p>
                 </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
-                <p>No service booking data available</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
       </div>
 
       {/* Bottom Row */}
