@@ -707,12 +707,7 @@ const Index = () => {
                 Today's Appointments
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {todaysAppointments.length} appointments scheduled for {new Date().toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
+                {todaysAppointments.length} appointments scheduled for today
               </p>
             </div>
             <Button variant="ghost" size="sm" asChild>
