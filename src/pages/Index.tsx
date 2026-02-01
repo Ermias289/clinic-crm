@@ -362,12 +362,29 @@ const Index = () => {
     }
   };
 
-  // Handle date change - automatically fetch new data
+
+  // Handle date change - automatically adjust to maintain 7-day range and fetch new data
   const handleDateChange = (type: 'from' | 'to', value: string) => {
-    const newDateRange = {
-      ...dateRange,
-      [type === 'from' ? 'fromDate' : 'toDate']: value
-    };
+    const newDate = new Date(value);
+    let newDateRange = { ...dateRange };
+    
+    if (type === 'from') {
+      // If From date changed, set To date to From + 6 days (total 7 days)
+      const toDate = new Date(newDate);
+      toDate.setDate(toDate.getDate() + 6);
+      newDateRange = {
+        fromDate: value,
+        toDate: formatDate(toDate)
+      };
+    } else {
+      // If To date changed, set From date to To - 6 days (total 7 days)
+      const fromDate = new Date(newDate);
+      fromDate.setDate(fromDate.getDate() - 6);
+      newDateRange = {
+        fromDate: formatDate(fromDate),
+        toDate: value
+      };
+    }
     
     setDateRange(newDateRange);
     
@@ -514,7 +531,6 @@ const Index = () => {
                   value={dateRange.fromDate}
                   onChange={(e) => handleDateChange('from', e.target.value)}
                   className="px-3 py-1.5 text-sm border border-input rounded-md bg-background w-32"
-                  max={dateRange.toDate} // "From" date cannot be after "To" date
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -527,7 +543,6 @@ const Index = () => {
                   value={dateRange.toDate}
                   onChange={(e) => handleDateChange('to', e.target.value)}
                   className="px-3 py-1.5 text-sm border border-input rounded-md bg-background w-32"
-                  min={dateRange.fromDate} // "To" date cannot be before "From" date
                 />
               </div>
             </div>
