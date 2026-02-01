@@ -82,10 +82,10 @@ const Index = () => {
   const [chartData, setChartData] = useState<ChartDataItem[]>([]);
   const [serviceData, setServiceData] = useState<ServiceChartData[]>([]);
   
-  // Default to last 7 days
+  // Start with empty dates
   const [dateRange, setDateRange] = useState<{ fromDate: string; toDate: string }>({
-    fromDate: getLast7Days(),
-    toDate: getTodayDate()
+    fromDate: '',
+    toDate: ''
   });
 
   // Helper functions for dates
@@ -95,7 +95,7 @@ const Index = () => {
 
   function getLast7Days(): string {
     const date = new Date();
-    date.setDate(date.getDate() - 7);
+    date.setDate(date.getDate() - 6); // -6 to get 7 days total (including today)
     return formatDate(date);
   }
 
@@ -127,13 +127,18 @@ const Index = () => {
   // Get dates for each day of week within the range
   function getDatesForDaysOfWeek(fromDate: string, toDate: string): Map<string, string> {
     const dateMap = new Map<string, string>();
+    
+    // If no dates provided, return empty map
+    if (!fromDate || !toDate) {
+      return dateMap;
+    }
+    
     let [start, end] = [new Date(fromDate), new Date(toDate)];
     
     // Ensure start date is before end date
     if (start > end) {
       [start, end] = [end, start];
     }
-
     
     // For each day in the range, map the day name to the first occurrence
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -149,14 +154,15 @@ const Index = () => {
     return dateMap;
   }
 
-  // Fetch appointment report from backend
+  // Fetch appointment report from backend - API accepts empty dates
   const fetchAppointmentReport = async (fromDate: string, toDate: string) => {
     try {
-      console.log(`Fetching appointment report from ${fromDate} to ${toDate}`);
+      console.log(`Fetching appointment report from ${fromDate || 'empty'} to ${toDate || 'empty'}`);
       
-      const response = await fetch(
-        `https://crmgate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate}&toDate=${toDate}`
-      );
+      // Build URL with parameters (empty strings are okay for this API)
+      const url = `https://crmgate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate || ''}&toDate=${toDate || ''}`;
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -167,11 +173,14 @@ const Index = () => {
       
       setAppointmentReport(data);
       
-      // Transform the API data for the chart with actual dates
-      transformAppointmentDataForChart(data, fromDate, toDate);
+      // Transform the API data for the chart
+      // Use default dates for display if none provided
+      const displayFromDate = fromDate || getLast7Days();
+      const displayToDate = toDate || getTodayDate();
+      transformAppointmentDataForChart(data, displayFromDate, displayToDate);
     } catch (err) {
       console.error("Error fetching appointment report:", err);
-      generateFallbackAppointmentReport(fromDate, toDate);
+      generateFallbackAppointmentReport(fromDate || getLast7Days(), toDate || getTodayDate());
     }
   };
 
@@ -190,8 +199,17 @@ const Index = () => {
       dayOrder.forEach(dayKey => {
         if (data[dayKey]) {
           const dayData = data[dayKey];
-          const actualDate = dateMap.get(dayKey) || fromDate; // Fallback to fromDate if no specific date found
-          const dateObj = new Date(actualDate);
+          let actualDate: string;
+          let dateObj: Date;
+          
+          if (dateMap.has(dayKey)) {
+            actualDate = dateMap.get(dayKey)!;
+            dateObj = new Date(actualDate);
+          } else {
+            // If no specific date in range, use today as fallback
+            dateObj = new Date();
+            actualDate = formatDate(dateObj);
+          }
           
           chartData.push({
             name: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), // Show date on X-axis
@@ -362,38 +380,47 @@ const Index = () => {
     }
   };
 
-
   // Handle date change - automatically adjust to maintain 7-day range and fetch new data
   const handleDateChange = (type: 'from' | 'to', value: string) => {
-    const newDate = new Date(value);
     let newDateRange = { ...dateRange };
     
-    if (type === 'from') {
-      // If From date changed, set To date to From + 6 days (total 7 days)
-      const toDate = new Date(newDate);
-      toDate.setDate(toDate.getDate() + 6);
-      newDateRange = {
-        fromDate: value,
-        toDate: formatDate(toDate)
-      };
+    if (value) {
+      const newDate = new Date(value);
+      
+      if (type === 'from') {
+        // If From date changed, set To date to From + 6 days (total 7 days)
+        const toDate = new Date(newDate);
+        toDate.setDate(toDate.getDate() + 6);
+        newDateRange = {
+          fromDate: value,
+          toDate: formatDate(toDate)
+        };
+      } else {
+        // If To date changed, set From date to To - 6 days (total 7 days)
+        const fromDate = new Date(newDate);
+        fromDate.setDate(fromDate.getDate() - 6);
+        newDateRange = {
+          fromDate: formatDate(fromDate),
+          toDate: value
+        };
+      }
     } else {
-      // If To date changed, set From date to To - 6 days (total 7 days)
-      const fromDate = new Date(newDate);
-      fromDate.setDate(fromDate.getDate() - 6);
+      // If clearing a date, just update that field (allow empty)
       newDateRange = {
-        fromDate: formatDate(fromDate),
-        toDate: value
+        ...dateRange,
+        [type === 'from' ? 'fromDate' : 'toDate']: value
       };
     }
     
     setDateRange(newDateRange);
     
-    // Automatically fetch new data when date changes
+    // Always fetch data when dates change (API accepts empty dates)
     fetchAppointmentReport(newDateRange.fromDate, newDateRange.toDate);
   };
 
   // Format date for display in header
   const formatDisplayDate = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
@@ -424,6 +451,7 @@ const Index = () => {
         setPayments(allPayments);
         setServices(allServices);
 
+        // Always fetch both APIs (AppointmentReport works with empty dates)
         await Promise.all([
           fetchAppointmentReport(dateRange.fromDate, dateRange.toDate),
           fetchMostBookedServices()
@@ -437,7 +465,7 @@ const Index = () => {
     };
 
     fetchData();
-  }, []); // Removed dateRange from dependencies since we handle it separately
+  }, []); // Only run once on mount
 
   if (loading) {
     return (
@@ -515,7 +543,9 @@ const Index = () => {
             <div>
               <CardTitle>Appointment Overview</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {formatDisplayDate(dateRange.fromDate)} - {formatDisplayDate(dateRange.toDate)}
+                {dateRange.fromDate && dateRange.toDate 
+                  ? `${formatDisplayDate(dateRange.fromDate)} - ${formatDisplayDate(dateRange.toDate)}`
+                  : 'Recent appointments'}
               </p>
             </div>
             
@@ -621,79 +651,76 @@ const Index = () => {
               </ResponsiveContainer>
             ) : (
               <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
-                <p>No appointment data available for the selected period</p>
+                <p>No appointment data available</p>
                 <p className="text-sm mt-2">Try selecting a different date range</p>
-                <p className="text-xs mt-1">Currently showing: {formatDisplayDate(dateRange.fromDate)} to {formatDisplayDate(dateRange.toDate)}</p>
               </div>
             )}
           </CardContent>
         </Card>
 
-          {/* Most Booked Services */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Most Booked Services</CardTitle>
-              <p className="text-sm text-muted-foreground">Overall most popular services</p>
-            </CardHeader>
-            <CardContent>
-              {serviceData.length > 0 ? (
-                <>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={serviceData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
-                        paddingAngle={2}
-                        dataKey="value"
-                        // Removed the label prop to hide service names from pie chart
-                        // label={(entry) => `${entry.name}\n${entry.value}`}
-                        labelLine={false}
-                      >
-                        {serviceData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value, name, props) => {
-                          const fullName = props.payload?.fullName || name;
-                          return [`${value} bookings`, fullName];
-                        }}
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(0, 0%, 100%)', 
-                          border: '1px solid hsl(200, 20%, 90%)',
-                          borderRadius: '8px',
-                          maxWidth: '250px'
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="space-y-2 mt-4">
-                    {serviceData.map((service, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div 
-                            className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
-                            style={{ backgroundColor: service.color }} 
-                          />
-                          <span className="text-muted-foreground truncate">
-                            {service.fullName}
-                          </span>
-                        </div>
-                        <span className="font-medium flex-shrink-0 ml-2">{service.value} bookings</span>
+        {/* Most Booked Services */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Most Booked Services</CardTitle>
+            <p className="text-sm text-muted-foreground">Overall most popular services</p>
+          </CardHeader>
+          <CardContent>
+            {serviceData.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={serviceData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                      labelLine={false}
+                    >
+                      {serviceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value, name, props) => {
+                        const fullName = props.payload?.fullName || name;
+                        return [`${value} bookings`, fullName];
+                      }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(0, 0%, 100%)', 
+                        border: '1px solid hsl(200, 20%, 90%)',
+                        borderRadius: '8px',
+                        maxWidth: '250px'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-2 mt-4">
+                  {serviceData.map((service, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div 
+                          className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
+                          style={{ backgroundColor: service.color }} 
+                        />
+                        <span className="text-muted-foreground truncate">
+                          {service.fullName}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
-                  <p>No service booking data available</p>
+                      <span className="font-medium flex-shrink-0 ml-2">{service.value} bookings</span>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+                <p>No service booking data available</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Row */}
