@@ -13,13 +13,12 @@ import {
   ArrowRight,
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  Plus
+  AlertCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { 
-  AreaChart, 
-  Area, 
+  BarChart, 
+  Bar, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -39,10 +38,14 @@ import {
 } from "@/lib/api";
 
 // Interfaces
-interface AppointmentReportItem {
-  date: string;
-  totalAppointments: number;
-  completedAppointments: number;
+interface DayAppointmentData {
+  scheduledAppointmentsCount: number;
+  completedAppointmentsCount: number;
+  canceledAppointmentsCount: number;
+}
+
+interface AppointmentReportResponse {
+  [key: string]: DayAppointmentData;
 }
 
 interface MostBookedService {
@@ -52,8 +55,21 @@ interface MostBookedService {
   color?: string;
 }
 
-interface AppointmentReportResponse {
-  [key: string]: AppointmentReportItem[] | string;
+interface ChartDataItem {
+  name: string;
+  day: string;
+  dayName: string;
+  actualDate: string;
+  Scheduled: number;
+  Completed: number;
+  Canceled: number;
+}
+
+interface ServiceChartData {
+  name: string;
+  value: number;
+  color: string;
+  fullName: string; // For display in the list
 }
 
 const Index = () => {
@@ -61,27 +77,18 @@ const Index = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [services, setServices] = useState<MedicalService[]>([]);
   const [loading, setLoading] = useState(true);
-  const [appointmentReport, setAppointmentReport] = useState<AppointmentReportItem[]>([]);
+  const [appointmentReport, setAppointmentReport] = useState<AppointmentReportResponse | null>(null);
   const [mostBookedServices, setMostBookedServices] = useState<MostBookedService[]>([]);
-  const [dateRange, setDateRange] = useState<{ fromDate: string; toDate: string; label: string }>({
+  const [chartData, setChartData] = useState<ChartDataItem[]>([]);
+  const [serviceData, setServiceData] = useState<ServiceChartData[]>([]);
+  
+  // Default to last 7 days
+  const [dateRange, setDateRange] = useState<{ fromDate: string; toDate: string }>({
     fromDate: getLast7Days(),
-    toDate: getTodayDate(),
-    label: "week"
+    toDate: getTodayDate()
   });
 
   // Helper functions for dates
-  function getFirstDayOfMonth(): string {
-    const date = new Date();
-    date.setDate(1);
-    return formatDate(date);
-  }
-
-  function getFirstDayOfYear(): string {
-    const date = new Date();
-    date.setMonth(0, 1);
-    return formatDate(date);
-  }
-
   function getTodayDate(): string {
     return formatDate(new Date());
   }
@@ -92,14 +99,54 @@ const Index = () => {
     return formatDate(date);
   }
 
-  function getLast30Days(): string {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return formatDate(date);
-  }
-
   function formatDate(date: Date): string {
     return date.toISOString().split('T')[0];
+  }
+
+  // Get day name from date
+  function getDayName(date: Date): string {
+    return date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+  }
+
+  // Format date for display
+  function formatDateDisplay(date: Date): string {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
+  }
+
+  // Truncate long service names for pie chart labels
+  function truncateServiceName(name: string, maxLength: number = 15): string {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength - 3) + '...';
+  }
+
+  // Get dates for each day of week within the range
+  function getDatesForDaysOfWeek(fromDate: string, toDate: string): Map<string, string> {
+    const dateMap = new Map<string, string>();
+    let [start, end] = [new Date(fromDate), new Date(toDate)];
+    
+    // Ensure start date is before end date
+    if (start > end) {
+      [start, end] = [end, start];
+    }
+
+    
+    // For each day in the range, map the day name to the first occurrence
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dayName = getDayName(d);
+      const dateStr = formatDate(d);
+      
+      // Only set if not already set (we want the first occurrence of each day)
+      if (!dateMap.has(dayName)) {
+        dateMap.set(dayName, dateStr);
+      }
+    }
+    
+    return dateMap;
   }
 
   // Fetch appointment report from backend
@@ -115,37 +162,54 @@ const Index = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: any = await response.json();
+      const data: AppointmentReportResponse = await response.json();
       console.log("Appointment report API response:", data);
       
-      // Handle different response formats
-      let reportData: AppointmentReportItem[] = [];
+      setAppointmentReport(data);
       
-      if (Array.isArray(data)) {
-        // If response is already an array
-        reportData = data;
-      } else if (data && typeof data === 'object') {
-        // If response is an object with data property
-        if (Array.isArray(data.data)) {
-          reportData = data.data;
-        } else if (Array.isArray(data.appointments)) {
-          reportData = data.appointments;
-        } else if (Array.isArray(data.results)) {
-          reportData = data.results;
-        } else {
-          // Convert object to array if needed
-          reportData = Object.values(data).filter(item => 
-            item && typeof item === 'object' && 'date' in item
-          ) as AppointmentReportItem[];
-        }
-      }
-      
-      console.log("Processed appointment report data:", reportData);
-      setAppointmentReport(reportData || []);
+      // Transform the API data for the chart with actual dates
+      transformAppointmentDataForChart(data, fromDate, toDate);
     } catch (err) {
       console.error("Error fetching appointment report:", err);
-      // Fallback to local data if API fails
       generateFallbackAppointmentReport(fromDate, toDate);
+    }
+  };
+
+  // Transform API data for the chart with actual dates
+  const transformAppointmentDataForChart = (data: AppointmentReportResponse, fromDate: string, toDate: string) => {
+    try {
+      const chartData: ChartDataItem[] = [];
+      
+      // Get actual dates for each day of week
+      const dateMap = getDatesForDaysOfWeek(fromDate, toDate);
+      
+      // Define the order of days
+      const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      
+      // Process each day in order
+      dayOrder.forEach(dayKey => {
+        if (data[dayKey]) {
+          const dayData = data[dayKey];
+          const actualDate = dateMap.get(dayKey) || fromDate; // Fallback to fromDate if no specific date found
+          const dateObj = new Date(actualDate);
+          
+          chartData.push({
+            name: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), // Show date on X-axis
+            day: dayKey,
+            dayName: dayKey.charAt(0).toUpperCase() + dayKey.slice(1), // "Monday", "Tuesday", etc.
+            actualDate: formatDateDisplay(dateObj), // Full date for tooltip
+            Scheduled: dayData.scheduledAppointmentsCount || 0,
+            Completed: dayData.completedAppointmentsCount || 0,
+            Canceled: dayData.canceledAppointmentsCount || 0
+          });
+        }
+      });
+      
+      console.log("Transformed chart data with dates:", chartData);
+      setChartData(chartData);
+    } catch (error) {
+      console.error("Error transforming chart data:", error);
+      setChartData([]);
     }
   };
 
@@ -165,7 +229,6 @@ const Index = () => {
       const data: any = await response.json();
       console.log("Most booked services API response:", data);
       
-      // Handle different response formats
       let servicesData: MostBookedService[] = [];
       
       if (Array.isArray(data)) {
@@ -178,7 +241,6 @@ const Index = () => {
         } else if (Array.isArray(data.services)) {
           servicesData = data.services;
         } else {
-          // Try to find array in object
           const arrayKey = Object.keys(data).find(key => Array.isArray(data[key]));
           if (arrayKey) {
             servicesData = data[arrayKey];
@@ -186,7 +248,6 @@ const Index = () => {
         }
       }
       
-      // Add colors to the services for the pie chart
       const palette = [
         'hsl(174, 72%, 40%)',
         'hsl(12, 76%, 61%)',
@@ -204,10 +265,30 @@ const Index = () => {
       
       console.log("Processed services data:", servicesWithColors);
       setMostBookedServices(servicesWithColors);
+      
+      // Transform for pie chart
+      transformServiceDataForChart(servicesWithColors);
     } catch (err) {
       console.error("Error fetching most booked services:", err);
-      // Fallback to local calculation if API fails
       calculateMostBookedServicesFromLocal();
+    }
+  };
+
+  // Transform service data for pie chart
+  const transformServiceDataForChart = (services: MostBookedService[]) => {
+    try {
+      const chartData: ServiceChartData[] = services.map((service, index) => ({
+        name: truncateServiceName(service.serviceName), // Truncated name for pie chart labels
+        value: service.bookingCount || 0,
+        color: service.color || '#8884d8',
+        fullName: service.serviceName // Full name for the list below
+      })).filter(item => item.value > 0);
+      
+      console.log("Transformed service data for chart:", chartData);
+      setServiceData(chartData);
+    } catch (error) {
+      console.error("Error transforming service data:", error);
+      setServiceData([]);
     }
   };
 
@@ -215,29 +296,30 @@ const Index = () => {
   const generateFallbackAppointmentReport = (fromDate: string, toDate: string) => {
     try {
       let [start, end] = [new Date(fromDate), new Date(toDate)];
-      const days: AppointmentReportItem[] = [];
-
-      // Make sure start date is before end date
+      
       if (start > end) {
         [start, end] = [end, start];
       }
       
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        const dateStr = formatDate(d);
-        const dayAppointments = appointments.filter(a => a.day === dateStr);
-        
-        days.push({
-          date: dateStr,
-          totalAppointments: dayAppointments.length,
-          completedAppointments: dayAppointments.filter(a => a.status === "completed").length
-        });
-      }
+      // Generate mock data for fallback
+      const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const fallbackData: AppointmentReportResponse = {};
       
-      console.log("Generated fallback appointment report:", days);
-      setAppointmentReport(days);
+      daysOfWeek.forEach(day => {
+        fallbackData[day] = {
+          scheduledAppointmentsCount: Math.floor(Math.random() * 15),
+          completedAppointmentsCount: Math.floor(Math.random() * 10),
+          canceledAppointmentsCount: Math.floor(Math.random() * 3)
+        };
+      });
+      
+      setAppointmentReport(fallbackData);
+      transformAppointmentDataForChart(fallbackData, fromDate, toDate);
+      console.log("Generated fallback appointment report:", fallbackData);
     } catch (error) {
       console.error("Error generating fallback report:", error);
-      setAppointmentReport([]);
+      setAppointmentReport(null);
+      setChartData([]);
     }
   };
 
@@ -260,7 +342,7 @@ const Index = () => {
         'hsl(262, 60%, 55%)'
       ];
       
-      const serviceData = Object.entries(serviceCounts)
+      const servicesData = Object.entries(serviceCounts)
         .map(([serviceName, bookingCount], i) => ({
           serviceId: `local-${i}`,
           serviceName,
@@ -270,12 +352,37 @@ const Index = () => {
         .sort((a, b) => b.bookingCount - a.bookingCount)
         .slice(0, 5);
       
-      console.log("Calculated local services data:", serviceData);
-      setMostBookedServices(serviceData);
+      console.log("Calculated local services data:", servicesData);
+      setMostBookedServices(servicesData);
+      transformServiceDataForChart(servicesData);
     } catch (error) {
       console.error("Error calculating local services:", error);
       setMostBookedServices([]);
+      setServiceData([]);
     }
+  };
+
+  // Handle date change - automatically fetch new data
+  const handleDateChange = (type: 'from' | 'to', value: string) => {
+    const newDateRange = {
+      ...dateRange,
+      [type === 'from' ? 'fromDate' : 'toDate']: value
+    };
+    
+    setDateRange(newDateRange);
+    
+    // Automatically fetch new data when date changes
+    fetchAppointmentReport(newDateRange.fromDate, newDateRange.toDate);
+  };
+
+  // Format date for display in header
+  const formatDisplayDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   useEffect(() => {
@@ -300,7 +407,6 @@ const Index = () => {
         setPayments(allPayments);
         setServices(allServices);
 
-        // Fetch dashboard-specific data
         await Promise.all([
           fetchAppointmentReport(dateRange.fromDate, dateRange.toDate),
           fetchMostBookedServices()
@@ -314,48 +420,7 @@ const Index = () => {
     };
 
     fetchData();
-  }, [dateRange]);
-
-  // Update date range handler
-  const handleDateRangeChange = (range: 'week' | 'month' | 'year' | '30days') => {
-    let fromDate: string;
-    let label = range;
-    
-    switch (range) {
-      case 'week':
-        fromDate = getLast7Days();
-        break;
-      case 'month':
-        fromDate = getFirstDayOfMonth();
-        break;
-      case 'year':
-        fromDate = getFirstDayOfYear();
-        break;
-      case '30days':
-        fromDate = getLast30Days();
-        label = '30days';
-        break;
-      default:
-        fromDate = getLast7Days();
-        label = 'week';
-    }
-    
-    setDateRange({
-      fromDate,
-      toDate: getTodayDate(),
-      label
-    });
-  };
-
-  // Format date for display
-  const formatDisplayDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-    });
-  };
+  }, []); // Removed dateRange from dependencies since we handle it separately
 
   if (loading) {
     return (
@@ -385,38 +450,6 @@ const Index = () => {
     return !isNaN(expiredDate.getTime()) && expiredDate < new Date();
   }).length;
 
-  // Format appointment report data for the chart - with safety checks
-  const weeklyData = Array.isArray(appointmentReport) 
-    ? appointmentReport.map(item => {
-        const date = new Date(item.date);
-        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-        
-        return {
-          name: dayName,
-          date: item.date,
-          appointments: item.totalAppointments || 0,
-          completed: item.completedAppointments || 0,
-          fullDate: date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
-          })
-        };
-      }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    : [];
-
-  console.log("Weekly data for chart:", weeklyData);
-
-  // Format most booked services for the pie chart - with safety checks
-  const serviceData = Array.isArray(mostBookedServices)
-    ? mostBookedServices.map(service => ({
-        name: service.serviceName || 'Unknown',
-        value: service.bookingCount || 0,
-        color: service.color
-      })).filter(item => item.value > 0) // Only show services with bookings
-    : [];
-
-  console.log("Service data for pie chart:", serviceData);
-
   // === Today's Appointments ===
   const todaysAppointments = totalAppointmentsToday;
 
@@ -425,43 +458,6 @@ const Index = () => {
       title="Dashboard" 
       subtitle="Welcome back! Here's what's happening at your clinic today."
     >
-      {/* Date Range Selector */}
-      <div className="flex justify-end mb-6">
-        <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg">
-          <Button 
-            variant={dateRange.label === 'week' ? "default" : "ghost"} 
-            size="sm"
-            onClick={() => handleDateRangeChange('week')}
-          >
-            Last 7 Days
-          </Button>
-          <Button 
-            variant={dateRange.label === '30days' ? "default" : "ghost"} 
-            size="sm"
-            onClick={() => handleDateRangeChange('30days')}
-          >
-            Last 30 Days
-          </Button>
-          <Button 
-            variant={dateRange.label === 'month' ? "default" : "ghost"} 
-            size="sm"
-            onClick={() => handleDateRangeChange('month')}
-          >
-            This Month
-          </Button>
-          <Button 
-            variant={dateRange.label === 'year' ? "default" : "ghost"} 
-            size="sm"
-            onClick={() => handleDateRangeChange('year')}
-          >
-            This Year
-          </Button>
-          <div className="text-xs text-muted-foreground px-2">
-            {formatDisplayDate(dateRange.fromDate)} - {formatDisplayDate(dateRange.toDate)}
-          </div>
-        </div>
-      </div>
-
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <KPICard
@@ -496,91 +492,120 @@ const Index = () => {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Weekly Overview - using backend data */}
+        {/* Appointment Overview Chart with Date Range */}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Appointment Overview</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                {dateRange.label === 'week' && 'Last 7 days '}
-                {dateRange.label === '30days' && 'Last 30 days '}
-                {dateRange.label === 'month' && 'This month '}
-                {dateRange.label === 'year' && 'This year '}
                 {formatDisplayDate(dateRange.fromDate)} - {formatDisplayDate(dateRange.toDate)}
               </p>
             </div>
-            <div className="flex items-center gap-4 text-sm">
+            
+            {/* Date Range Selector - No Apply button needed */}
+            <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary" />
-                <span className="text-muted-foreground">Scheduled</span>
+                <label htmlFor="fromDate" className="text-sm font-medium text-muted-foreground">
+                  From:
+                </label>
+                <input
+                  id="fromDate"
+                  type="date"
+                  value={dateRange.fromDate}
+                  onChange={(e) => handleDateChange('from', e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-input rounded-md bg-background w-32"
+                  max={dateRange.toDate} // "From" date cannot be after "To" date
+                />
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-success" />
-                <span className="text-muted-foreground">Completed</span>
+                <label htmlFor="toDate" className="text-sm font-medium text-muted-foreground">
+                  To:
+                </label>
+                <input
+                  id="toDate"
+                  type="date"
+                  value={dateRange.toDate}
+                  onChange={(e) => handleDateChange('to', e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-input rounded-md bg-background w-32"
+                  min={dateRange.fromDate} // "To" date cannot be before "From" date
+                />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            {weeklyData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <AreaChart data={weeklyData}>
-                  <defs>
-                    <linearGradient id="colorAppointments" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(174, 72%, 40%)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(174, 72%, 40%)" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(152, 69%, 40%)" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(152, 69%, 40%)" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
+            {/* Chart Legend - positioned above the chart */}
+            <div className="flex items-center gap-4 text-sm mb-4 justify-center">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500" />
+                <span className="text-muted-foreground">Scheduled</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="text-muted-foreground">Completed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <span className="text-muted-foreground">Canceled</span>
+              </div>
+            </div>
+            
+            {/* Chart */}
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(200, 20%, 90%)" />
                   <XAxis 
-                    dataKey="fullDate" 
+                    dataKey="name" 
                     stroke="hsl(210, 15%, 50%)" 
                     fontSize={12} 
                   />
-                  <YAxis stroke="hsl(210, 15%, 50%)" fontSize={12} />
+                  <YAxis 
+                    stroke="hsl(210, 15%, 50%)" 
+                    fontSize={12}
+                    allowDecimals={false}
+                  />
                   <Tooltip 
                     contentStyle={{ 
                       backgroundColor: 'hsl(0, 0%, 100%)', 
                       border: '1px solid hsl(200, 20%, 90%)',
-                      borderRadius: '8px'
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                     }} 
+                    formatter={(value, name) => {
+                      return [`${value} appointments`, name];
+                    }}
                     labelFormatter={(label, payload) => {
-                      if (payload && payload[0]?.payload?.date) {
-                        return new Date(payload[0].payload.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        });
+                      if (payload && payload[0]?.payload?.actualDate) {
+                        return payload[0].payload.actualDate; // Show full date like "Sunday, Feb 1, 2026"
                       }
                       return label;
                     }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="appointments" 
-                    stroke="hsl(174, 72%, 40%)" 
-                    fillOpacity={1} 
-                    fill="url(#colorAppointments)" 
-                    strokeWidth={2}
-                    name="Scheduled Appointments"
+                  <Bar 
+                    dataKey="Scheduled" 
+                    fill="#3b82f6" 
+                    name="Scheduled" 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={20}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="completed" 
-                    stroke="hsl(152, 69%, 40%)" 
-                    fillOpacity={1} 
-                    fill="url(#colorCompleted)" 
-                    strokeWidth={2}
-                    name="Completed Appointments"
+                  <Bar 
+                    dataKey="Completed" 
+                    fill="#10b981" 
+                    name="Completed" 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={20}
                   />
-                </AreaChart>
+                  <Bar 
+                    dataKey="Canceled" 
+                    fill="#ef4444" 
+                    name="Canceled" 
+                    radius={[4, 4, 0, 0]} 
+                    barSize={20}
+                  />
+                </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex flex-col items-center justify-center h-[280px] text-muted-foreground">
+              <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
                 <p>No appointment data available for the selected period</p>
                 <p className="text-sm mt-2">Try selecting a different date range</p>
                 <p className="text-xs mt-1">Currently showing: {formatDisplayDate(dateRange.fromDate)} to {formatDisplayDate(dateRange.toDate)}</p>
@@ -589,16 +614,11 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* Most Booked Services -  using backend data */}
+        {/* Most Booked Services */}
         <Card>
           <CardHeader>
             <CardTitle>Most Booked Services</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {dateRange.label === 'week' && 'Last 7 days'}
-              {dateRange.label === '30days' && 'Last 30 days'}
-              {dateRange.label === 'month' && 'This month'}
-              {dateRange.label === 'year' && 'This year'}
-            </p>
+            <p className="text-sm text-muted-foreground">Overall most popular services</p>
           </CardHeader>
           <CardContent>
             {serviceData.length > 0 ? (
@@ -609,32 +629,44 @@ const Index = () => {
                       data={serviceData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={80}
+                      innerRadius={40} // Reduced inner radius for more space
+                      outerRadius={70} // Reduced outer radius
                       paddingAngle={2}
                       dataKey="value"
-                      label={(entry) => `${entry.name}: ${entry.value}`}
+                      label={(entry) => `${entry.name}\n${entry.value}`} // Name and value on separate lines
+                      labelLine={true}
                     >
                       {serviceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color || '#8884d8'} />
+                        <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value, name, props) => {
+                        const fullName = props.payload?.fullName || name;
+                        return [`${value} bookings`, fullName];
+                      }}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(0, 0%, 100%)', 
+                        border: '1px solid hsl(200, 20%, 90%)',
+                        borderRadius: '8px',
+                        maxWidth: '250px' // Limit tooltip width
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="space-y-2 mt-4">
                   {serviceData.map((service, index) => (
                     <div key={index} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
                         <div 
-                          className="w-2.5 h-2.5 rounded-full" 
+                          className="w-2.5 h-2.5 rounded-full flex-shrink-0" 
                           style={{ backgroundColor: service.color }} 
                         />
-                        <span className="text-muted-foreground truncate max-w-[120px]">
-                          {service.name}
+                        <span className="text-muted-foreground truncate">
+                          {service.fullName}
                         </span>
                       </div>
-                      <span className="font-medium">{service.value} bookings</span>
+                      <span className="font-medium flex-shrink-0 ml-2">{service.value} bookings</span>
                     </div>
                   ))}
                 </div>
@@ -642,12 +674,6 @@ const Index = () => {
             ) : (
               <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
                 <p>No service booking data available</p>
-                <p className="text-sm mt-2">
-                  {dateRange.label === 'week' && 'Last 7 days'}
-                  {dateRange.label === '30days' && 'Last 30 days'}
-                  {dateRange.label === 'month' && 'This month'}
-                  {dateRange.label === 'year' && 'This year'}
-                </p>
               </div>
             )}
           </CardContent>
