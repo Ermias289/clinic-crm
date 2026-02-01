@@ -214,10 +214,9 @@ const Index = () => {
   // Fallback function for appointment report
   const generateFallbackAppointmentReport = (fromDate: string, toDate: string) => {
     try {
-      const start = new Date(fromDate);
-      const end = new Date(toDate);
+      let [start, end] = [new Date(fromDate), new Date(toDate)];
       const days: AppointmentReportItem[] = [];
-      
+
       // Make sure start date is before end date
       if (start > end) {
         [start, end] = [end, start];
