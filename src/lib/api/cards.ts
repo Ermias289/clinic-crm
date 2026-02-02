@@ -71,6 +71,19 @@ export interface CardDTO {
   updatedAt?: string;
   requestedAt?: string;
   requestedById?: number;
+  requestedBy?: {  
+    id: number;
+    username: string;
+    fName: string;
+    mName?: string;
+    lName: string;
+    email: string;
+    phoneNumber?: string;
+    userRoleId: number;
+    isEmailConfirmed: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
   benefits?: string[];          
 }
 

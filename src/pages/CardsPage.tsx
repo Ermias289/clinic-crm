@@ -39,7 +39,6 @@ import {
   Search,
   Filter,
   CreditCard,
-  Edit,
   Eye,
   Calendar,
   User,
@@ -73,7 +72,7 @@ type CardStatus = "active" | "pending" | "expired" | "suspended";
 
 // Interface for the mapped card with additional fields
 interface MappedCard extends CardDTO {
-  patientName: string;
+  patientFullName: string;
   patientDetails?: Patient;
   cardTypeName: string;
   cardTypeDetails?: CardTypeDTO;
@@ -81,6 +80,7 @@ interface MappedCard extends CardDTO {
   expiryDate: string;
   referenceNumber: string;
   uiStatus: CardStatus;
+  requestedByName?: string;
 }
 
 /* ================= STATUS MAPPER ================= */
@@ -317,12 +317,10 @@ const CardsPage = () => {
   // Dialog states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   
-  // Selected card for view/edit
+  // Selected card for view
   const [selectedCard, setSelectedCard] = useState<MappedCard | null>(null);
   const [selectedCardDetails, setSelectedCardDetails] = useState<MappedCard | null>(null);
-  const [editStatus, setEditStatus] = useState<CardStatus>("pending");
 
   // Create card states
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
@@ -356,13 +354,45 @@ const CardsPage = () => {
 
   /* ================= MAP CARD ================= */
 
+  const getPatientFullName = (patient: Patient | undefined): string => {
+    if (!patient) return "Unknown";
+    const names = [patient.fName];
+    if (patient.mName) names.push(patient.mName);
+    names.push(patient.lName);
+    return names.join(" ");
+  };
+
+const getRequestedByName = (card: CardDTO): string => {
+  console.log('Debug - card ID:', card.id); // Add card ID to debug
+  console.log('Debug - requestedBy:', card.requestedBy); 
+  console.log('Debug - requestedById:', card.requestedById);
+  
+  // Check if requestedBy exists and has the name fields
+  if (card.requestedBy && card.requestedBy.fName && card.requestedBy.lName) {
+    const names = [card.requestedBy.fName];
+    if (card.requestedBy.mName && card.requestedBy.mName.trim()) {
+      names.push(card.requestedBy.mName);
+    }
+    names.push(card.requestedBy.lName);
+    const result = names.join(" ");
+    console.log('Debug - returning name:', result); // Debug the result
+    return result;
+  }
+  
+  // Fallback if requestedBy is not available
+  if (!card.requestedById) return "N/A";
+  const fallback = `User #${card.requestedById}`;
+  console.log('Debug - returning fallback:', fallback); // Debug fallback
+  return fallback;
+};
+
   const mapCard = (card: CardDTO): MappedCard => {
     const patient = patients.find(p => p.id === card.patientId);
     const cardType = cardTypes.find(ct => ct.id === card.cardTypeId);
 
     return {
       ...card,
-      patientName: patient ? `${patient.fName} ${patient.lName}` : "Unknown",
+      patientFullName: getPatientFullName(patient),
       patientDetails: patient,
       cardTypeName: cardType ? cardType.name : "Unknown",
       cardTypeDetails: cardType,
@@ -373,6 +403,7 @@ const CardsPage = () => {
           : card.expiredAt?.split("T")[0],
       referenceNumber: card.cardNumber,
       uiStatus: mapCardStatus(card.status),
+      requestedByName: getRequestedByName(card),
     };
   };
 
@@ -382,7 +413,7 @@ const CardsPage = () => {
     .map(mapCard)
     .filter(card => {
       const matchesSearch =
-        card.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        card.patientFullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         card.referenceNumber.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesStatus =
@@ -410,38 +441,6 @@ const CardsPage = () => {
       console.error("Error fetching card details:", error);
       setSelectedCardDetails(card);
       setIsViewOpen(true);
-    }
-  };
-
-  /* ================= EDIT CARD ================= */
-
-  const handleEditCard = (card: MappedCard) => {
-    setSelectedCard(card);
-    setSelectedCardDetails(card);
-    setEditStatus(card.uiStatus);
-    setIsEditOpen(true);
-  };
-
-  const handleUpdateCard = async () => {
-    if (!selectedCard) return;
-
-    const updateData: UpdateCardDTO = {
-      id: selectedCard.id,
-      status: mapUIToApiStatus(editStatus),
-    };
-
-    try {
-      await cardService.update(updateData);
-      setIsEditOpen(false);
-      
-      // Refresh cards list
-      const updatedCards = await cardService.getAll();
-      setCards(updatedCards);
-      
-      setSelectedCard(null);
-      setSelectedCardDetails(null);
-    } catch (error) {
-      console.error("Error updating card:", error);
     }
   };
 
@@ -594,7 +593,7 @@ const CardsPage = () => {
                     <SelectContent>
                       {patients.map(p => (
                         <SelectItem key={p.id} value={p.id.toString()}>
-                          {p.fName} {p.lName}
+                          {getPatientFullName(p)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -741,27 +740,21 @@ const CardsPage = () => {
               {filteredCards.map(card => (
                 <tr key={card.id}>
                   <td>{card.referenceNumber}</td>
-                  <td>{card.patientName}</td>
+                  <td>{card.patientFullName}</td>
                   <td>{card.cardTypeName}</td>
                   <td>{card.issueDate}</td>
                   <td>{card.expiryDate}</td>
                   <td>
                     <StatusBadge status={card.uiStatus} />
                   </td>
-                  <td className="flex gap-2">
+                  <td>
                     <Button 
                       variant="ghost" 
                       size="icon-sm"
                       onClick={() => handleViewCard(card)}
+                      title="View Details"
                     >
                       <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon-sm"
-                      onClick={() => handleEditCard(card)}
-                    >
-                      <Edit className="w-4 h-4" />
                     </Button>
                   </td>
                 </tr>
@@ -853,7 +846,20 @@ const CardsPage = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <DetailItem 
                         label="Full Name" 
-                        value={selectedCardDetails.patientName}
+                        value={
+                          <div className="flex flex-col">
+                            <span className="font-medium">
+                              {selectedCardDetails.patientFullName}
+                            </span>
+                            {selectedCardDetails.patientDetails.mName && (
+                              <span className="text-sm text-muted-foreground">
+                                First: {selectedCardDetails.patientDetails.fName}<br />
+                                Middle: {selectedCardDetails.patientDetails.mName}<br />
+                                Last: {selectedCardDetails.patientDetails.lName}
+                              </span>
+                            )}
+                          </div>
+                        }
                         icon={User}
                       />
                       <DetailItem 
@@ -953,8 +959,9 @@ const CardsPage = () => {
                       value={formatDateTime(selectedCardDetails.expiredAt || "")}
                     />
                     <DetailItem 
-                      label="Requested By ID" 
-                      value={selectedCardDetails.requestedById || "N/A"}
+                      label="Requested By" 
+                      value={selectedCardDetails.requestedByName}
+                      icon={User}
                     />
                   </div>
                 </div>
@@ -1009,103 +1016,6 @@ const CardsPage = () => {
             <DialogClose asChild>
               <Button variant="outline">Close</Button>
             </DialogClose>
-            <Button 
-              variant="dental" 
-              onClick={() => {
-                setIsViewOpen(false);
-                if (selectedCardDetails) {
-                  handleEditCard(selectedCardDetails);
-                }
-              }}
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit Card
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* EDIT CARD DIALOG */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5" />
-              Edit Card
-            </DialogTitle>
-            <DialogDescription>
-              Update card details for: {selectedCardDetails?.referenceNumber}
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedCardDetails && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Card Status</Label>
-                <Select value={editStatus} onValueChange={(value: CardStatus) => setEditStatus(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Patient</Label>
-                <Input 
-                  value={selectedCardDetails.patientName} 
-                  disabled 
-                  className="bg-muted"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Card Type</Label>
-                <Input 
-                  value={selectedCardDetails.cardTypeName} 
-                  disabled 
-                  className="bg-muted"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Request Remark</Label>
-                <Input 
-                  value={selectedCardDetails.requestRemark || ""} 
-                  onChange={(e) => setSelectedCardDetails({
-                    ...selectedCardDetails,
-                    requestRemark: e.target.value
-                  })}
-                  placeholder="Update request remark"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Activation Remark</Label>
-                <Input 
-                  value={selectedCardDetails.activationRemark || ""} 
-                  onChange={(e) => setSelectedCardDetails({
-                    ...selectedCardDetails,
-                    activationRemark: e.target.value
-                  })}
-                  placeholder="Update activation remark"
-                />
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="dental" onClick={handleUpdateCard}>
-              Save Changes
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
