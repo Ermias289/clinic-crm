@@ -1,4 +1,5 @@
 import apiClient from './client';
+import { MedicalProfessional } from './medicalProfessionals'; 
 
 export interface AppointmentDTO {
   id: number;
@@ -14,20 +15,50 @@ export interface AppointmentDTO {
     email: string;
     phoneNumber: string;
     gender: string;
-    dateOfBirth: string;
+    alergies: string; // Note: Typo in API - should be "allergies"
+    chronicConditions: string;
+    emergencyContactName: string;
+    emergencyContactPhone: string;
     address: string;
-    city: string;
     subCity: string;
+    country: string;
+    city: string;
+    userId: number;
+    cardId: number;
+    dateOfBirth: string;
+    requiresUserAccount: boolean;
+    createdAt: string;
+    updatedAt: string;
+    user?: { // Optional based on response
+      id: number;
+      username: string;
+      fName: string;
+      mName: string;
+      lName: string;
+      email: string;
+      phoneNumber: string;
+      userRoleId: number;
+      isEmailConfirmed: boolean;
+      createdAt: string;
+      updatedAt: string;
+    };
   };
+  branchId: number; // Important: This exists in the response
   reservationTime: string;
   day: string;
   status: string;
-  scheduledBy: {
+  scheduledBy?: { // Optional - sometimes missing in response
     id: number;
     username: string;
     fName: string;
+    mName: string;
     lName: string;
     email: string;
+    phoneNumber: string;
+    userRoleId: number;
+    isEmailConfirmed: boolean;
+    createdAt: string;
+    updatedAt: string;
   };
   scheduledById: number;
   scheduledAt: string;
@@ -36,11 +67,13 @@ export interface AppointmentDTO {
   cancelReason: string;
   createdAt: string;
   updateAt: string;
-  // Additional fields for UI
+  
+  // Additional fields for UI (not from API)
   doctorName?: string;
   serviceName?: string;
   branchName?: string;
   patientName?: string;
+  medicalProfessional?: MedicalProfessional; // For doctor details
 }
 
 export interface CreateAppointmentDTO {
