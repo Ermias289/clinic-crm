@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Plus,
   Search,
@@ -51,6 +52,12 @@ import {
   Check,
   CheckCheck,
   AlertTriangle,
+  Hash,
+  Shield,
+  Clock,
+  FileText,
+  Tag,
+  IdCard,
 } from "lucide-react";
 import { format } from "date-fns";
 import { formatDistanceToNow, parseISO } from "date-fns";
@@ -317,9 +324,14 @@ const CardsPage = () => {
   const [selectedCardDetails, setSelectedCardDetails] = useState<MappedCard | null>(null);
   const [editStatus, setEditStatus] = useState<CardStatus>("pending");
 
+  // Create card states
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const [selectedCardTypeId, setSelectedCardTypeId] = useState<number | null>(null);
   const [requestRemark, setRequestRemark] = useState("");
+  
+  // Error handling for create card
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   // User ID for notifications (replace with actual user from auth)
   const userId = 1; // Hardcoded for now, replace with actual user ID
@@ -435,22 +447,63 @@ const CardsPage = () => {
 
   /* ================= CREATE CARD ================= */
 
-  const handleCreateCard = async () => {
-    if (!selectedPatientId || !selectedCardTypeId) return;
-
-    await cardService.create({
-      patientId: selectedPatientId,
-      cardTypeId: selectedCardTypeId,
-      requestRemark,
-    });
-
-    setIsCreateOpen(false);
+  const resetCreateForm = () => {
     setSelectedPatientId(null);
     setSelectedCardTypeId(null);
     setRequestRemark("");
+    setCreateError(null);
+    setIsCreating(false);
+  };
 
-    const updated = await cardService.getAll();
-    setCards(updated);
+  const validateCreateForm = (): boolean => {
+    if (!selectedPatientId) {
+      setCreateError("Please select a patient");
+      return false;
+    }
+    if (!selectedCardTypeId) {
+      setCreateError("Please select a card type");
+      return false;
+    }
+    setCreateError(null);
+    return true;
+  };
+
+  const handleCreateCard = async () => {
+    if (!validateCreateForm()) return;
+
+    setIsCreating(true);
+    setCreateError(null);
+
+    try {
+      await cardService.create({
+        patientId: selectedPatientId!,
+        cardTypeId: selectedCardTypeId!,
+        requestRemark: requestRemark || undefined,
+      });
+      
+      // Reset form and close dialog
+      resetCreateForm();
+      setIsCreateOpen(false);
+      
+      // Refresh data
+      const [updatedCards, updatedPatients] = await Promise.all([
+        cardService.getAll(),
+        patientsService.getAll(),
+      ]);
+      
+      setCards(updatedCards);
+      setPatients(updatedPatients);
+
+    } catch (error: any) {
+      console.error("Error creating card:", error);
+      setCreateError(
+        error.response?.data?.message || 
+        error.message || 
+        "Failed to create card. Please try again."
+      );
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   /* ================= FORMAT DATE ================= */
@@ -467,6 +520,26 @@ const CardsPage = () => {
     }
   };
 
+  /* ================= DETAIL ITEM COMPONENT ================= */
+
+  const DetailItem = ({ 
+    label, 
+    value, 
+    icon: Icon 
+  }: { 
+    label: string; 
+    value: React.ReactNode; 
+    icon?: React.ElementType 
+  }) => (
+    <div className="space-y-1">
+      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+        {Icon && <Icon className="w-4 h-4" />}
+        {label}
+      </p>
+      <p className="text-base">{value || "N/A"}</p>
+    </div>
+  );
+
   return (
     <DashboardLayout
       title="Patient Cards"
@@ -476,7 +549,10 @@ const CardsPage = () => {
           <div className="hidden">
             <NotificationsButton userId={userId} />
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+          <Dialog open={isCreateOpen} onOpenChange={(open) => {
+            setIsCreateOpen(open);
+            if (!open) resetCreateForm();
+          }}>
             <DialogTrigger asChild>
               <Button variant="dental">
                 <Plus className="w-4 h-4" />
@@ -492,12 +568,25 @@ const CardsPage = () => {
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Patient</Label>
+              <div className="space-y-4 py-4">
+                {/* Error Message Display */}
+                {createError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {createError}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Patient *</Label>
                   <Select
                     value={selectedPatientId?.toString()}
-                    onValueChange={(v) => setSelectedPatientId(Number(v))}
+                    onValueChange={(v) => {
+                      setSelectedPatientId(Number(v));
+                      setCreateError(null); // Clear error when user selects
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select patient" />
@@ -512,11 +601,14 @@ const CardsPage = () => {
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
-                  <Label>Card Type</Label>
+                <div className="space-y-2">
+                  <Label>Card Type *</Label>
                   <Select
                     value={selectedCardTypeId?.toString()}
-                    onValueChange={(v) => setSelectedCardTypeId(Number(v))}
+                    onValueChange={(v) => {
+                      setSelectedCardTypeId(Number(v));
+                      setCreateError(null); // Clear error when user selects
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select card type" />
@@ -531,7 +623,7 @@ const CardsPage = () => {
                   </Select>
                 </div>
 
-                <div className="grid gap-2">
+                <div className="space-y-2">
                   <Label>Request Remark</Label>
                   <Input
                     placeholder="Optional remark"
@@ -542,11 +634,22 @@ const CardsPage = () => {
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsCreateOpen(false);
+                    resetCreateForm();
+                  }}
+                  disabled={isCreating}
+                >
                   Cancel
                 </Button>
-                <Button variant="dental" onClick={handleCreateCard}>
-                  Issue Card
+                <Button 
+                  variant="dental" 
+                  onClick={handleCreateCard}
+                  disabled={isCreating}
+                >
+                  {isCreating ? "Creating..." : "Issue Card"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -668,145 +771,256 @@ const CardsPage = () => {
         </CardContent>
       </Card>
 
-      {/* VIEW CARD DIALOG */}
+      {/* VIEW CARD DIALOG - IMPROVED LAYOUT */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CreditCard className="w-5 h-5" />
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              <CreditCard className="w-6 h-6" />
               Card Details
             </DialogTitle>
             <DialogDescription>
-              Complete information for card: {selectedCardDetails?.referenceNumber}
+              Complete information for card reference: {selectedCardDetails?.referenceNumber}
             </DialogDescription>
           </DialogHeader>
 
           {selectedCardDetails && (
-            <div className="space-y-6 py-4">
-              {/* Card Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Card Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Reference Number</p>
-                    <p className="font-mono">{selectedCardDetails.referenceNumber}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Card Type</p>
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: selectedCardDetails.cardTypeDetails?.color }}
-                      />
-                      <p>{selectedCardDetails.cardTypeName}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Status</p>
-                    <StatusBadge status={selectedCardDetails.uiStatus} />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Expiry Date</p>
-                    <p>{selectedCardDetails.expiryDate}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Patient Information */}
-              {selectedCardDetails.patientDetails && (
+            <ScrollArea className="h-[70vh] pr-4">
+              <div className="space-y-8 py-4">
+                {/* Card Information Section */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Patient Information
+                    <IdCard className="w-5 h-5" />
+                    Card Information
                   </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Full Name</p>
-                      <p>{selectedCardDetails.patientName}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Email</p>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        <p>{selectedCardDetails.patientDetails.email || "N/A"}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        <p>{selectedCardDetails.patientDetails.phoneNumber || "N/A"}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
-                      <p>{selectedCardDetails.patientDetails.dateOfBirth || "N/A"}</p>
-                    </div>
-                    <div className="space-y-1 col-span-2">
-                      <p className="text-sm font-medium text-muted-foreground">Address</p>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <p>{selectedCardDetails.patientDetails.address || "N/A"}</p>
-                      </div>
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <DetailItem 
+                      label="Reference Number" 
+                      value={
+                        <span className="font-mono font-semibold">
+                          {selectedCardDetails.referenceNumber}
+                        </span>
+                      }
+                      icon={Hash}
+                    />
+                    <DetailItem 
+                      label="Card Number" 
+                      value={selectedCardDetails.cardNumber}
+                      icon={Tag}
+                    />
+                    <DetailItem 
+                      label="Card Type" 
+                      value={
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: selectedCardDetails.cardTypeDetails?.color }}
+                          />
+                          <span>{selectedCardDetails.cardTypeName}</span>
+                        </div>
+                      }
+                      icon={CreditCard}
+                    />
+                    <DetailItem 
+                      label="Status" 
+                      value={
+                        <div className="inline-block">
+                          <StatusBadge status={selectedCardDetails.uiStatus} />
+                        </div>
+                      }
+                      icon={Shield}
+                    />
+                    <DetailItem 
+                      label="Issue Date" 
+                      value={selectedCardDetails.issueDate}
+                      icon={Calendar}
+                    />
+                    <DetailItem 
+                      label="Expiry Date" 
+                      value={selectedCardDetails.expiryDate}
+                      icon={Calendar}
+                    />
                   </div>
                 </div>
-              )}
 
-              {/* Timestamps */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Timestamps
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Created At</p>
-                    <p>{formatDateTime(selectedCardDetails.createdAt)}</p>
+                {/* Patient Information Section */}
+                {selectedCardDetails.patientDetails && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      Patient Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <DetailItem 
+                        label="Full Name" 
+                        value={selectedCardDetails.patientName}
+                        icon={User}
+                      />
+                      <DetailItem 
+                        label="Email" 
+                        value={selectedCardDetails.patientDetails.email}
+                        icon={Mail}
+                      />
+                      <DetailItem 
+                        label="Phone Number" 
+                        value={selectedCardDetails.patientDetails.phoneNumber}
+                        icon={Phone}
+                      />
+                      <DetailItem 
+                        label="Date of Birth" 
+                        value={selectedCardDetails.patientDetails.dateOfBirth}
+                        icon={Calendar}
+                      />
+                      <DetailItem 
+                        label="Gender" 
+                        value={selectedCardDetails.patientDetails.gender || "Not specified"}
+                      />
+                      <DetailItem 
+                        label="Address" 
+                        value={selectedCardDetails.patientDetails.address}
+                        icon={MapPin}
+                      />
+                      {selectedCardDetails.patientDetails.subCity && (
+                        <DetailItem 
+                          label="Sub-City" 
+                          value={selectedCardDetails.patientDetails.subCity}
+                        />
+                      )}
+                      {selectedCardDetails.patientDetails.city && (
+                        <DetailItem 
+                          label="City" 
+                          value={selectedCardDetails.patientDetails.city}
+                        />
+                      )}
+                      {selectedCardDetails.patientDetails.country && (
+                        <DetailItem 
+                          label="Country" 
+                          value={selectedCardDetails.patientDetails.country}
+                        />
+                      )}
+                    </div>
+                    
+                    {/* Medical Information */}
+                    <div className="space-y-4 mt-4 pt-4 border-t">
+                      <h4 className="font-medium text-muted-foreground">Medical Information</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <DetailItem 
+                          label="Allergies" 
+                          value={selectedCardDetails.patientDetails.alergies || "None recorded"}
+                        />
+                        <DetailItem 
+                          label="Chronic Conditions" 
+                          value={selectedCardDetails.patientDetails.chronicConditions || "None recorded"}
+                        />
+                        <DetailItem 
+                          label="Emergency Contact" 
+                          value={
+                            selectedCardDetails.patientDetails.emergencyContactName ? 
+                            `${selectedCardDetails.patientDetails.emergencyContactName} (${selectedCardDetails.patientDetails.emergencyContactPhone})` : 
+                            "Not provided"
+                          }
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Updated At</p>
-                    <p>{formatDateTime(selectedCardDetails.updatedAt || "")}</p>
+                )}
+
+                {/* Timestamps Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Timestamps
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <DetailItem 
+                      label="Created At" 
+                      value={formatDateTime(selectedCardDetails.createdAt)}
+                    />
+                    <DetailItem 
+                      label="Updated At" 
+                      value={formatDateTime(selectedCardDetails.updatedAt || "")}
+                    />
+                    <DetailItem 
+                      label="Requested At" 
+                      value={formatDateTime(selectedCardDetails.requestedAt || "")}
+                    />
+                    <DetailItem 
+                      label="Activated At" 
+                      value={formatDateTime(selectedCardDetails.activatedAt || "")}
+                    />
+                    <DetailItem 
+                      label="Expired At" 
+                      value={formatDateTime(selectedCardDetails.expiredAt || "")}
+                    />
+                    <DetailItem 
+                      label="Requested By ID" 
+                      value={selectedCardDetails.requestedById || "N/A"}
+                    />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Activated At</p>
-                    <p>{formatDateTime(selectedCardDetails.activatedAt || "")}</p>
+                </div>
+
+                {/* Benefits Section */}
+                {selectedCardDetails.benefits && selectedCardDetails.benefits.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Check className="w-5 h-5" />
+                      Card Benefits
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCardDetails.benefits.map((benefit, index) => (
+                        <Badge key={index} variant="secondary" className="px-3 py-1 text-sm">
+                          {benefit}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Expired At</p>
-                    <p>{formatDateTime(selectedCardDetails.expiredAt || "")}</p>
+                )}
+
+                {/* Remarks Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Remarks
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Request Remark</Label>
+                      <div className="bg-muted/50 p-4 rounded-lg border">
+                        <p className="text-base">
+                          {selectedCardDetails.requestRemark || "No remark provided"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Activation Remark</Label>
+                      <div className="bg-muted/50 p-4 rounded-lg border">
+                        <p className="text-base">
+                          {selectedCardDetails.activationRemark || "No activation remark"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              {/* Remarks */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5" />
-                  Remarks
-                </h3>
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Request Remark</p>
-                    <p className="bg-muted p-3 rounded-md">
-                      {selectedCardDetails.requestRemark || "No remark provided"}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Activation Remark</p>
-                    <p className="bg-muted p-3 rounded-md">
-                      {selectedCardDetails.activationRemark || "No activation remark"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </ScrollArea>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
             <DialogClose asChild>
               <Button variant="outline">Close</Button>
             </DialogClose>
+            <Button 
+              variant="dental" 
+              onClick={() => {
+                setIsViewOpen(false);
+                if (selectedCardDetails) {
+                  handleEditCard(selectedCardDetails);
+                }
+              }}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Card
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
