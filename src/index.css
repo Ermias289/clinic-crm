@@ -293,3 +293,9 @@ input[type=number] {
 [data-radix-dialog-content] {
   overflow: hidden;
 }
+
+/* Add to your global CSS or component CSS */
+.dialog-overlay-fix {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}

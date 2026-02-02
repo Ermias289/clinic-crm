@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
+import TimeSlotSelector from "./TimeSlotSelector.tsx";
+
 import { 
   Select,
   SelectContent,
@@ -73,7 +75,7 @@ import {
   MapPinIcon
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { AppointmentDTO, appointmentService } from "@/lib/api/appointments";
+import { AppointmentDTO, appointmentService, FreeSlotDTO } from "@/lib/api/appointments";
 import { MedicalProfessional, medicalProfessionalsService } from "@/lib/api/medicalProfessionals";
 import { MedicalService, medicalServicesService } from "@/lib/api/medicalServices";
 import { BranchSettingDTO, branchService } from "@/lib/api/branches";
@@ -112,6 +114,8 @@ const AppointmentsPage = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [isTimeSlotDialogOpen, setIsTimeSlotDialogOpen] = useState(false);
 
   // User ID for notifications
   const userId = 1;
@@ -233,7 +237,8 @@ const AppointmentsPage = () => {
     }
   };
 
-  // Handle Add Appointment with AM/PM time format
+
+  // Handle Add Appointment - KEEP TIME IN 24-HOUR FORMAT
   const handleAddAppointment = async () => {
     if (!selectedPatientId || !selectedDoctorId || !selectedServiceId || 
         !selectedBranchId || !appointmentDate || !appointmentTime) {
@@ -243,20 +248,44 @@ const AppointmentsPage = () => {
 
     setIsProcessing(true);
     try {
-      // Format time to AM/PM
-      const formattedTime = formatTimeToAMPM(appointmentTime);
+      // IMPORTANT: Time is already in 24-hour format from TimeSlotSelector
+      // Don't convert it to AM/PM for the API!
+      
+      // Convert IDs to numbers
+      const patientId = parseInt(selectedPatientId);
+      const medicalProfessionalId = parseInt(selectedDoctorId);
+      const dentistryId = parseInt(selectedServiceId);
+      const branchId = parseInt(selectedBranchId);
+      
+      console.log("IDs being sent:", {
+        patientId,
+        medicalProfessionalId,
+        dentistryId,
+        branchId,
+        appointmentDate,
+        appointmentTime 
+      });
+      
+      // Check if any ID is NaN
+      if (isNaN(patientId) || isNaN(medicalProfessionalId) || 
+          isNaN(dentistryId) || isNaN(branchId)) {
+        throw new Error("Invalid ID detected. Please reselect all fields.");
+      }
       
       const appointmentData = {
-        patientId: parseInt(selectedPatientId),
-        medicalProfessionalId: parseInt(selectedDoctorId),
-        dentistryId: parseInt(selectedServiceId),
-        branchId: parseInt(selectedBranchId),
+        patientId: patientId,
+        medicalProfessionalId: medicalProfessionalId,
+        dentistryId: dentistryId,
+        branchId: branchId,
         day: appointmentDate,
-        reservationTime: formattedTime,
+        reservationTime: appointmentTime, // Use as-is (24-hour format)
       };
 
-      console.log("Creating appointment:", appointmentData);
+      console.log("Creating appointment with data:", appointmentData);
+      
       const newAppointment = await appointmentService.create(appointmentData);
+      
+      console.log("Appointment created successfully:", newAppointment);
       
       // Refresh appointments list
       const updatedAppointments = await appointmentService.getAll();
@@ -298,8 +327,30 @@ const AppointmentsPage = () => {
       toast.success("Appointment created successfully!");
     } catch (error: any) {
       console.error("Error creating appointment:", error);
-      const msg = error.response?.data?.message || "Failed to create appointment";
-      toast.error(msg);
+      console.error("Error response:", error.response);
+      
+      let errorMessage = "Failed to create appointment";
+      
+      if (error.response) {
+        const { data, status } = error.response;
+        console.error(`Server error ${status}:`, data);
+        
+        if (data && data.message) {
+          errorMessage = data.message;
+        } else if (data && typeof data === 'string') {
+          errorMessage = data;
+        } else if (data && data.errors) {
+          const validationErrors = Object.values(data.errors).flat().join(', ');
+          errorMessage = `Validation errors: ${validationErrors}`;
+        }
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        errorMessage = "No response from server. Check your network connection.";
+      } else {
+        errorMessage = error.message || "Failed to create appointment";
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }
@@ -463,7 +514,7 @@ const AppointmentsPage = () => {
                     <SelectContent>
                       {patients.map(patient => (
                         <SelectItem key={patient.id} value={patient.id.toString()}>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col text-left">
                             <span>{patient.fName} {patient.mName} {patient.lName}</span>
                             <span className="text-xs text-muted-foreground">
                               {patient.phoneNumber} • {patient.email}
@@ -487,7 +538,7 @@ const AppointmentsPage = () => {
                     <SelectContent>
                       {doctors.map(doctor => (
                         <SelectItem key={doctor.id} value={doctor.id.toString()}>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col text-left">
                             <span>Dr. {doctor.fName} {doctor.lName}</span>
                             {doctor.specialty && (
                               <span className="text-xs text-muted-foreground">
@@ -542,7 +593,7 @@ const AppointmentsPage = () => {
                   </Select>
                 </div>
 
-                {/* Date and Time */}
+                {/* Date and Time with Free Slots */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date" className="text-sm font-medium">
@@ -566,14 +617,15 @@ const AppointmentsPage = () => {
                       <span className="text-red-500">*</span> Time
                     </Label>
                     <div className="relative">
-                      <Clock className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="time"
-                        type="time"
-                        value={appointmentTime}
-                        onChange={(e) => setAppointmentTime(e.target.value)}
-                        className="pl-10"
-                      />
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal h-10"
+                        disabled={!selectedDoctorId || !selectedBranchId || !appointmentDate}
+                        onClick={() => setIsTimeSlotDialogOpen(true)} 
+                      >
+                        <Clock className="mr-2 h-4 w-4" />
+                        {appointmentTime ? formatTimeToAMPM(appointmentTime) : "Select time slot"}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1269,6 +1321,44 @@ const AppointmentsPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+
+      {/* TIME SLOT SELECTOR DIALOG - SEPARATE DIALOG */}
+      <Dialog open={isTimeSlotDialogOpen} onOpenChange={setIsTimeSlotDialogOpen}>
+        <DialogContent 
+            className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Select Available Time Slot
+            </DialogTitle>
+            <DialogDescription>
+              Available time slots for {appointmentDate ? formatDate(appointmentDate) : 'selected date'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedDoctorId && selectedBranchId && appointmentDate ? (
+            <TimeSlotSelector
+              doctorId={selectedDoctorId}
+              branchId={selectedBranchId}
+              date={appointmentDate}
+              onTimeSelect={(time) => {
+                setAppointmentTime(time);
+                setIsTimeSlotDialogOpen(false); // Close dialog after selection
+              }}
+              selectedTime={appointmentTime}
+            />
+          ) : (
+            <div className="py-8 text-center">
+              <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium">Select doctor, branch, and date first</h3>
+              <p className="text-muted-foreground mt-2">
+                Please select a doctor, branch, and date to see available time slots.
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };

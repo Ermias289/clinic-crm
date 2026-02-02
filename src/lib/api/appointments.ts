@@ -98,6 +98,13 @@ export interface AppointmentFilters {
   dateTo?: string;
 }
 
+// export type FreeSlotDTO = string; // Just a string like "13:30"
+// // OR keep as interface but update the service:
+export interface FreeSlotDTO {
+  time: string;
+}
+
+
 export const appointmentService = {
   getAll: async (): Promise<AppointmentDTO[]> => {
     const response = await apiClient.get<AppointmentDTO[]>('/api/Appointment');
@@ -134,16 +141,22 @@ export const appointmentService = {
     });
   },
 
-  complete: async (ids: number[]): Promise<void> => {
-  await apiClient.put(
-    '/api/Appointment/completeAppointments',
-    ids
-  );
-},
+    complete: async (ids: number[]): Promise<void> => {
+      await apiClient.put(
+        '/api/Appointment/completeAppointments',
+        ids
+      );
+    },
 
+    update: async (id: number, data: Partial<CreateAppointmentDTO>): Promise<AppointmentDTO> => {
+      const response = await apiClient.put<AppointmentDTO>(`/api/Appointment/${id}`, data);
+      return response.data;
+    },
 
-  update: async (id: number, data: Partial<CreateAppointmentDTO>): Promise<AppointmentDTO> => {
-    const response = await apiClient.put<AppointmentDTO>(`/api/Appointment/${id}`, data);
-    return response.data;
-  },
+    getFreeSlots: async (docId: number, day: string, branchId: number): Promise<string[]> => {
+      const response = await apiClient.get<string[]>('/api/Appointment/getFreeSlots', {
+        params: { docId, day, branchId }
+      });
+      return response.data;
+    },
 };
