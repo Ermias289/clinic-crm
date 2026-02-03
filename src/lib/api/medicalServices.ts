@@ -53,7 +53,7 @@ export interface UpdateMedicalServiceDTO {
   durationInMinutes: number;
   servicePicture?: string;
   medicalProfessionalsId?: number[];
-  branches?: number[];
+  branchesId?: number[];  // Changed from 'branches' to 'branchesId'
 }
 
 /* ===== API Service ===== */

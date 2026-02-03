@@ -109,21 +109,35 @@ const ServicesPage = () => {
         branchService.getAll(),
       ]);
 
-      console.log("Services:", srv); // Debug
-      console.log("Doctors:", docs); // Debug
-      console.log("Branches:", brs); // Debug
+      console.log("Services:", srv);
+      console.log("Doctors:", docs);
+      console.log("Branches:", brs);
 
       setServices(srv);
       setDoctors(docs);
       setBranches(brs);
 
-      // Extract branches from services data directly
+      // Load branches for each service
       const branchMap: {[key: number]: BranchMini[]} = {};
-      srv.forEach(service => {
-        if (service.branches && Array.isArray(service.branches)) {
-          branchMap[service.id] = service.branches;
+      
+      for (const service of srv) {
+        try {
+          // Try to get detailed service info with branches
+          const serviceDetails = await medicalServicesService.getById(service.id);
+          if (serviceDetails.branches && Array.isArray(serviceDetails.branches)) {
+            branchMap[service.id] = serviceDetails.branches;
+          } else if (service.branches && Array.isArray(service.branches)) {
+            branchMap[service.id] = service.branches;
+          }
+        } catch (error) {
+          console.warn(`Could not load branches for service ${service.id}:`, error);
+          // Fallback to service.branches if available
+          if (service.branches && Array.isArray(service.branches)) {
+            branchMap[service.id] = service.branches;
+          }
         }
-      });
+      }
+      
       setServiceBranches(branchMap);
 
       console.log("Data loading completed successfully");
@@ -215,22 +229,17 @@ const ServicesPage = () => {
       setEditSelectedDoctorIds(doctorIds);
     }
     
-    // Load branches for this service
-    // try {
-    //   const serviceDetails = await medicalServicesService.getById(service.id);
-    //   if (serviceDetails.branches && Array.isArray(serviceDetails.branches)) {
-    //     const branchIds = serviceDetails.branches
-    //       .filter(branch => branch !== null)
-    //       .map(branch => (branch as BranchSettingDTO).id);
-    //     setEditSelectedBranchIds(branchIds);
-    //   }
-    // } catch (error) {
-    //   console.error("Error loading service branches:", error);
-    //   toast({
-    //     title: "Failed to load service branches",
-    //     variant: "destructive",
-    //   });
-    // }
+    // Load branches for this service from our state
+    if (serviceBranches[service.id]) {
+      const branchIds = serviceBranches[service.id].map(branch => branch.id);
+      setEditSelectedBranchIds(branchIds);
+    } else {
+      // Fallback: try to get from service.branches if available
+      if (service.branches && Array.isArray(service.branches)) {
+        const branchIds = service.branches.map(branch => branch.id);
+        setEditSelectedBranchIds(branchIds);
+      }
+    }
     
     setOpenEdit(true);
   };
@@ -249,7 +258,7 @@ const ServicesPage = () => {
       setServices((prev) => prev.filter((s) => s.id !== serviceToDelete.id));
       
       toast({
-        title: "Service deleted",
+        title: "Dental service deleted",
         description: `${serviceToDelete.name} has been removed`,
       });
     } catch (error) {
@@ -490,14 +499,21 @@ const ServicesPage = () => {
 
       setServices((prev) => [...prev, newService]);
       
+      // Add branches to our state
+      if (newService.branches) {
+        setServiceBranches(prev => ({
+          ...prev,
+          [newService.id]: newService.branches!
+        }));
+      }
+      
       toast({
-        title: "Service added successfully",
+        title: "Dental service added successfully",
         description: `${createForm.name} has been added to the system`,
       });
       
       resetCreateForm();
       setOpenCreate(false);
-      loadData(); // Reload data to get branches
     } catch (err: any) {
       console.error("Error adding service:", err);
       console.error("Error response data:", err.response?.data);
@@ -550,7 +566,7 @@ const ServicesPage = () => {
         durationInMinutes: editForm.durationInMinutes,
         servicePicture: editForm.servicePicture || "",
         medicalProfessionalsId: editSelectedDoctorIds,
-        branches: editSelectedBranchIds,
+        branchesId: editSelectedBranchIds, // Changed from 'branches' to 'branchesId'
       };
 
       const updatedService = await medicalServicesService.update(serviceData);
@@ -559,14 +575,19 @@ const ServicesPage = () => {
         prev.map((srv) => (srv.id === editingService.id ? updatedService : srv))
       );
       
+      // Update service branches in state
+      setServiceBranches(prev => ({
+        ...prev,
+        [editingService.id]: branches.filter(b => editSelectedBranchIds.includes(b.id))
+      }));
+      
       toast({
-        title: "Service updated successfully",
+        title: "Dental service updated successfully",
         description: `${editForm.name} has been updated`,
       });
       
       resetEditForm();
       setOpenEdit(false);
-      loadData(); // Reload data to get updated branches
     } catch (err: any) {
       console.error("Error updating service:", err);
       toast({
@@ -589,7 +610,7 @@ const ServicesPage = () => {
   /* -------------------- UI -------------------- */
   return (
     <DashboardLayout
-      title="Medical Services"
+      title="Dental Services"
       subtitle="Manage dental services offered at your clinic"
       actions={
         <Dialog open={openCreate} onOpenChange={(open) => {
@@ -606,7 +627,7 @@ const ServicesPage = () => {
 
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
             <DialogHeader className="p-6 pb-0">
-              <DialogTitle className="py-3">Add New Medical Service</DialogTitle>
+              <DialogTitle className="py-3">Add New Dental Service</DialogTitle>
             </DialogHeader>
 
             <div className="p-6 space-y-6">
@@ -866,19 +887,6 @@ const ServicesPage = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  console.log("Debug - Current form state:");
-                  console.log("createForm:", createForm);
-                  console.log("createSelectedBranchIds:", createSelectedBranchIds);
-                  console.log("createSelectedDoctorIds:", createSelectedDoctorIds);
-                  console.log("branches:", branches);
-                  console.log("availableCreateBranches:", availableCreateBranches);
-                }}
-              >
-                Debug Form
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
                   resetCreateForm();
                   setOpenCreate(false);
                 }}
@@ -954,32 +962,33 @@ const ServicesPage = () => {
                   <span className="font-medium">{service.durationInMinutes} minutes</span>
                 </div>
 
-                {/* BRANCHES - Display branches */}
+                {/* BRANCHES - Display branches with similar UI to doctors */}
                 <div className="mb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className="w-4 h-4" />
                     <span className="text-sm font-medium">Available at:</span>
                   </div>
                   {serviceBranches[service.id] && serviceBranches[service.id].length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {serviceBranches[service.id].slice(0, 2).map((branch) => (
-                        <span
+                    <div className="flex flex-col gap-2">
+                      {serviceBranches[service.id].map((branch) => (
+                        <div
                           key={branch.id}
-                          className="px-2 py-1 bg-secondary/20 rounded-full text-xs"
+                          className="flex items-center gap-2 px-3 py-2 bg-secondary/10 rounded-md"
                         >
-                          {branch.name}
-                        </span>
+                          <div className="w-2 h-2 rounded-full bg-primary" />
+                          <div>
+                            <p className="text-sm font-medium">{branch.name}</p>
+                            <p className="text-xs text-muted-foreground">{branch.address}</p>
+                          </div>
+                        </div>
                       ))}
-                      {serviceBranches[service.id].length > 2 && (
-                        <span className="px-2 py-1 bg-secondary/20 rounded-full text-xs">
-                          +{serviceBranches[service.id].length - 2} more
-                        </span>
-                      )}
                     </div>
                   ) : (
-                    <span className="text-xs text-red-500">
-                      No branches assigned
-                    </span>
+                    <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-md">
+                      <span className="text-sm text-red-600">
+                        No branches assigned
+                      </span>
+                    </div>
                   )}
                 </div>
 
@@ -1078,7 +1087,7 @@ const ServicesPage = () => {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="py-3">
-              Edit Medical Service - {editForm.name}
+              Edit Dental Service - {editForm.name}
             </DialogTitle>
           </DialogHeader>
 
