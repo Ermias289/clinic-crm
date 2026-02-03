@@ -35,7 +35,7 @@ const navItems: NavItem[] = [
   { title: "Appointments", href: "/appointments", icon: Calendar },
   { title: "Cards", href: "/cards", icon: CreditCard },
   { title: "Dental professionals", href: "/doctors", icon: Stethoscope },
-  { title: "Medical Services", href: "/services", icon: ClipboardList },
+  { title: "Dental Services", href: "/services", icon: ClipboardList },
   { title: "Patients", href: "/patients", icon: Users },
   { title: "Payments", href: "/payments", icon: Wallet },
   { 
