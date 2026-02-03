@@ -49,6 +49,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   MedicalProfessional,
   medicalProfessionalsService,
+  UpdateMedicalProfessionalDTO
 } from "@/lib/api/medicalProfessionals";
 import { toast } from "@/hooks/use-toast";
 import { medicalServicesService, MedicalService } from "@/lib/api/medicalServices";
@@ -94,7 +95,7 @@ const DoctorsPage = () => {
     yearsOfExperience: "" as number | "",
     status: "Active",
     profilePicture: "",
-    requiresUserAccount: true,
+    requiresUserAccount: false, // Changed from true to false
   });
   const [createSelectedServiceIds, setCreateSelectedServiceIds] = useState<number[]>([]);
   const [createSelectedBranchIds, setCreateSelectedBranchIds] = useState<number[]>([]);
@@ -127,7 +128,7 @@ const DoctorsPage = () => {
     yearsOfExperience: "" as number | "",
     status: "Active",
     profilePicture: "",
-    requiresUserAccount: true,
+    requiresUserAccount: false, // Changed from true to false
   });
   const [editSelectedServiceIds, setEditSelectedServiceIds] = useState<number[]>([]);
   const [editSelectedBranchIds, setEditSelectedBranchIds] = useState<number[]>([]);
@@ -363,7 +364,7 @@ const DoctorsPage = () => {
       yearsOfExperience: "",
       status: "Active",
       profilePicture: "",
-      requiresUserAccount: true,
+      requiresUserAccount: false, // Changed from true to false
     });
     setCreateSelectedServiceIds([]);
     setCreateSelectedBranchIds([]);
@@ -393,7 +394,7 @@ const DoctorsPage = () => {
       yearsOfExperience: "",
       status: "Active",
       profilePicture: "",
-      requiresUserAccount: true,
+      requiresUserAccount: false, // Changed from true to false
     });
     setEditSelectedServiceIds([]);
     setEditSelectedBranchIds([]);
@@ -468,7 +469,7 @@ const DoctorsPage = () => {
     if (createSelectedServiceIds.length === 0) {
       toast({
         title: "No services selected",
-        description: "Please select at least one medical service",
+        description: "Please select at least one dental service",
         variant: "destructive",
       });
       return;
@@ -511,8 +512,8 @@ const DoctorsPage = () => {
           await saveDoctorSchedules(newDoctor.id, createSchedules);
         } catch (scheduleError) {
           toast({
-            title: "Doctor added but schedules failed",
-            description: "The doctor was created but there was an issue saving the schedule. You can edit the doctor to add schedules.",
+            title: "Dental professional added but schedules failed",
+            description: "The dental professional was created but there was an issue saving the schedule. You can edit the dental professional to add schedules.",
             variant: "destructive",
           });
         }
@@ -521,16 +522,16 @@ const DoctorsPage = () => {
       setDoctors((prev) => [...prev, newDoctor]);
       
       toast({
-        title: "Doctor added successfully",
+        title: "Dental professional added successfully", // Changed text
         description: `${createForm.fName} ${createForm.lName} has been added to the system`,
       });
       
       resetCreateForm();
       setOpenCreate(false);
     } catch (err: any) {
-      console.error("Error adding doctor:", err);
+      console.error("Error adding dental professional:", err);
       toast({
-        title: "Failed to add doctor",
+        title: "Failed to add dental professional", // Changed text
         description: err.response?.data?.message || "Please check the form and try again",
         variant: "destructive",
       });
@@ -554,7 +555,7 @@ const DoctorsPage = () => {
     if (editSelectedServiceIds.length === 0) {
       toast({
         title: "No services selected",
-        description: "Please select at least one medical service",
+        description: "Please select at least one dental service",
         variant: "destructive",
       });
       return;
@@ -569,81 +570,50 @@ const DoctorsPage = () => {
       return;
     }
 
-    let doctorUpdateSuccess = false;
-    let scheduleUpdateSuccess = false;
-
     try {
-      // First, try to update the doctor's basic information
-      const updatedDoctor = await medicalProfessionalsService.update({
+      // Create the DTO object
+      const dto: UpdateMedicalProfessionalDTO = {
         id: editingDoctor.id,
         fName: editForm.fName,
-        mName: editForm.mName,
+        mName: editForm.mName || "",
         lName: editForm.lName,
         email: editForm.email,
         phoneNumber: editForm.phoneNumber,
-        jobTitle: editForm.jobTitle,
-        specialty: editForm.specialty,
-        licenseNumber: editForm.licenseNumber,
-        educationalBackground: editForm.educationalBackground,
+        jobTitle: editForm.jobTitle || "",
+        specialty: editForm.specialty || "",
+        licenseNumber: editForm.licenseNumber || "",
+        educationalBackground: editForm.educationalBackground || "",
         yearsOfExperience: editForm.yearsOfExperience === "" ? 0 : Number(editForm.yearsOfExperience),
-        status: editForm.status,
-        profilePicture: editForm.profilePicture,
-        requiresUserAccount: editForm.requiresUserAccount,
-        medicalServicesId: editSelectedServiceIds,
-        branches: editSelectedBranchIds,
-      });
-
-      doctorUpdateSuccess = true;
-
+        status: editForm.status || "Active",
+        profilePicture: editForm.profilePicture || "",
+        requiresUserAccount: editForm.requiresUserAccount || false,
+        medicalServicesId: editSelectedServiceIds || [],
+        branches: editSelectedBranchIds || [],
+      };
+      
+      console.log("Sending update DTO:", dto);
+      
+      const updatedDoctor = await medicalProfessionalsService.update(dto);
+      
       setDoctors((prev) =>
         prev.map((doc) => (doc.id === editingDoctor.id ? updatedDoctor : doc))
       );
 
-    } catch (err: any) {
-      // Don't return here - continue with schedule update even if basic info fails
       toast({
-        title: "Doctor info update failed",
-        description: `Error: ${err.response?.status} ${err.response?.statusText}. Check console for details.`,
-        variant: "destructive",
+        title: "Dental professional updated successfully",
+        description: `${editForm.fName} ${editForm.lName} has been updated`,
       });
-    }
-
-    // Always try to update schedules, regardless of basic info update success
-    try {
-      await updateDoctorSchedules(editingDoctor.id, editSchedules);
-      scheduleUpdateSuccess = true;
-    } catch (scheduleError) {
-      toast({
-        title: "Schedule update failed",
-        description: "There was an issue updating the doctor's schedule. Please try again.",
-        variant: "destructive",
-      });
-    }
-
-    // Show appropriate success message
-    if (doctorUpdateSuccess && scheduleUpdateSuccess) {
-      toast({
-        title: "Doctor updated successfully",
-        description: `${editForm.fName} ${editForm.lName} and their schedule have been updated`,
-      });
+      
       resetEditForm();
       setOpenEdit(false);
-    } else if (scheduleUpdateSuccess) {
+    } catch (error: any) {
+      console.error("Error updating dental professional:", error);
+      console.error("Error status:", error.response?.status);
+      console.error("Error data:", error.response?.data);
+      
       toast({
-        title: "Schedule updated",
-        description: "The doctor's schedule was updated successfully, but basic information update failed.",
-      });
-      resetEditForm();
-      setOpenEdit(false);
-    } else if (doctorUpdateSuccess) {
-      toast({
-        title: "Partial update",
-        description: "Basic information was updated, but schedule update failed.",
-      });
-    } else {
-      toast({
-        title: "Update failed",
-        description: "Both doctor information and schedule updates failed. Please try again.",
+        title: "Error",
+        description: "Failed to update dental professional",
         variant: "destructive",
       });
     }
@@ -674,14 +644,14 @@ const DoctorsPage = () => {
       setDoctors((prev) => prev.filter((d) => d.id !== doctorToDelete.id));
       
       toast({
-        title: "Doctor deleted",
+        title: "Dental professional deleted", // Changed text
         description: `${doctorToDelete.fName} ${doctorToDelete.lName} has been removed`,
       });
     } catch (error) {
-      console.error("Error deleting doctor:", error);
+      console.error("Error deleting dental professional:", error);
       toast({
         title: "Delete failed",
-        description: "Could not delete the doctor",
+        description: "Could not delete the dental professional",
         variant: "destructive",
       });
     } finally {
@@ -938,8 +908,8 @@ const DoctorsPage = () => {
 
   return (
     <DashboardLayout
-      title="Medical Professionals"
-      subtitle="Manage doctors"
+      title="Dental Professionals" // Changed text
+      subtitle="Manage dental professionals" // Changed text
       actions={
         <Dialog open={openCreate} onOpenChange={(open) => {
           if (!open) {
@@ -949,13 +919,13 @@ const DoctorsPage = () => {
         }}>
           <DialogTrigger asChild>
             <Button variant="dental">
-              <Plus className="w-4 h-4 mr-1" /> Add Doctor
+              <Plus className="w-4 h-4 mr-1" /> Add Dental Professional {/* Changed text */}
             </Button>
           </DialogTrigger>
 
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
             <DialogHeader className="p-6 pb-0">
-              <DialogTitle className="py-3">Add New Medical Professional</DialogTitle>
+              <DialogTitle className="py-3">Add New Dental Professional</DialogTitle> {/* Changed text */}
             </DialogHeader>
 
             <Tabs defaultValue="basic" className="w-full">
@@ -1187,7 +1157,7 @@ const DoctorsPage = () => {
                       className="w-4 h-4"
                     />
                     <Label htmlFor="requiresUserAccount" className="cursor-pointer">
-                      Create user account for this professional
+                      Create user account for this dental professional {/* Changed text */}
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -1241,9 +1211,9 @@ const DoctorsPage = () => {
                   )}
                 </div>
 
-                {/* Medical Services Section */}
+                {/* Dental Services Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Medical Services *</h3>
+                  <h3 className="text-lg font-semibold">Dental Services *</h3> {/* Changed text */}
                   <div className="space-y-2">
                     <Label>Select Services</Label>
                     <Select onValueChange={handleCreateServiceSelect}>
@@ -1299,7 +1269,7 @@ const DoctorsPage = () => {
                       size="sm"
                       onClick={async () => {
                         if (editingDoctor) {
-                          console.log("=== Testing Schedule Update for Doctor", editingDoctor.id, "===");
+                          console.log("=== Testing Schedule Update for Dental Professional", editingDoctor.id, "===");
                           try {
                             await updateDoctorSchedules(editingDoctor.id, editSchedules);
                             toast({
@@ -1414,7 +1384,7 @@ const DoctorsPage = () => {
                 disabled={isCreateUploading}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {isCreateUploading ? "Uploading..." : "Add Doctor"}
+                {isCreateUploading ? "Uploading..." : "Add Dental Professional"} {/* Changed text */}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1428,7 +1398,7 @@ const DoctorsPage = () => {
             <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
             <Input
               className="pl-10"
-              placeholder="Search doctor..."
+              placeholder="Search dental professional..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -1436,12 +1406,12 @@ const DoctorsPage = () => {
         </CardContent>
       </Card>
 
-      {/* DOCTOR CARDS */}
+      {/* DENTAL PROFESSIONAL CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {filteredDoctors.map((doc) => (
           <Card key={doc.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardContent className="p-0">
-              {/* Doctor Avatar Header */}
+              {/* Dental Professional Avatar Header */}
               <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 p-6 flex flex-col items-center">
                 <div className="absolute top-4 right-4">
                   <StatusBadge status={doc.status} />
@@ -1462,10 +1432,10 @@ const DoctorsPage = () => {
                 <h3 className="mt-4 text-xl font-bold text-center">
                   Dr. {doc.fName} {doc.mName && `${doc.mName} `}{doc.lName}
                 </h3>
-                <p className="text-sm text-muted-foreground text-center">{doc.specialty || "General Practitioner"}</p>
+                <p className="text-sm text-muted-foreground text-center">{doc.specialty || "General Dentist"}</p>
               </div>
 
-              {/* Doctor Details */}
+              {/* Dental Professional Details */}
               <div className="p-2 space-y-2">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
@@ -1534,7 +1504,7 @@ const DoctorsPage = () => {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Doctor</AlertDialogTitle>
+            <AlertDialogTitle>Delete Dental Professional</AlertDialogTitle> {/* Changed text */}
             <AlertDialogDescription>
               Are you sure you want to delete{" "}
               <span className="font-semibold">
@@ -1551,7 +1521,7 @@ const DoctorsPage = () => {
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete Doctor
+              Delete Dental Professional {/* Changed text */}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1567,7 +1537,7 @@ const DoctorsPage = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="py-3">
-              Edit Medical Professional - Dr. {editForm.fName} {editForm.lName}
+              Edit Dental Professional - Dr. {editForm.fName} {editForm.lName} {/* Changed text */}
             </DialogTitle>
           </DialogHeader>
 
@@ -1800,11 +1770,11 @@ const DoctorsPage = () => {
                     className="w-4 h-4"
                   />
                   <Label htmlFor="edit-requiresUserAccount" className="cursor-pointer">
-                    User account for this professional
+                    User account for this dental professional {/* Changed text */}
                   </Label>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  When enabled, the system will maintain login credentials for this professional.
+                  When enabled, the system will maintain login credentials for this dental professional.
                 </p>
               </div>
             </TabsContent>
@@ -1854,9 +1824,9 @@ const DoctorsPage = () => {
                 )}
               </div>
 
-              {/* Medical Services Section */}
+              {/* Dental Services Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Medical Services *</h3>
+                <h3 className="text-lg font-semibold">Dental Services *</h3> {/* Changed text */}
                 <div className="space-y-2">
                   <Label>Select Services</Label>
                   <Select onValueChange={handleEditServiceSelect}>
@@ -2000,7 +1970,7 @@ const DoctorsPage = () => {
               disabled={isEditUploading}
             >
               <Pencil className="w-4 h-4 mr-2" />
-              {isEditUploading ? "Uploading..." : "Update Doctor"}
+              {isEditUploading ? "Uploading..." : "Update Dental Professional"} {/* Changed text */}
             </Button>
           </DialogFooter>
         </DialogContent>
