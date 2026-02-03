@@ -103,7 +103,7 @@ const DoctorsPage = () => {
   const [isCreateUploading, setIsCreateUploading] = useState(false);
 
   // Schedule states for create form
-  const [createSchedules, setCreateSchedules] = useState<{[key: string]: {isWorking: boolean, startTime: string, endTime: string, branchId: number}}>({
+  const [createSchedules, setCreateSchedules] = useState<{ [key: string]: { isWorking: boolean, startTime: string, endTime: string, branchId: number } }>({
     monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
     tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
     wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
@@ -134,9 +134,10 @@ const DoctorsPage = () => {
   const [editProfilePictureFile, setEditProfilePictureFile] = useState<File | null>(null);
   const [editProfilePicturePreview, setEditProfilePicturePreview] = useState<string>("");
   const [isEditUploading, setIsEditUploading] = useState(false);
+  const [activeEditTab, setActiveEditTab] = useState("basic");
 
   // Schedule states for edit form
-  const [editSchedules, setEditSchedules] = useState<{[key: string]: {isWorking: boolean, startTime: string, endTime: string, branchId: number}}>({
+  const [editSchedules, setEditSchedules] = useState<{ [key: string]: { isWorking: boolean, startTime: string, endTime: string, branchId: number } }>({
     monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
     tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
     wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
@@ -200,11 +201,11 @@ const DoctorsPage = () => {
       }
 
       setCreateProfilePictureFile(file);
-      
+
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setCreateProfilePicturePreview(previewUrl);
-      
+
       // Upload file immediately
       uploadProfilePicture(file, true);
     }
@@ -233,11 +234,11 @@ const DoctorsPage = () => {
       }
 
       setEditProfilePictureFile(file);
-      
+
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setEditProfilePicturePreview(previewUrl);
-      
+
       // Upload file immediately
       uploadProfilePicture(file, false);
     }
@@ -250,16 +251,16 @@ const DoctorsPage = () => {
     } else {
       setIsEditUploading(true);
     }
-    
+
     try {
       const fileName = await fileUploadService.upload(file);
-      
+
       if (isCreate) {
         setCreateForm(prev => ({ ...prev, profilePicture: fileName }));
       } else {
         setEditForm(prev => ({ ...prev, profilePicture: fileName }));
       }
-      
+
       toast({
         title: "Profile picture uploaded",
         description: "Image successfully uploaded to server",
@@ -406,6 +407,7 @@ const DoctorsPage = () => {
     if (editFileInputRef.current) {
       editFileInputRef.current.value = "";
     }
+    setActiveEditTab("basic");
   };
 
   // Setup edit form with doctor data
@@ -426,30 +428,30 @@ const DoctorsPage = () => {
       profilePicture: doctor.profilePicture || "",
       requiresUserAccount: doctor.requiresUserAccount !== false,
     });
-    
+
     if (doctor.profilePicture) {
       setEditProfilePicturePreview(getImageUrl(doctor.profilePicture));
     }
-    
+
     // Set selected services
     if (doctor.medicalServices) {
-      const serviceIds = doctor.medicalServices.map(service => 
+      const serviceIds = doctor.medicalServices.map(service =>
         typeof service === 'object' ? service.id : parseInt(service as string)
       ).filter(id => !isNaN(id));
       setEditSelectedServiceIds(serviceIds);
     }
-    
+
     // Set selected branches
     if (doctor.branches) {
-      const branchIds = doctor.branches.map(branch => 
+      const branchIds = doctor.branches.map(branch =>
         typeof branch === 'object' ? branch.id : parseInt(branch as string)
       ).filter(id => !isNaN(id));
       setEditSelectedBranchIds(branchIds);
     }
-    
+
     // Load doctor schedules
     loadDoctorSchedules(doctor.id);
-    
+
     setOpenEdit(true);
   };
 
@@ -503,7 +505,7 @@ const DoctorsPage = () => {
       });
 
       // Save doctor schedules if any are configured
-      const hasValidSchedules = Object.values(createSchedules).some(schedule => 
+      const hasValidSchedules = Object.values(createSchedules).some(schedule =>
         schedule.isWorking && schedule.branchId > 0
       );
       if (hasValidSchedules) {
@@ -519,12 +521,12 @@ const DoctorsPage = () => {
       }
 
       setDoctors((prev) => [...prev, newDoctor]);
-      
+
       toast({
         title: "Doctor added successfully",
         description: `${createForm.fName} ${createForm.lName} has been added to the system`,
       });
-      
+
       resetCreateForm();
       setOpenCreate(false);
     } catch (err: any) {
@@ -569,83 +571,66 @@ const DoctorsPage = () => {
       return;
     }
 
-    let doctorUpdateSuccess = false;
-    let scheduleUpdateSuccess = false;
+    let success = false;
 
-    try {
-      // First, try to update the doctor's basic information
-      const updatedDoctor = await medicalProfessionalsService.update({
-        id: editingDoctor.id,
-        fName: editForm.fName,
-        mName: editForm.mName,
-        lName: editForm.lName,
-        email: editForm.email,
-        phoneNumber: editForm.phoneNumber,
-        jobTitle: editForm.jobTitle,
-        specialty: editForm.specialty,
-        licenseNumber: editForm.licenseNumber,
-        educationalBackground: editForm.educationalBackground,
-        yearsOfExperience: editForm.yearsOfExperience === "" ? 0 : Number(editForm.yearsOfExperience),
-        status: editForm.status,
-        profilePicture: editForm.profilePicture,
-        requiresUserAccount: editForm.requiresUserAccount,
-        medicalServicesId: editSelectedServiceIds,
-        branches: editSelectedBranchIds,
-      });
+    if (activeEditTab === "basic" || activeEditTab === "services") {
+      try {
+        // Try to update the doctor's basic information/services
+        const updatedDoctor = await medicalProfessionalsService.update({
+          id: editingDoctor.id,
+          fName: editForm.fName,
+          mName: editForm.mName,
+          lName: editForm.lName,
+          email: editForm.email,
+          phoneNumber: editForm.phoneNumber,
+          jobTitle: editForm.jobTitle,
+          specialty: editForm.specialty,
+          licenseNumber: editForm.licenseNumber,
+          educationalBackground: editForm.educationalBackground,
+          yearsOfExperience: editForm.yearsOfExperience === "" ? 0 : Number(editForm.yearsOfExperience),
+          status: editForm.status,
+          profilePicture: editForm.profilePicture,
+          requiresUserAccount: editForm.requiresUserAccount,
+          medicalServicesId: editSelectedServiceIds,
+          branches: editSelectedBranchIds,
+        });
 
-      doctorUpdateSuccess = true;
+        setDoctors((prev) =>
+          prev.map((doc) => (doc.id === editingDoctor.id ? updatedDoctor : doc))
+        );
 
-      setDoctors((prev) =>
-        prev.map((doc) => (doc.id === editingDoctor.id ? updatedDoctor : doc))
-      );
-
-    } catch (err: any) {
-      // Don't return here - continue with schedule update even if basic info fails
-      toast({
-        title: "Doctor info update failed",
-        description: `Error: ${err.response?.status} ${err.response?.statusText}. Check console for details.`,
-        variant: "destructive",
-      });
+        toast({
+          title: "Doctor information updated",
+          description: `${editForm.fName} ${editForm.lName}'s data has been updated`,
+        });
+        success = true;
+      } catch (err: any) {
+        toast({
+          title: "Doctor info update failed",
+          description: `Error: ${err.response?.status} ${err.response?.statusText}. Check console for details.`,
+          variant: "destructive",
+        });
+      }
+    } else if (activeEditTab === "schedule") {
+      try {
+        await updateDoctorSchedules(editingDoctor.id, editSchedules);
+        toast({
+          title: "Schedule updated",
+          description: "The doctor's schedule has been updated successfully",
+        });
+        success = true;
+      } catch (scheduleError) {
+        toast({
+          title: "Schedule update failed",
+          description: "There was an issue updating the doctor's schedule. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
 
-    // Always try to update schedules, regardless of basic info update success
-    try {
-      await updateDoctorSchedules(editingDoctor.id, editSchedules);
-      scheduleUpdateSuccess = true;
-    } catch (scheduleError) {
-      toast({
-        title: "Schedule update failed",
-        description: "There was an issue updating the doctor's schedule. Please try again.",
-        variant: "destructive",
-      });
-    }
-
-    // Show appropriate success message
-    if (doctorUpdateSuccess && scheduleUpdateSuccess) {
-      toast({
-        title: "Doctor updated successfully",
-        description: `${editForm.fName} ${editForm.lName} and their schedule have been updated`,
-      });
+    if (success) {
       resetEditForm();
       setOpenEdit(false);
-    } else if (scheduleUpdateSuccess) {
-      toast({
-        title: "Schedule updated",
-        description: "The doctor's schedule was updated successfully, but basic information update failed.",
-      });
-      resetEditForm();
-      setOpenEdit(false);
-    } else if (doctorUpdateSuccess) {
-      toast({
-        title: "Partial update",
-        description: "Basic information was updated, but schedule update failed.",
-      });
-    } else {
-      toast({
-        title: "Update failed",
-        description: "Both doctor information and schedule updates failed. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -672,7 +657,7 @@ const DoctorsPage = () => {
     try {
       await medicalProfessionalsService.delete(doctorToDelete.id);
       setDoctors((prev) => prev.filter((d) => d.id !== doctorToDelete.id));
-      
+
       toast({
         title: "Doctor deleted",
         description: `${doctorToDelete.fName} ${doctorToDelete.lName} has been removed`,
@@ -721,13 +706,13 @@ const DoctorsPage = () => {
     if (!timeString || timeString === "" || timeString === "00:00:00" || timeString === "00:00") {
       return "02:00"; // Ethiopian default start time
     }
-    
+
     // Handle different time formats from backend
     if (timeString.length > 5) {
       // If time includes seconds (HH:MM:SS), extract HH:MM
       return timeString.substring(0, 5);
     }
-    
+
     // If time is in correct format already (HH:MM)
     if (timeString.match(/^\d{1,2}:\d{2}$/)) {
       // Ensure two-digit hour format
@@ -736,7 +721,7 @@ const DoctorsPage = () => {
       const minute = parts[1];
       return `${hour}:${minute}`;
     }
-    
+
     // Default fallback
     return "02:00";
   };
@@ -746,7 +731,7 @@ const DoctorsPage = () => {
     if (!timeString || timeString === "") {
       return "02:00";
     }
-    
+
     // Ensure format is HH:MM
     if (timeString.match(/^\d{1,2}:\d{2}$/)) {
       const parts = timeString.split(':');
@@ -754,7 +739,7 @@ const DoctorsPage = () => {
       const minute = parts[1];
       return `${hour}:${minute}`;
     }
-    
+
     // Default fallback
     return "02:00";
   };
@@ -777,12 +762,12 @@ const DoctorsPage = () => {
         ...prev,
         [day]: { ...prev[day], [field]: value }
       };
-      
+
       // If toggling working day on and no branch selected, select first available branch
       if (field === 'isWorking' && value === true && prev[day].branchId === 0 && branches.length > 0) {
         updated[day].branchId = branches[0].id;
       }
-      
+
       return updated;
     });
   };
@@ -794,12 +779,12 @@ const DoctorsPage = () => {
         ...prev,
         [day]: { ...prev[day], [field]: value }
       };
-      
+
       // If toggling working day on and no branch selected, select first available branch
       if (field === 'isWorking' && value === true && prev[day].branchId === 0 && branches.length > 0) {
         updated[day].branchId = branches[0].id;
       }
-      
+
       return updated;
     });
   };
@@ -822,7 +807,7 @@ const DoctorsPage = () => {
     try {
       const schedules = await doctorScheduleService.getByDoctorId(doctorId);
       setExistingSchedules(schedules);
-      
+
       // Reset edit schedules first with Ethiopian default times
       const resetSchedules = {
         monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
@@ -837,11 +822,11 @@ const DoctorsPage = () => {
       // Populate with existing schedules
       schedules.forEach(schedule => {
         const dayKey = schedule.weekDay.toLowerCase();
-        
+
         if (resetSchedules[dayKey]) {
           const formattedStartTime = formatTimeForDisplay(schedule.startTime);
           const formattedEndTime = formatTimeForDisplay(schedule.endTime);
-          
+
           resetSchedules[dayKey] = {
             isWorking: true,
             startTime: formattedStartTime,
@@ -889,49 +874,54 @@ const DoctorsPage = () => {
     }
   };
 
-  // Update doctor schedules (delete existing and create new ones)
+  // Update doctor schedules (Smart Sync: PUT for update, POST for create, DELETE for removal)
   const updateDoctorSchedules = async (doctorId: number, schedules: typeof editSchedules) => {
     try {
-      // Delete existing schedules first
-      if (existingSchedules.length > 0) {
-        const deletePromises = existingSchedules.map(async (schedule) => {
-          try {
-            await doctorScheduleService.delete(schedule.id);
-          } catch (error) {
-            throw error;
-          }
-        });
-        
-        await Promise.all(deletePromises);
-      }
+      const schedulePromises: Promise<any>[] = [];
+      const days = Object.keys(schedules);
 
-      // Create new schedules
-      const createPromises: Promise<any>[] = [];
-      
-      Object.entries(schedules).forEach(([day, schedule]) => {
+      // 1. Process each day in the frontend state
+      days.forEach((dayKey) => {
+        const schedule = schedules[dayKey];
+        const existingForDay = existingSchedules.find(
+          (s) => s.weekDay.toLowerCase() === dayKey.toLowerCase()
+        );
+
         if (schedule.isWorking && schedule.branchId > 0) {
-          const scheduleData: AddDoctorScheduleDTO = {
-            medicalProfessionalId: doctorId,
-            branchSettingId: schedule.branchId,
-            weekDay: day.charAt(0).toUpperCase() + day.slice(1),
-            startTime: schedule.startTime,
-            endTime: schedule.endTime,
-          };
-          
-          createPromises.push(
-            doctorScheduleService.create(scheduleData).then(result => {
-              return result;
-            }).catch(error => {
-              throw error;
-            })
-          );
+          // Should be working
+          if (existingForDay) {
+            // Already exists -> Update (PUT)
+            const updateData: DoctorScheduleDTO = {
+              id: existingForDay.id,
+              medicalProfessionalId: doctorId,
+              branchSettingId: schedule.branchId,
+              weekDay: dayKey.charAt(0).toUpperCase() + dayKey.slice(1),
+              startTime: formatTimeForBackend(schedule.startTime),
+              endTime: formatTimeForBackend(schedule.endTime),
+            };
+            schedulePromises.push(doctorScheduleService.update(updateData));
+          } else {
+            // New -> Create (POST)
+            const addData: AddDoctorScheduleDTO = {
+              medicalProfessionalId: doctorId,
+              branchSettingId: schedule.branchId,
+              weekDay: dayKey.charAt(0).toUpperCase() + dayKey.slice(1),
+              startTime: formatTimeForBackend(schedule.startTime),
+              endTime: formatTimeForBackend(schedule.endTime),
+            };
+            schedulePromises.push(doctorScheduleService.create(addData));
+          }
+        } else if (existingForDay) {
+          // No longer working but existed -> Delete (DELETE)
+          schedulePromises.push(doctorScheduleService.delete(existingForDay.id));
         }
       });
 
-      if (createPromises.length > 0) {
-        await Promise.all(createPromises);
+      if (schedulePromises.length > 0) {
+        await Promise.all(schedulePromises);
       }
     } catch (error) {
+      console.error("Error in updateDoctorSchedules:", error);
       throw error;
     }
   };
@@ -1090,8 +1080,8 @@ const DoctorsPage = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="status">Status</Label>
-                      <Select 
-                        value={createForm.status} 
+                      <Select
+                        value={createForm.status}
                         onValueChange={(value) => updateCreateForm("status", value)}
                       >
                         <SelectTrigger>
@@ -1324,18 +1314,17 @@ const DoctorsPage = () => {
                     <br />
                     <span className="text-xs text-blue-600">Default Ethiopian working hours: 2:00 AM - 11:00 AM</span>
                   </p>
-                  
+
                   <div className="space-y-4">
                     {daysOfWeek.map((day) => (
-                      <div 
-                        key={day.key} 
-                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                          createSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
-                        }`}
+                      <div
+                        key={day.key}
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${createSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
+                          }`}
                       >
                         <div className="flex items-center gap-4">
-                          <Switch 
-                            checked={createSchedules[day.key].isWorking} 
+                          <Switch
+                            checked={createSchedules[day.key].isWorking}
                             onCheckedChange={(checked) => updateCreateSchedule(day.key, 'isWorking', checked)}
                           />
                           <div className="w-28">
@@ -1344,13 +1333,13 @@ const DoctorsPage = () => {
                             </span>
                           </div>
                         </div>
-                        
+
                         {createSchedules[day.key].isWorking ? (
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
                               <Label className="text-sm text-muted-foreground">Branch</Label>
-                              <Select 
-                                value={createSchedules[day.key].branchId > 0 ? createSchedules[day.key].branchId.toString() : ""} 
+                              <Select
+                                value={createSchedules[day.key].branchId > 0 ? createSchedules[day.key].branchId.toString() : ""}
                                 onValueChange={(value) => updateCreateSchedule(day.key, 'branchId', parseInt(value))}
                               >
                                 <SelectTrigger className={`w-40 ${createSchedules[day.key].branchId === 0 ? 'border-red-300' : ''}`}>
@@ -1370,21 +1359,21 @@ const DoctorsPage = () => {
                             </div>
                             <div className="flex items-center gap-2">
                               <Label className="text-sm text-muted-foreground">Start</Label>
-                              <Input 
-                                type="time" 
+                              <Input
+                                type="time"
                                 value={createSchedules[day.key].startTime}
                                 onChange={(e) => updateCreateSchedule(day.key, 'startTime', e.target.value)}
-                                className="w-32" 
+                                className="w-32"
                               />
                             </div>
                             <span className="text-muted-foreground">to</span>
                             <div className="flex items-center gap-2">
                               <Label className="text-sm text-muted-foreground">End</Label>
-                              <Input 
-                                type="time" 
+                              <Input
+                                type="time"
                                 value={createSchedules[day.key].endTime}
                                 onChange={(e) => updateCreateSchedule(day.key, 'endTime', e.target.value)}
-                                className="w-32" 
+                                className="w-32"
                               />
                             </div>
                           </div>
@@ -1446,11 +1435,11 @@ const DoctorsPage = () => {
                 <div className="absolute top-4 right-4">
                   <StatusBadge status={doc.status} />
                 </div>
-                
+
                 <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
                   {doc.profilePicture ? (
-                    <AvatarImage 
-                      src={getImageUrl(doc.profilePicture)} 
+                    <AvatarImage
+                      src={getImageUrl(doc.profilePicture)}
                       alt={`Dr. ${doc.fName} ${doc.lName}`}
                     />
                   ) : null}
@@ -1458,7 +1447,7 @@ const DoctorsPage = () => {
                     {getInitials(doc.fName, doc.lName)}
                   </AvatarFallback>
                 </Avatar>
-                
+
                 <h3 className="mt-4 text-xl font-bold text-center">
                   Dr. {doc.fName} {doc.mName && `${doc.mName} `}{doc.lName}
                 </h3>
@@ -1571,7 +1560,7 @@ const DoctorsPage = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="basic" className="w-full">
+          <Tabs value={activeEditTab} onValueChange={setActiveEditTab} className="w-full">
             <div className="px-6">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
@@ -1630,7 +1619,7 @@ const DoctorsPage = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="edit-phoneNumber">Phone Number *</Label>
-                      <Input
+                    <Input
                       id="edit-phoneNumber"
                       value={editForm.phoneNumber}
                       onChange={(e) => updateEditForm("phoneNumber", e.target.value)}
@@ -1703,8 +1692,8 @@ const DoctorsPage = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="edit-status">Status</Label>
-                    <Select 
-                      value={editForm.status} 
+                    <Select
+                      value={editForm.status}
                       onValueChange={(value) => updateEditForm("status", value)}
                     >
                       <SelectTrigger>
@@ -1910,18 +1899,17 @@ const DoctorsPage = () => {
                   <br />
                   <span className="text-xs text-blue-600">Default Ethiopian working hours: 2:00 AM - 11:00 AM</span>
                 </p>
-                
+
                 <div className="space-y-4">
                   {daysOfWeek.map((day) => (
-                    <div 
-                      key={day.key} 
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
-                        editSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
-                      }`}
+                    <div
+                      key={day.key}
+                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${editSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
+                        }`}
                     >
                       <div className="flex items-center gap-4">
-                        <Switch 
-                          checked={editSchedules[day.key].isWorking} 
+                        <Switch
+                          checked={editSchedules[day.key].isWorking}
                           onCheckedChange={(checked) => updateEditSchedule(day.key, 'isWorking', checked)}
                         />
                         <div className="w-28">
@@ -1930,13 +1918,13 @@ const DoctorsPage = () => {
                           </span>
                         </div>
                       </div>
-                      
+
                       {editSchedules[day.key].isWorking ? (
                         <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2">
                             <Label className="text-sm text-muted-foreground">Branch</Label>
-                            <Select 
-                              value={editSchedules[day.key].branchId > 0 ? editSchedules[day.key].branchId.toString() : ""} 
+                            <Select
+                              value={editSchedules[day.key].branchId > 0 ? editSchedules[day.key].branchId.toString() : ""}
                               onValueChange={(value) => updateEditSchedule(day.key, 'branchId', parseInt(value))}
                             >
                               <SelectTrigger className={`w-40 ${editSchedules[day.key].branchId === 0 ? 'border-red-300' : ''}`}>
@@ -1956,21 +1944,21 @@ const DoctorsPage = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Label className="text-sm text-muted-foreground">Start</Label>
-                            <Input 
-                              type="time" 
+                            <Input
+                              type="time"
                               value={editSchedules[day.key].startTime}
                               onChange={(e) => updateEditSchedule(day.key, 'startTime', e.target.value)}
-                              className="w-32" 
+                              className="w-32"
                             />
                           </div>
                           <span className="text-muted-foreground">to</span>
                           <div className="flex items-center gap-2">
                             <Label className="text-sm text-muted-foreground">End</Label>
-                            <Input 
-                              type="time" 
+                            <Input
+                              type="time"
                               value={editSchedules[day.key].endTime}
                               onChange={(e) => updateEditSchedule(day.key, 'endTime', e.target.value)}
-                              className="w-32" 
+                              className="w-32"
                             />
                           </div>
                         </div>
