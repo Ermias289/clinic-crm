@@ -26,6 +26,8 @@ import UserRolesPage from "./pages/settings/UserRolesPage";
 import WorkingDaysPage from "./pages/settings/WorkingDaysPage";
 import TestServiceAdd from "./pages/TestServiceAdd";
 import NotFound from "./pages/NotFound";
+import PaymentTypesPage from "./pages/settings/PaymentTypesPage";
+import BankAccountPage from "./pages/settings/BankAccountPage";
 
 const queryClient = new QueryClient();
 
@@ -64,7 +66,8 @@ const App = () => (
           <Route path="/settings/cards" element={<ProtectedRoute><CardSettingsPage /></ProtectedRoute>} />
           <Route path="/settings/card-types" element={<ProtectedRoute><CardTypesPage /></ProtectedRoute>} />
           <Route path="/settings/onboarding" element={<ProtectedRoute><OnboardingSettingsPage /></ProtectedRoute>} />
-
+            <Route path="/settings/payment-types" element={<ProtectedRoute><PaymentTypesPage /></ProtectedRoute>} />   
+            <Route path="/settings/bank-account" element={<ProtectedRoute><BankAccountPage /></ProtectedRoute>} />  
           <Route path="/settings/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
           <Route path="/settings/roles" element={<ProtectedRoute><UserRolesPage /></ProtectedRoute>} />
           <Route path="/settings/working-days" element={<ProtectedRoute><WorkingDaysPage /></ProtectedRoute>} />

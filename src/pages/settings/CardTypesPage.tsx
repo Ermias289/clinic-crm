@@ -14,7 +14,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Plus, CreditCard, Edit, Trash2, Loader2, DollarSign, Calendar } from "lucide-react";
+import { Plus, CreditCard, Edit, Trash2, Loader2, Calendar } from "lucide-react";
 import { CardType } from "@/types/clinic";
 import { toast } from "@/hooks/use-toast";
 import { cardTypeService, AddCardTypeDTO, UpdateCardTypeDTO } from "@/lib/api/cardTypes";
@@ -99,7 +99,7 @@ const CardTypesPage = () => {
     if (!createForm.cardSetting.price || price <= 0) {
       toast({ 
         title: "Validation Error", 
-        description: "Price must be greater than 0.",
+        description: "Price must be greater than 0 ETB.",
         variant: "destructive"
       });
       return;
@@ -177,27 +177,6 @@ const CardTypesPage = () => {
       return;
     }
 
-    const price = parseFloat(editForm.cardSetting.price);
-    const duration = parseInt(editForm.cardSetting.expirationDuration);
-
-    if (!editForm.cardSetting.price || price <= 0) {
-      toast({ 
-        title: "Validation Error", 
-        description: "Price must be greater than 0.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!editForm.cardSetting.expirationDuration || duration <= 0) {
-      toast({ 
-        title: "Validation Error", 
-        description: "Duration must be greater than 0 days.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     // Check for duplicate names (excluding current card type)
     const duplicateName = cardTypes.some(type => 
       type.id !== editForm.cardType.id && 
@@ -215,35 +194,9 @@ const CardTypesPage = () => {
     try {
       setSubmitting(true);
       
-      // Check if the card type name or description has changed
-      const originalCardType = editingType;
-      const hasCardTypeChanged = originalCardType && (
-        originalCardType.name !== editForm.cardType.name ||
-        originalCardType.description !== editForm.cardType.description
-      );
-      
-      // Only update the card type if something has changed
-      if (hasCardTypeChanged) {
-        await cardTypeService.update(editForm.cardType);
-      }
-      
-      // Update or create the card setting
-      if (editForm.cardSetting.id) {
-        const updateData: UpdateCardSettingDTO = {
-          id: editForm.cardSetting.id!,
-          price: parseFloat(editForm.cardSetting.price),
-          expirationDuration: parseInt(editForm.cardSetting.expirationDuration),
-          cardTypeId: editForm.cardType.id
-        };
-        await cardSettingService.update(updateData);
-      } else {
-        const createData: AddCardSettingDTO = {
-          price: parseFloat(editForm.cardSetting.price),
-          expirationDuration: parseInt(editForm.cardSetting.expirationDuration),
-          cardTypeId: editForm.cardType.id
-        };
-        await cardSettingService.create(createData);
-      }
+      // Only update the card type name and description
+      // Price and expiration duration are NOT updated as per requirements
+      await cardTypeService.update(editForm.cardType);
       
       toast({ title: "Success", description: "Card type updated successfully." });
       setEditingType(null);
@@ -333,7 +286,7 @@ const CardTypesPage = () => {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>Create Card Type</DialogTitle>
-              <DialogDescription>Define a new membership tier with pricing</DialogDescription>
+              <DialogDescription>Define a new membership tier with pricing and duration</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
@@ -361,7 +314,7 @@ const CardTypesPage = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Price ($) *</Label>
+                  <Label>Price (ETB) *</Label>
                   <Input 
                     type="number" 
                     placeholder="199.00" 
@@ -375,7 +328,7 @@ const CardTypesPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Duration (days)</Label>
+                  <Label>Duration (days) *</Label>
                   <Input 
                     type="number" 
                     placeholder="365" 
@@ -387,6 +340,9 @@ const CardTypesPage = () => {
                     }))}
                   />
                 </div>
+              </div>
+              <div className="text-sm text-muted-foreground pt-2 border-t">
+                <p>Note: Price and duration can only be set during creation and cannot be changed later.</p>
               </div>
             </div>
             <DialogFooter>
@@ -448,10 +404,9 @@ const CardTypesPage = () => {
                   <>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">Price</span>
                       </div>
-                      <span className="text-xl font-bold">${cardType.setting.price}</span>
+                      <span className="text-xl font-bold">{cardType.setting.price} ETB</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                       <div className="flex items-center gap-2">
@@ -498,7 +453,7 @@ const CardTypesPage = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Card Type</DialogTitle>
-            <DialogDescription>Update card type details and pricing</DialogDescription>
+            <DialogDescription>Update card type name and description only</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
@@ -522,35 +477,35 @@ const CardTypesPage = () => {
                 rows={3}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Price ($) *</Label>
-                <Input 
-                  type="number" 
-                  placeholder="199.00"
-                  min="0"
-                  step="0.01"
-                  value={editForm.cardSetting.price}
-                  onChange={(e) => setEditForm(prev => ({ 
-                    ...prev, 
-                    cardSetting: { ...prev.cardSetting, price: e.target.value }
-                  }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Duration (days)</Label>
-                <Input 
-                  type="number" 
-                  placeholder="365"
-                  min="1"
-                  value={editForm.cardSetting.expirationDuration}
-                  onChange={(e) => setEditForm(prev => ({ 
-                    ...prev, 
-                    cardSetting: { ...prev.cardSetting, expirationDuration: e.target.value }
-                  }))}
-                />
-              </div>
-            </div>
+            
+            {/* Display price and expiration duration as read-only */}
+            {editingType?.setting && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Price (ETB)</Label>
+                    <Input 
+                      type="text" 
+                      value={editForm.cardSetting.price}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Duration (days)</Label>
+                    <Input 
+                      type="text" 
+                      value={editForm.cardSetting.expirationDuration}
+                      readOnly
+                      className="bg-muted"
+                    />
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground pt-2">
+                  <p>Note: Price and duration can only be set during creation and cannot be modified.</p>
+                </div>
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button 

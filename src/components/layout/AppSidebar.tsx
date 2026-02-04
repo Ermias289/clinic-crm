@@ -45,8 +45,10 @@ const navItems: NavItem[] = [
     children: [
       { title: "Company", href: "/settings/company", icon: Building },
       { title: "Branches", href: "/settings/branches", icon: Building2 },
-      { title: "Card Settings", href: "/settings/cards", icon: CardIcon },
+      // { title: "Card Settings", href: "/settings/cards", icon: CardIcon },
       { title: "Card Types", href: "/settings/card-types", icon: CreditCard },
+      { title: "Payment Types", href: "/settings/payment-types", icon: CreditCard },
+      { title: "Bank Account", href: "/settings/bank-account", icon: CreditCard },
       { title: "Banner", href: "/settings/onboarding", icon: UserCog },
       { title: "Users", href: "/settings/users", icon: UserCircle },
       { title: "User Roles", href: "/settings/roles", icon: Shield },

@@ -1,3 +1,4 @@
+// Update the users service to include email confirmation
 import apiClient from './client';
 
 export interface CreateUserDTO {
@@ -28,6 +29,8 @@ export interface User {
   roleName: string;
   phoneNumber?: string;
   userRoleId: number;
+  isEmailConfirmed?: boolean;
+  emailConfirmationOTP?: string;
 }
 
 export const usersService = {
@@ -41,9 +44,12 @@ export const usersService = {
     return response.data;
   },
 
-  create: async (data: CreateUserDTO): Promise<User> => {
+  create: async (data: CreateUserDTO): Promise<{user: User; requiresEmailConfirmation: boolean}> => {
     const response = await apiClient.post<User>('/api/User', data);
-    return response.data;
+    return {
+      user: response.data,
+      requiresEmailConfirmation: true
+    };
   },
 
   update: async (id: number, data: UpdateUserDTO): Promise<User> => {
@@ -58,4 +64,9 @@ export const usersService = {
   confirmAccount: async (email: string, otp: string): Promise<void> => {
     await apiClient.put('/api/User/confirmAccount', null, { params: { email, OTP: otp } });
   },
+
+  resendOTP: async (email: string): Promise<void> => {
+    await apiClient.post('/api/User/resend-otp', null, { params: { email } });
+  },
 };
+
