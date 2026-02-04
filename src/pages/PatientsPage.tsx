@@ -156,16 +156,19 @@ const PatientsPage = () => {
     
     try {
       await patientsService.delete(patientToDelete.id);
+      // Update local state
       setPatients(patients.filter(p => p.id !== patientToDelete.id));
+      // Also update filteredPatients by fetching again or filtering
+      fetchPatients(); // Or use the line above
       toast({
         title: "Success",
         description: "Patient deleted successfully",
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to delete patient:", err);
       toast({
         title: "Error",
-        description: "Failed to delete patient",
+        description: err.response?.data?.message || "Failed to delete patient",
         variant: "destructive",
       });
     } finally {
@@ -177,7 +180,27 @@ const PatientsPage = () => {
   // Handle add patient
   const handleAddPatient = async () => {
     try {
-      const newPatient = await patientsService.create(formData);
+      // Create a clean object without undefined values
+      const cleanData: AddPatientDTO = {
+        fName: formData.fName || "",
+        mName: formData.mName || "",
+        lName: formData.lName || "",
+        email: formData.email || "",
+        phoneNumber: formData.phoneNumber || "",
+        gender: formData.gender || "",
+        alergies: formData.alergies || "",
+        chronicConditions: formData.chronicConditions || "",
+        emergencyContactName: formData.emergencyContactName || "",
+        emergencyContactPhone: formData.emergencyContactPhone || "",
+        address: formData.address || "",
+        subCity: formData.subCity || "",
+        country: formData.country || "",
+        city: formData.city || "",
+        dateOfBirth: formData.dateOfBirth || "",
+        requiresUserAccount: formData.requiresUserAccount || false,
+      };
+      
+      const newPatient = await patientsService.create(cleanData);
       setPatients([...patients, newPatient]);
       toast({
         title: "Success",
@@ -200,10 +223,28 @@ const PatientsPage = () => {
     if (!selectedPatient) return;
     
     try {
-      const updatedPatient = await patientsService.update({
-        ...formData,
+      // Create a clean object without undefined values
+      const cleanData: UpdatePatientDTO = {
         id: selectedPatient.id,
-      } as UpdatePatientDTO);
+        fName: formData.fName || "",
+        mName: formData.mName || "",
+        lName: formData.lName || "",
+        email: formData.email || "",
+        phoneNumber: formData.phoneNumber || "",
+        gender: formData.gender || "",
+        alergies: formData.alergies || "",
+        chronicConditions: formData.chronicConditions || "",
+        emergencyContactName: formData.emergencyContactName || "",
+        emergencyContactPhone: formData.emergencyContactPhone || "",
+        address: formData.address || "",
+        subCity: formData.subCity || "",
+        country: formData.country || "",
+        city: formData.city || "",
+        dateOfBirth: formData.dateOfBirth || "",
+        requiresUserAccount: formData.requiresUserAccount || false,
+      };
+      
+      const updatedPatient = await patientsService.update(cleanData);
       
       setPatients(patients.map(p => 
         p.id === selectedPatient.id ? updatedPatient : p
@@ -269,6 +310,35 @@ const PatientsPage = () => {
       age--;
     }
     return age;
+  };
+
+  // Function to format full name
+  const formatFullName = (patient: Patient) => {
+    const parts = [];
+    if (patient.fName) parts.push(patient.fName);
+    if (patient.mName) parts.push(patient.mName);
+    if (patient.lName) parts.push(patient.lName);
+    return parts.join(" ");
+  };
+
+  // Function to format location
+  const formatLocation = (patient: Patient) => {
+    const locationParts = [];
+    
+    // First line: subcity, city
+    if (patient.subCity || patient.city) {
+      const subcityCity = [patient.subCity, patient.city]
+        .filter(Boolean)
+        .join(", ");
+      locationParts.push(subcityCity);
+    }
+    
+    // Second line: country
+    if (patient.country) {
+      locationParts.push(patient.country);
+    }
+    
+    return locationParts.length > 0 ? locationParts.join("\n") : "-";
   };
 
   return (
@@ -377,7 +447,7 @@ const PatientsPage = () => {
                               </div>
                               <div>
                                 <p className="font-medium">
-                                  {patient.fName || ""} {patient.mName || ""} {patient.lName || ""}
+                                  {formatFullName(patient)}
                                 </p>
                                 <div className="flex items-center gap-2 mt-1">
                                   <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
@@ -413,40 +483,51 @@ const PatientsPage = () => {
 
                           {/* Health Info */}
                           <td className="p-4">
-                            <div className="space-y-1">
-                              {patient.alergies ? (
-                                <div className="flex items-center gap-1">
-                                  <AlertTriangle className="w-3 h-3 text-amber-500" />
-                                  <span className="text-xs">Has allergies</span>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">No allergies</span>
-                              )}
-                              {patient.chronicConditions ? (
-                                <div className="flex items-center gap-1">
-                                  <Stethoscope className="w-3 h-3 text-red-500" />
-                                  <span className="text-xs">Chronic conditions</span>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">No conditions</span>
-                              )}
+                            <div className="space-y-2">
+                              {/* First line - Allergies */}
+                              <div className="flex items-center gap-1 min-h-[20px]">
+                                {patient.alergies ? (
+                                  <>
+                                    <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                                    <span className="text-xs truncate max-w-[120px]">Has allergies</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <AlertTriangle className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-xs text-muted-foreground">No allergies</span>
+                                  </>
+                                )}
+                              </div>
+                              
+                              {/* Second line - Chronic Conditions */}
+                              <div className="flex items-center gap-1 min-h-[20px]">
+                                {patient.chronicConditions ? (
+                                  <>
+                                    <Stethoscope className="w-3 h-3 text-red-500 flex-shrink-0" />
+                                    <span className="text-xs truncate max-w-[120px]">Chronic conditions</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Stethoscope className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-xs text-muted-foreground">No conditions</span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </td>
 
-                          {/* New Location Column */}
+                          {/* Fixed Location Column */}
                           <td className="p-4">
                             <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <MapPin className="w-3 h-3 text-muted-foreground" />
-                                <span className="text-sm truncate max-w-[150px]">
-                                  {(() => {
-                                    const parts = [];
-                                    if (patient.country) parts.push(patient.country);
-                                    if (patient.city) parts.push(patient.city);
-                                    if (patient.subCity) parts.push(`and ${patient.subCity}`);
-                                    return parts.length > 0 ? parts.join(' - ') : "-";
-                                  })()}
-                                </span>
+                              <div className="flex items-start gap-2">
+                                <MapPin className="w-3 h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <div className="text-sm">
+                                  {formatLocation(patient).split('\n').map((line, index) => (
+                                    <div key={index}>
+                                      {line}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -559,7 +640,7 @@ const PatientsPage = () => {
         </>
       )}
 
-      {/* View Patient Dialog */}
+      {/* View Patient Dialog - Fixed name display */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -574,7 +655,7 @@ const PatientsPage = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold">
-                    {selectedPatient.fName} {selectedPatient.mName} {selectedPatient.lName}
+                    {formatFullName(selectedPatient)}
                   </h3>
                   <div className="flex items-center gap-4 mt-2">
                     <div className="flex items-center gap-2">
@@ -619,13 +700,32 @@ const PatientsPage = () => {
                     <div className="flex items-center gap-3">
                       <MapPin className="w-5 h-5 text-muted-foreground" />
                       <div>
-                        <p className="text-sm text-muted-foreground">Address</p>
+                        <p className="text-sm text-muted-foreground">Location</p>
                         <p className="font-medium">
-                          {selectedPatient.address || "-"}
-                          {selectedPatient.city && `, ${selectedPatient.city}`}
-                          {selectedPatient.subCity && `, ${selectedPatient.subCity}`}
-                          {selectedPatient.country && `, ${selectedPatient.country}`}
+                          {/* Create a multi-line location display */}
+                          {selectedPatient.subCity && (
+                            <span>{selectedPatient.subCity}, </span>
+                          )}
+                          {selectedPatient.city && (
+                            <span>{selectedPatient.city}</span>
+                          )}
+                          {(selectedPatient.subCity || selectedPatient.city) && selectedPatient.country && (
+                            <br />
+                          )}
+                          {selectedPatient.country && (
+                            <span>{selectedPatient.country}</span>
+                          )}
+                          {!selectedPatient.subCity && !selectedPatient.city && !selectedPatient.country && (
+                            <span>-</span>
+                          )}
                         </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Address</p>
+                        <p className="font-medium">{selectedPatient.address || "-"}</p>
                       </div>
                     </div>
                   </div>
@@ -687,7 +787,7 @@ const PatientsPage = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Last Updated</p>
-                    {/* <p className="font-medium">{formatDate(selectedPatient.updatedAt)}</p> */}
+                    <p className="font-medium">{formatDate(selectedPatient.updatedAt)}</p>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,4 @@
-// PaymentsPage.tsx 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,9 +43,10 @@ import {
   FileCheck,
   Ban,
   Image as ImageIcon,
+  Upload,
 } from "lucide-react";
 
-import { paymentsService, Payment } from "@/lib/api/payments";
+import { paymentsService, Payment, PaymentType } from "@/lib/api/payments";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -68,6 +68,7 @@ const PaymentsPage = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
   
   // Form states
   const [checkedAmount, setCheckedAmount] = useState<number>(0);
@@ -76,6 +77,14 @@ const PaymentsPage = () => {
   const [approvalRemark, setApprovalRemark] = useState("");
   const [rejectionRemark, setRejectionRemark] = useState("");
   const [cancelRemark, setCancelRemark] = useState("");
+
+  // Request payment states
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
+  const [selectedPaymentType, setSelectedPaymentType] = useState<number>(1); // Default to Cash
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch payments
   const fetchPayments = async () => {
@@ -93,6 +102,21 @@ const PaymentsPage = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch payment types
+  const fetchPaymentTypes = async () => {
+    try {
+      const types = await paymentsService.getPaymentTypes();
+      setPaymentTypes(types);
+    } catch (err) {
+      console.error("Failed to fetch payment types", err);
+      toast({
+        title: "Warning",
+        description: "Failed to load payment types",
+        variant: "destructive",
+      });
     }
   };
 
@@ -129,11 +153,20 @@ const PaymentsPage = () => {
 
   useEffect(() => {
     fetchPayments();
+    fetchPaymentTypes();
   }, []);
 
   useEffect(() => {
     applyFilters(payments, searchQuery, statusFilter);
   }, [searchQuery, statusFilter, payments]);
+
+  // Reset payment proof when payment type changes
+  useEffect(() => {
+    if (selectedPaymentType !== 3) { // Not "Via Mobile App Payment"
+      setPaymentProofFile(null);
+      setPaymentProofPreview(null);
+    }
+  }, [selectedPaymentType]);
 
   // Get image URL for payment proof
   const getPaymentProofUrl = (filename?: string): string | null => {
@@ -151,6 +184,9 @@ const PaymentsPage = () => {
     setApprovalRemark("");
     setRejectionRemark("");
     setCancelRemark("");
+    setSelectedPaymentType(1);
+    setPaymentProofFile(null);
+    setPaymentProofPreview(null);
   };
 
   // Open details dialog
@@ -171,8 +207,102 @@ const PaymentsPage = () => {
     setShowApproveModal(false);
     setShowRejectModal(false);
     setShowCancelModal(false);
+    setShowRequestModal(false);
   };
 
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file type (allow images)
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file (JPG, PNG, GIF)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPaymentProofFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPaymentProofPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle request payment
+  const handleRequestPayment = async () => {
+    if (!selectedPayment) return;
+
+    // Validate payment type selection
+    if (selectedPaymentType === 3 && !paymentProofFile) { // Via Mobile App Payment
+      toast({
+        title: "Validation Error",
+        description: "Please upload a payment proof screenshot for mobile app payments",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      let uploadedFileName = "";
+
+      // Upload file if payment type requires it
+      if (paymentProofFile) {
+        const uploadResponse = await paymentsService.uploadFile(paymentProofFile);
+        uploadedFileName = uploadResponse.fileName;
+      }
+
+      // Request payment with the correct API format
+      await paymentsService.requestPayment({
+        id: selectedPayment.id,
+        requestedAmount: selectedPayment.requestedAmount, 
+        paymentProof: uploadedFileName || undefined, 
+        isInsuranceCovered: selectedPayment.isInsuranceCovered || false,
+        paymentTypeId: selectedPaymentType,
+      });
+
+      toast({
+        title: "Success",
+        description: "Payment request has been submitted",
+      });
+
+      // Reset states
+      setShowRequestModal(false);
+      setSelectedPayment(null);
+      setPaymentProofFile(null);
+      setPaymentProofPreview(null);
+      setSelectedPaymentType(1);
+      
+      // Refresh payments list
+      fetchPayments();
+    } catch (error: any) {
+      console.error("Failed to request payment:", error);
+      toast({
+        title: "Failed to request payment",
+        description: error.response?.data?.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
   // Action handlers
   const handleCheckPayment = async () => {
     if (!selectedPayment) return;
@@ -200,7 +330,7 @@ const PaymentsPage = () => {
         id: selectedPayment.id,
         chekedAmount: checkedAmount,
         checkRemark: checkRemark,
-        paymentProof: selectedPayment.paymentProof || "", // Pass the existing payment proof from backend
+        paymentProof: selectedPayment.paymentProof || "",
       });
       toast({
         title: "Success",
@@ -537,6 +667,30 @@ const PaymentsPage = () => {
                           <p className="font-semibold">${selectedPayment.unPaidAmount.toLocaleString()}</p>
                         </div>
                         <div>
+                          <p className="text-sm text-muted-foreground">Payment Type</p>
+                          <div className="mt-1">
+                            {(selectedPayment.status === "Requested" || 
+                              selectedPayment.status === "Checked" || 
+                              selectedPayment.status === "Approved" || 
+                              selectedPayment.status === "Rejected") && (
+                              <div>
+                                <p className="text-sm text-muted-foreground">Payment Type</p>
+                                <div className="mt-1">
+                                  {selectedPayment.paymentType ? (
+                                    <Badge variant="secondary">{selectedPayment.paymentType.name}</Badge>
+                                  ) : selectedPayment.paymentTypeId ? (
+                                    <Badge variant="secondary">
+                                      {paymentTypes.find(t => t.id === selectedPayment.paymentTypeId)?.name || "Unknown"}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">Not specified</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div>
                           <p className="text-sm text-muted-foreground">Insurance</p>
                           <Badge variant={selectedPayment.isInsuranceCovered ? "default" : "secondary"}>
                             {selectedPayment.isInsuranceCovered ? "Covered" : "Not Covered"}
@@ -731,13 +885,20 @@ const PaymentsPage = () => {
                         {getAvailableActions(selectedPayment.status).map((action) => (
                           <Button
                             key={action}
-                            variant={action === "cancel" || action === "reject" ? "destructive" : "default"}
+                            variant={
+                              action === "cancel" || action === "reject" 
+                                ? "destructive" 
+                                : action === "request"
+                                ? "secondary"
+                                : "default"
+                            }
                             size="sm"
                             onClick={() => {
                               if (action === "check") setShowCheckModal(true);
                               if (action === "approve") setShowApproveModal(true);
                               if (action === "reject") setShowRejectModal(true);
                               if (action === "cancel") setShowCancelModal(true);
+                              if (action === "request") setShowRequestModal(true);
                             }}
                             className="capitalize"
                           >
@@ -745,6 +906,7 @@ const PaymentsPage = () => {
                             {action === "approve" && <ShieldCheck className="w-4 h-4 mr-2" />}
                             {action === "reject" && <ShieldX className="w-4 h-4 mr-2" />}
                             {action === "cancel" && <Ban className="w-4 h-4 mr-2" />}
+                            {action === "request" && <DollarSign className="w-4 h-4 mr-2" />}
                             {action}
                           </Button>
                         ))}
@@ -942,6 +1104,152 @@ const PaymentsPage = () => {
             <Button onClick={handleCancelPayment} variant="destructive">
               <X className="w-4 h-4 mr-2" />
               Cancel Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* REQUEST PAYMENT MODAL */}
+      <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5" />
+              Request Payment
+            </DialogTitle>
+            <DialogDescription>
+              Request payment for {selectedPayment?.reference}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentType">Payment Type *</Label>
+              <Select 
+                value={selectedPaymentType.toString()} 
+                onValueChange={(value) => setSelectedPaymentType(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select payment type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedPaymentType === 3 && ( // Via Mobile App Payment
+              <div className="space-y-2">
+                <Label htmlFor="paymentProof">
+                  Payment Proof (Screenshot) *
+                  <span className="text-muted-foreground text-sm ml-2">
+                    Required for mobile app payments
+                  </span>
+                </Label>
+                
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    id="paymentProof"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  
+                  {paymentProofPreview ? (
+                    <div className="space-y-4">
+                      <div className="relative mx-auto max-w-xs">
+                        <img
+                          src={paymentProofPreview}
+                          alt="Payment proof preview"
+                          className="max-h-48 w-auto mx-auto rounded-md"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                          onClick={() => {
+                            setPaymentProofFile(null);
+                            setPaymentProofPreview(null);
+                            if (fileInputRef.current) {
+                              fileInputRef.current.value = '';
+                            }
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {paymentProofFile?.name}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Upload payment screenshot
+                      </p>
+                    </>
+                  )}
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="mt-2"
+                  >
+                    {paymentProofPreview ? 'Change Image' : 'Select Image'}
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Supported formats: JPG, PNG, GIF. Max size: 5MB
+                  </p>
+                </div>
+                
+                {selectedPaymentType === 3 && !paymentProofFile && (
+                  <p className="text-sm text-red-500 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    Payment proof is required for mobile app payments
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowRequestModal(false);
+                setPaymentProofFile(null);
+                setPaymentProofPreview(null);
+                setSelectedPaymentType(1);
+              }}
+              disabled={isUploading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleRequestPayment}
+              disabled={isUploading || (selectedPaymentType === 3 && !paymentProofFile)}
+            >
+              {isUploading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Request Payment
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

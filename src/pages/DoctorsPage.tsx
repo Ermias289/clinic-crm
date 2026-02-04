@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,14 +42,19 @@ import {
   XCircle,
   Pencil,
   Clock,
+  Building,
+  Calendar,
+  ArrowUpDown,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 import {
   MedicalProfessional,
   medicalProfessionalsService,
-  UpdateMedicalProfessionalDTO
+  UpdateMedicalProfessionalDTO,
+  CreateMedicalProfessionalDTO
 } from "@/lib/api/medicalProfessionals";
 import { toast } from "@/hooks/use-toast";
 import { medicalServicesService, MedicalService } from "@/lib/api/medicalServices";
@@ -67,6 +72,36 @@ interface BranchWithName {
   name: string;
   location?: string;
 }
+
+// Interface for branch-specific service selections
+interface BranchServiceSelection {
+  branchId: number;
+  serviceIds: number[];
+}
+
+// ===== NEW: Interface for daily schedule slots =====
+interface DailyScheduleSlot {
+  id: string; // Unique ID for React keys
+  branchId: number;
+  startTime: string;
+  endTime: string;
+}
+
+interface DaySchedule {
+  isWorking: boolean;
+  slots: DailyScheduleSlot[];
+}
+
+// Days of week with full names
+const daysOfWeek = [
+  { key: 'monday', name: 'Monday' },
+  { key: 'tuesday', name: 'Tuesday' },
+  { key: 'wednesday', name: 'Wednesday' },
+  { key: 'thursday', name: 'Thursday' },
+  { key: 'friday', name: 'Friday' },
+  { key: 'saturday', name: 'Saturday' },
+  { key: 'sunday', name: 'Sunday' },
+];
 
 const DoctorsPage = () => {
   const [doctors, setDoctors] = useState<MedicalProfessional[]>([]);
@@ -95,24 +130,31 @@ const DoctorsPage = () => {
     yearsOfExperience: "" as number | "",
     status: "Active",
     profilePicture: "",
-    requiresUserAccount: false, // Changed from true to false
+    requiresUserAccount: false,
   });
-  const [createSelectedServiceIds, setCreateSelectedServiceIds] = useState<number[]>([]);
-  const [createSelectedBranchIds, setCreateSelectedBranchIds] = useState<number[]>([]);
+  
+  // Branch-specific services for create form
+  const [createBranchServices, setCreateBranchServices] = useState<BranchServiceSelection[]>([]);
   const [createProfilePictureFile, setCreateProfilePictureFile] = useState<File | null>(null);
   const [createProfilePicturePreview, setCreateProfilePicturePreview] = useState<string>("");
   const [isCreateUploading, setIsCreateUploading] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Schedule states for create form
-  const [createSchedules, setCreateSchedules] = useState<{ [key: string]: { isWorking: boolean, startTime: string, endTime: string, branchId: number } }>({
-    monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-  });
+  // ===== UPDATED: Schedule states for create form - Now supports multiple slots per day =====
+  const [createSchedules, setCreateSchedules] = useState<Record<string, DaySchedule>>(
+    daysOfWeek.reduce((acc, day) => ({
+      ...acc,
+      [day.key]: {
+        isWorking: false,
+        slots: [{
+          id: `slot-${day.key}-1`,
+          branchId: 0,
+          startTime: "08:00",
+          endTime: "06:00"
+        }]
+      }
+    }), {})
+  );
 
   // Edit form states
   const [editForm, setEditForm] = useState({
@@ -128,29 +170,40 @@ const DoctorsPage = () => {
     yearsOfExperience: "" as number | "",
     status: "Active",
     profilePicture: "",
-    requiresUserAccount: false, // Changed from true to false
+    requiresUserAccount: false,
   });
-  const [editSelectedServiceIds, setEditSelectedServiceIds] = useState<number[]>([]);
-  const [editSelectedBranchIds, setEditSelectedBranchIds] = useState<number[]>([]);
+  
+  // Branch-specific services for edit form
+  const [editBranchServices, setEditBranchServices] = useState<BranchServiceSelection[]>([]);
   const [editProfilePictureFile, setEditProfilePictureFile] = useState<File | null>(null);
   const [editProfilePicturePreview, setEditProfilePicturePreview] = useState<string>("");
   const [isEditUploading, setIsEditUploading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [activeEditTab, setActiveEditTab] = useState("basic");
 
-  // Schedule states for edit form
-  const [editSchedules, setEditSchedules] = useState<{ [key: string]: { isWorking: boolean, startTime: string, endTime: string, branchId: number } }>({
-    monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-  });
+  // ===== UPDATED: Schedule states for edit form - Now supports multiple slots per day =====
+  const [editSchedules, setEditSchedules] = useState<Record<string, DaySchedule>>(
+    daysOfWeek.reduce((acc, day) => ({
+      ...acc,
+      [day.key]: {
+        isWorking: false,
+        slots: [{
+          id: `edit-slot-${day.key}-1`,
+          branchId: 0,
+          startTime: "02:00",
+          endTime: "11:00"
+        }]
+      }
+    }), {})
+  );
+  
   const [existingSchedules, setExistingSchedules] = useState<DoctorScheduleDTO[]>([]);
 
   const createFileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to generate unique IDs
+  const generateId = () => `slot-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   useEffect(() => {
     fetchData();
@@ -192,7 +245,7 @@ const DoctorsPage = () => {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "File too large",
           description: "Please select an image smaller than 5MB",
@@ -203,11 +256,9 @@ const DoctorsPage = () => {
 
       setCreateProfilePictureFile(file);
 
-      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setCreateProfilePicturePreview(previewUrl);
 
-      // Upload file immediately
       uploadProfilePicture(file, true);
     }
   };
@@ -225,7 +276,7 @@ const DoctorsPage = () => {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         toast({
           title: "File too large",
           description: "Please select an image smaller than 5MB",
@@ -236,11 +287,9 @@ const DoctorsPage = () => {
 
       setEditProfilePictureFile(file);
 
-      // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setEditProfilePicturePreview(previewUrl);
 
-      // Upload file immediately
       uploadProfilePicture(file, false);
     }
   };
@@ -282,72 +331,257 @@ const DoctorsPage = () => {
     }
   };
 
-  // Handle service selection for create dialog
-  const handleCreateServiceSelect = (serviceId: string) => {
-    const id = parseInt(serviceId);
-    if (!createSelectedServiceIds.includes(id)) {
-      setCreateSelectedServiceIds([...createSelectedServiceIds, id]);
+  // ===== NEW: Schedule Management Functions =====
+
+  // Add a new time slot to a day
+  const addTimeSlot = (dayKey: string, isCreate: boolean) => {
+    const newSlot: DailyScheduleSlot = {
+      id: generateId(),
+      branchId: 0,
+      startTime: "02:00",
+      endTime: "11:00"
+    };
+
+    if (isCreate) {
+      setCreateSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          slots: [...prev[dayKey].slots, newSlot]
+        }
+      }));
+    } else {
+      setEditSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          slots: [...prev[dayKey].slots, newSlot]
+        }
+      }));
     }
   };
 
-  const removeCreateService = (serviceId: number) => {
-    setCreateSelectedServiceIds(createSelectedServiceIds.filter(id => id !== serviceId));
-  };
-
-  // Handle service selection for edit dialog
-  const handleEditServiceSelect = (serviceId: string) => {
-    const id = parseInt(serviceId);
-    if (!editSelectedServiceIds.includes(id)) {
-      setEditSelectedServiceIds([...editSelectedServiceIds, id]);
+  // Remove a time slot from a day
+  const removeTimeSlot = (dayKey: string, slotId: string, isCreate: boolean) => {
+    if (isCreate) {
+      const daySchedule = createSchedules[dayKey];
+      if (daySchedule.slots.length <= 1) {
+        toast({
+          title: "Cannot remove last slot",
+          description: "Each day must have at least one time slot",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setCreateSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          slots: prev[dayKey].slots.filter(slot => slot.id !== slotId)
+        }
+      }));
+    } else {
+      const daySchedule = editSchedules[dayKey];
+      if (daySchedule.slots.length <= 1) {
+        toast({
+          title: "Cannot remove last slot",
+          description: "Each day must have at least one time slot",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      setEditSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          slots: prev[dayKey].slots.filter(slot => slot.id !== slotId)
+        }
+      }));
     }
   };
 
-  const removeEditService = (serviceId: number) => {
-    setEditSelectedServiceIds(editSelectedServiceIds.filter(id => id !== serviceId));
-  };
-
-  // Handle branch selection for create dialog
-  const handleCreateBranchSelect = (branchId: string) => {
-    const id = parseInt(branchId);
-    if (!createSelectedBranchIds.includes(id)) {
-      setCreateSelectedBranchIds([...createSelectedBranchIds, id]);
+  // Update a specific time slot
+  const updateTimeSlot = (
+    dayKey: string, 
+    slotId: string, 
+    field: keyof DailyScheduleSlot, 
+    value: any, 
+    isCreate: boolean
+  ) => {
+    if (isCreate) {
+      setCreateSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          slots: prev[dayKey].slots.map(slot => 
+            slot.id === slotId ? { ...slot, [field]: value } : slot
+          )
+        }
+      }));
+    } else {
+      setEditSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          slots: prev[dayKey].slots.map(slot => 
+            slot.id === slotId ? { ...slot, [field]: value } : slot
+          )
+        }
+      }));
     }
   };
 
-  const removeCreateBranch = (branchId: number) => {
-    setCreateSelectedBranchIds(createSelectedBranchIds.filter(id => id !== branchId));
-  };
-
-  // Handle branch selection for edit dialog
-  const handleEditBranchSelect = (branchId: string) => {
-    const id = parseInt(branchId);
-    if (!editSelectedBranchIds.includes(id)) {
-      setEditSelectedBranchIds([...editSelectedBranchIds, id]);
+  // Toggle working day
+  const toggleWorkingDay = (dayKey: string, isCreate: boolean) => {
+    if (isCreate) {
+      const newIsWorking = !createSchedules[dayKey].isWorking;
+      setCreateSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          isWorking: newIsWorking
+        }
+      }));
+    } else {
+      const newIsWorking = !editSchedules[dayKey].isWorking;
+      setEditSchedules(prev => ({
+        ...prev,
+        [dayKey]: {
+          ...prev[dayKey],
+          isWorking: newIsWorking
+        }
+      }));
     }
   };
 
-  const removeEditBranch = (branchId: number) => {
-    setEditSelectedBranchIds(editSelectedBranchIds.filter(id => id !== branchId));
+  // Check if a time slot is valid (has branch and valid times)
+  const isValidTimeSlot = (slot: DailyScheduleSlot): boolean => {
+    if (slot.branchId === 0) return false;
+    if (!slot.startTime || !slot.endTime) return false;
+    
+    const start = new Date(`1970-01-01T${slot.startTime}`);
+    const end = new Date(`1970-01-01T${slot.endTime}`);
+    return start < end;
   };
 
-  // Get available services for create dialog
-  const availableCreateServices = services.filter(
-    service => !createSelectedServiceIds.includes(service.id)
-  );
+  // Check if day has any valid working slots
+  const hasValidWorkingSlots = (daySchedule: DaySchedule): boolean => {
+    if (!daySchedule.isWorking) return false;
+    return daySchedule.slots.some(slot => isValidTimeSlot(slot));
+  };
 
-  // Get available services for edit dialog
-  const availableEditServices = services.filter(
-    service => !editSelectedServiceIds.includes(service.id)
-  );
+  // ===== Branch-Specific Service Functions =====
+  
+  // Add branch with services for create form
+  const handleAddBranchServiceCreate = (branchId: number, serviceIds: number[]) => {
+    if (branchId === 0 || serviceIds.length === 0) {
+      toast({
+        title: "Missing information",
+        description: "Please select both a branch and at least one service",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  // Get available branches for create dialog
+    if (createBranchServices.some(bs => bs.branchId === branchId)) {
+      toast({
+        title: "Branch already added",
+        description: "This branch already has services assigned. Please edit the existing entry.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreateBranchServices([...createBranchServices, { branchId, serviceIds }]);
+  };
+
+  // Remove branch service for create form
+  const handleRemoveBranchServiceCreate = (branchId: number) => {
+    setCreateBranchServices(createBranchServices.filter(bs => bs.branchId !== branchId));
+  };
+
+  // Add service to existing branch for create form
+  const handleAddServiceToBranchCreate = (branchId: number, serviceId: number) => {
+    const updated = createBranchServices.map(bs => {
+      if (bs.branchId === branchId && !bs.serviceIds.includes(serviceId)) {
+        return { ...bs, serviceIds: [...bs.serviceIds, serviceId] };
+      }
+      return bs;
+    });
+    setCreateBranchServices(updated);
+  };
+
+  // Remove service from branch for create form
+  const handleRemoveServiceFromBranchCreate = (branchId: number, serviceId: number) => {
+    const updated = createBranchServices.map(bs => {
+      if (bs.branchId === branchId) {
+        const newServiceIds = bs.serviceIds.filter(id => id !== serviceId);
+        if (newServiceIds.length === 0) {
+          return null;
+        }
+        return { ...bs, serviceIds: newServiceIds };
+      }
+      return bs;
+    }).filter((bs): bs is BranchServiceSelection => bs !== null);
+    
+    setCreateBranchServices(updated);
+  };
+
+  // Similar functions for edit form
+  const handleAddBranchServiceEdit = (branchId: number, serviceIds: number[]) => {
+    if (branchId === 0 || serviceIds.length === 0) return;
+    
+    if (editBranchServices.some(bs => bs.branchId === branchId)) {
+      toast({
+        title: "Branch already added",
+        description: "This branch already has services assigned",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setEditBranchServices([...editBranchServices, { branchId, serviceIds }]);
+  };
+
+  const handleRemoveBranchServiceEdit = (branchId: number) => {
+    setEditBranchServices(editBranchServices.filter(bs => bs.branchId !== branchId));
+  };
+
+  const handleAddServiceToBranchEdit = (branchId: number, serviceId: number) => {
+    const updated = editBranchServices.map(bs => {
+      if (bs.branchId === branchId && !bs.serviceIds.includes(serviceId)) {
+        return { ...bs, serviceIds: [...bs.serviceIds, serviceId] };
+      }
+      return bs;
+    });
+    setEditBranchServices(updated);
+  };
+
+  const handleRemoveServiceFromBranchEdit = (branchId: number, serviceId: number) => {
+    const updated = editBranchServices.map(bs => {
+      if (bs.branchId === branchId) {
+        const newServiceIds = bs.serviceIds.filter(id => id !== serviceId);
+        if (newServiceIds.length === 0) {
+          return null;
+        }
+        return { ...bs, serviceIds: newServiceIds };
+      }
+      return bs;
+    }).filter((bs): bs is BranchServiceSelection => bs !== null);
+    
+    setEditBranchServices(updated);
+  };
+
+  // Get available branches (not already selected) for create form
   const availableCreateBranches = branches.filter(
-    branch => !createSelectedBranchIds.includes(branch.id)
+    branch => !createBranchServices.some(bs => bs.branchId === branch.id)
   );
 
-  // Get available branches for edit dialog
+  // Get available branches for edit form
   const availableEditBranches = branches.filter(
-    branch => !editSelectedBranchIds.includes(branch.id)
+    branch => !editBranchServices.some(bs => bs.branchId === branch.id)
   );
 
   // Reset create form
@@ -365,10 +599,9 @@ const DoctorsPage = () => {
       yearsOfExperience: "",
       status: "Active",
       profilePicture: "",
-      requiresUserAccount: false, // Changed from true to false
+      requiresUserAccount: false,
     });
-    setCreateSelectedServiceIds([]);
-    setCreateSelectedBranchIds([]);
+    setCreateBranchServices([]);
     setCreateProfilePictureFile(null);
     if (createProfilePicturePreview) {
       URL.revokeObjectURL(createProfilePicturePreview);
@@ -377,7 +610,21 @@ const DoctorsPage = () => {
     if (createFileInputRef.current) {
       createFileInputRef.current.value = "";
     }
-    resetCreateSchedules();
+    // Reset schedules to initial state
+    setCreateSchedules(
+      daysOfWeek.reduce((acc, day) => ({
+        ...acc,
+        [day.key]: {
+          isWorking: false,
+          slots: [{
+            id: `slot-${day.key}-1`,
+            branchId: 0,
+            startTime: "02:00",
+            endTime: "11:00"
+          }]
+        }
+      }), {})
+    );
   };
 
   // Reset edit form
@@ -395,10 +642,9 @@ const DoctorsPage = () => {
       yearsOfExperience: "",
       status: "Active",
       profilePicture: "",
-      requiresUserAccount: false, // Changed from true to false
+      requiresUserAccount: false,
     });
-    setEditSelectedServiceIds([]);
-    setEditSelectedBranchIds([]);
+    setEditBranchServices([]);
     setEditProfilePictureFile(null);
     if (editProfilePicturePreview) {
       URL.revokeObjectURL(editProfilePicturePreview);
@@ -409,10 +655,25 @@ const DoctorsPage = () => {
       editFileInputRef.current.value = "";
     }
     setActiveEditTab("basic");
+    // Reset edit schedules
+    setEditSchedules(
+      daysOfWeek.reduce((acc, day) => ({
+        ...acc,
+        [day.key]: {
+          isWorking: false,
+          slots: [{
+            id: `edit-slot-${day.key}-1`,
+            branchId: 0,
+            startTime: "02:00",
+            endTime: "11:00"
+          }]
+        }
+      }), {})
+    );
   };
 
   // Setup edit form with doctor data
-  const setupEditForm = (doctor: MedicalProfessional) => {
+  const setupEditForm = async (doctor: MedicalProfessional) => {
     setEditingDoctor(doctor);
     setEditForm({
       fName: doctor.fName,
@@ -434,30 +695,40 @@ const DoctorsPage = () => {
       setEditProfilePicturePreview(getImageUrl(doctor.profilePicture));
     }
 
-    // Set selected services
-    if (doctor.medicalServices) {
-      const serviceIds = doctor.medicalServices.map(service =>
-        typeof service === 'object' ? service.id : parseInt(service as string)
-      ).filter(id => !isNaN(id));
-      setEditSelectedServiceIds(serviceIds);
+    // Convert existing doctor data to branch-service format
+    const branchServices: BranchServiceSelection[] = [];
+    
+    if (doctor.branches && doctor.medicalServices) {
+      doctor.branches.forEach(branch => {
+        const branchId = typeof branch === 'object' ? branch.id : parseInt(branch as string);
+        const serviceIds = doctor.medicalServices.map(service =>
+          typeof service === 'object' ? service.id : parseInt(service as string)
+        ).filter(id => !isNaN(id));
+        
+        if (branchId && serviceIds.length > 0) {
+          branchServices.push({
+            branchId,
+            serviceIds
+          });
+        }
+      });
     }
-
-    // Set selected branches
-    if (doctor.branches) {
-      const branchIds = doctor.branches.map(branch =>
-        typeof branch === 'object' ? branch.id : parseInt(branch as string)
-      ).filter(id => !isNaN(id));
-      setEditSelectedBranchIds(branchIds);
-    }
+    
+    setEditBranchServices(branchServices);
 
     // Load doctor schedules
-    loadDoctorSchedules(doctor.id);
+    await loadDoctorSchedules(doctor.id);
 
     setOpenEdit(true);
   };
 
   // Handle create save
   const handleSave = async () => {
+    // Prevent double submission
+    if (isCreating) return;
+    
+    setIsCreating(true);
+
     // Validate required fields
     if (!createForm.fName || !createForm.lName || !createForm.email || !createForm.phoneNumber) {
       toast({
@@ -465,28 +736,33 @@ const DoctorsPage = () => {
         description: "Please fill in all required fields",
         variant: "destructive",
       });
+      setIsCreating(false);
       return;
     }
 
-    if (createSelectedServiceIds.length === 0) {
+    if (createBranchServices.length === 0) {
       toast({
-        title: "No services selected",
-        description: "Please select at least one dental service",
+        title: "No branch services configured",
+        description: "Please add at least one branch with services",
         variant: "destructive",
       });
-      return;
-    }
-
-    if (createSelectedBranchIds.length === 0) {
-      toast({
-        title: "No branches selected",
-        description: "Please select at least one branch",
-        variant: "destructive",
-      });
+      setIsCreating(false);
       return;
     }
 
     try {
+      // Flatten branchServices into format backend expects
+      const branchServicesFlattened = createBranchServices.flatMap(bs =>
+        bs.serviceIds.map(serviceId => ({
+          branchId: bs.branchId,
+          serviceId: serviceId
+        }))
+      );
+
+      // Extract all unique branch IDs and service IDs for backward compatibility
+      const allBranchIds = Array.from(new Set(createBranchServices.map(bs => bs.branchId)));
+      const allServiceIds = Array.from(new Set(createBranchServices.flatMap(bs => bs.serviceIds)));
+
       const newDoctor = await medicalProfessionalsService.create({
         fName: createForm.fName,
         mName: createForm.mName,
@@ -501,30 +777,26 @@ const DoctorsPage = () => {
         status: createForm.status,
         profilePicture: createForm.profilePicture,
         requiresUserAccount: createForm.requiresUserAccount,
-        medicalServicesId: createSelectedServiceIds,
-        branches: createSelectedBranchIds,
-      });
+        branches: allBranchIds,
+        medicalServicesId: allServiceIds,
+        branchServices: branchServicesFlattened,
+      } as any);
 
-      // Save doctor schedules if any are configured
-      const hasValidSchedules = Object.values(createSchedules).some(schedule =>
-        schedule.isWorking && schedule.branchId > 0
-      );
-      if (hasValidSchedules) {
-        try {
-          await saveDoctorSchedules(newDoctor.id, createSchedules);
-        } catch (scheduleError) {
-          toast({
-            title: "Dental professional added but schedules failed",
-            description: "The dental professional was created but there was an issue saving the schedule. You can edit the dental professional to add schedules.",
-            variant: "destructive",
-          });
-        }
+      // Save doctor schedules
+      try {
+        await saveDoctorSchedules(newDoctor.id, createSchedules);
+      } catch (scheduleError) {
+        toast({
+          title: "Dental professional added but schedules failed",
+          description: "The dental professional was created but there was an issue saving the schedule.",
+          variant: "destructive",
+        });
       }
 
       setDoctors((prev) => [...prev, newDoctor]);
 
       toast({
-        title: "Dental professional added successfully", // Changed text
+        title: "Dental professional added successfully",
         description: `${createForm.fName} ${createForm.lName} has been added to the system`,
       });
 
@@ -533,16 +805,20 @@ const DoctorsPage = () => {
     } catch (err: any) {
       console.error("Error adding dental professional:", err);
       toast({
-        title: "Failed to add dental professional", // Changed text
+        title: "Failed to add dental professional",
         description: err.response?.data?.message || "Please check the form and try again",
         variant: "destructive",
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
   // Handle update save
   const handleUpdate = async () => {
-    if (!editingDoctor) return;
+    if (!editingDoctor || isUpdating) return;
+    
+    setIsUpdating(true);
 
     // Validate required fields
     if (!editForm.fName || !editForm.lName || !editForm.email || !editForm.phoneNumber) {
@@ -551,24 +827,17 @@ const DoctorsPage = () => {
         description: "Please fill in all required fields",
         variant: "destructive",
       });
+      setIsUpdating(false);
       return;
     }
 
-    if (editSelectedServiceIds.length === 0) {
+    if (editBranchServices.length === 0) {
       toast({
-        title: "No services selected",
-        description: "Please select at least one dental service",
+        title: "No branch services configured",
+        description: "Please add at least one branch with services",
         variant: "destructive",
       });
-      return;
-    }
-
-    if (editSelectedBranchIds.length === 0) {
-      toast({
-        title: "No branches selected",
-        description: "Please select at least one branch",
-        variant: "destructive",
-      });
+      setIsUpdating(false);
       return;
     }
 
@@ -576,7 +845,18 @@ const DoctorsPage = () => {
 
     if (activeEditTab === "basic" || activeEditTab === "services") {
       try {
-        // Try to update the doctor's basic information/services
+        // Flatten branchServices for backend
+        const branchServicesFlattened = editBranchServices.flatMap(bs =>
+          bs.serviceIds.map(serviceId => ({
+            branchId: bs.branchId,
+            serviceId: serviceId
+          }))
+        );
+
+        // Extract all unique branch IDs and service IDs
+        const allBranchIds = Array.from(new Set(editBranchServices.map(bs => bs.branchId)));
+        const allServiceIds = Array.from(new Set(editBranchServices.flatMap(bs => bs.serviceIds)));
+
         const updatedDoctor = await medicalProfessionalsService.update({
           id: editingDoctor.id,
           fName: editForm.fName,
@@ -592,9 +872,10 @@ const DoctorsPage = () => {
           status: editForm.status,
           profilePicture: editForm.profilePicture,
           requiresUserAccount: editForm.requiresUserAccount,
-          medicalServicesId: editSelectedServiceIds,
-          branches: editSelectedBranchIds,
-        });
+          branches: allBranchIds,
+          medicalServicesId: allServiceIds,
+          branchServices: branchServicesFlattened,
+        } as any);
 
         setDoctors((prev) =>
           prev.map((doc) => (doc.id === editingDoctor.id ? updatedDoctor : doc))
@@ -608,7 +889,7 @@ const DoctorsPage = () => {
       } catch (err: any) {
         toast({
           title: "Doctor info update failed",
-          description: `Error: ${err.response?.status} ${err.response?.statusText}. Check console for details.`,
+          description: `Error: ${err.response?.status} ${err.response?.statusText}`,
           variant: "destructive",
         });
       }
@@ -623,7 +904,7 @@ const DoctorsPage = () => {
       } catch (scheduleError) {
         toast({
           title: "Schedule update failed",
-          description: "There was an issue updating the doctor's schedule. Please try again.",
+          description: "There was an issue updating the doctor's schedule.",
           variant: "destructive",
         });
       }
@@ -633,6 +914,8 @@ const DoctorsPage = () => {
       resetEditForm();
       setOpenEdit(false);
     }
+    
+    setIsUpdating(false);
   };
 
   // Get initials for avatar fallback
@@ -660,7 +943,7 @@ const DoctorsPage = () => {
       setDoctors((prev) => prev.filter((d) => d.id !== doctorToDelete.id));
 
       toast({
-        title: "Dental professional deleted", // Changed text
+        title: "Dental professional deleted",
         description: `${doctorToDelete.fName} ${doctorToDelete.lName} has been removed`,
       });
     } catch (error) {
@@ -705,25 +988,20 @@ const DoctorsPage = () => {
   // Helper function to format time for display
   const formatTimeForDisplay = (timeString: string): string => {
     if (!timeString || timeString === "" || timeString === "00:00:00" || timeString === "00:00") {
-      return "02:00"; // Ethiopian default start time
+      return "02:00";
     }
 
-    // Handle different time formats from backend
     if (timeString.length > 5) {
-      // If time includes seconds (HH:MM:SS), extract HH:MM
       return timeString.substring(0, 5);
     }
 
-    // If time is in correct format already (HH:MM)
     if (timeString.match(/^\d{1,2}:\d{2}$/)) {
-      // Ensure two-digit hour format
       const parts = timeString.split(':');
       const hour = parts[0].padStart(2, '0');
       const minute = parts[1];
       return `${hour}:${minute}`;
     }
 
-    // Default fallback
     return "02:00";
   };
 
@@ -733,7 +1011,6 @@ const DoctorsPage = () => {
       return "02:00";
     }
 
-    // Ensure format is HH:MM
     if (timeString.match(/^\d{1,2}:\d{2}$/)) {
       const parts = timeString.split(':');
       const hour = parts[0].padStart(2, '0');
@@ -741,66 +1018,7 @@ const DoctorsPage = () => {
       return `${hour}:${minute}`;
     }
 
-    // Default fallback
     return "02:00";
-  };
-
-  // Schedule helper functions
-  const daysOfWeek = [
-    { key: 'monday', name: 'Monday' },
-    { key: 'tuesday', name: 'Tuesday' },
-    { key: 'wednesday', name: 'Wednesday' },
-    { key: 'thursday', name: 'Thursday' },
-    { key: 'friday', name: 'Friday' },
-    { key: 'saturday', name: 'Saturday' },
-    { key: 'sunday', name: 'Sunday' },
-  ];
-
-  // Update create schedule
-  const updateCreateSchedule = (day: string, field: 'isWorking' | 'startTime' | 'endTime' | 'branchId', value: any) => {
-    setCreateSchedules(prev => {
-      const updated = {
-        ...prev,
-        [day]: { ...prev[day], [field]: value }
-      };
-
-      // If toggling working day on and no branch selected, select first available branch
-      if (field === 'isWorking' && value === true && prev[day].branchId === 0 && branches.length > 0) {
-        updated[day].branchId = branches[0].id;
-      }
-
-      return updated;
-    });
-  };
-
-  // Update edit schedule
-  const updateEditSchedule = (day: string, field: 'isWorking' | 'startTime' | 'endTime' | 'branchId', value: any) => {
-    setEditSchedules(prev => {
-      const updated = {
-        ...prev,
-        [day]: { ...prev[day], [field]: value }
-      };
-
-      // If toggling working day on and no branch selected, select first available branch
-      if (field === 'isWorking' && value === true && prev[day].branchId === 0 && branches.length > 0) {
-        updated[day].branchId = branches[0].id;
-      }
-
-      return updated;
-    });
-  };
-
-  // Reset create schedules
-  const resetCreateSchedules = () => {
-    setCreateSchedules({
-      monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-      tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-      wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-      thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-      friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-      saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-      sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-    });
   };
 
   // Load doctor schedules for editing
@@ -809,61 +1027,70 @@ const DoctorsPage = () => {
       const schedules = await doctorScheduleService.getByDoctorId(doctorId);
       setExistingSchedules(schedules);
 
-      // Reset edit schedules first with Ethiopian default times
-      const resetSchedules = {
-        monday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-        tuesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-        wednesday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-        thursday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-        friday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-        saturday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-        sunday: { isWorking: false, startTime: "02:00", endTime: "11:00", branchId: 0 },
-      };
-
-      // Populate with existing schedules
+      // Group schedules by day
+      const schedulesByDay: Record<string, DailyScheduleSlot[]> = {};
+      
       schedules.forEach(schedule => {
         const dayKey = schedule.weekDay.toLowerCase();
-
-        if (resetSchedules[dayKey]) {
-          const formattedStartTime = formatTimeForDisplay(schedule.startTime);
-          const formattedEndTime = formatTimeForDisplay(schedule.endTime);
-
-          resetSchedules[dayKey] = {
-            isWorking: true,
-            startTime: formattedStartTime,
-            endTime: formattedEndTime,
-            branchId: schedule.branchSettingId,
-          };
+        if (!schedulesByDay[dayKey]) {
+          schedulesByDay[dayKey] = [];
         }
+        
+        schedulesByDay[dayKey].push({
+          id: generateId(),
+          branchId: schedule.branchSettingId,
+          startTime: formatTimeForDisplay(schedule.startTime),
+          endTime: formatTimeForDisplay(schedule.endTime)
+        });
       });
 
-      setEditSchedules(resetSchedules);
+      // Update edit schedules
+      const updatedSchedules = { ...editSchedules };
+      
+      daysOfWeek.forEach(day => {
+        const daySchedules = schedulesByDay[day.key] || [{
+          id: generateId(),
+          branchId: 0,
+          startTime: "02:00",
+          endTime: "11:00"
+        }];
+        
+        updatedSchedules[day.key] = {
+          isWorking: daySchedules.length > 0 && daySchedules.some(s => s.branchId > 0),
+          slots: daySchedules
+        };
+      });
+
+      setEditSchedules(updatedSchedules);
     } catch (error: any) {
-      // Show a user-friendly message
       toast({
         title: "Could not load schedules",
-        description: "Unable to load existing schedules. You can still create new ones.",
+        description: "Unable to load existing schedules.",
         variant: "destructive",
       });
     }
   };
 
-  // Save doctor schedules
+  // Save doctor schedules - Now handles multiple slots per day
   const saveDoctorSchedules = async (doctorId: number, schedules: typeof createSchedules) => {
     try {
       const schedulePromises: Promise<any>[] = [];
 
-      // Create schedules for working days
-      Object.entries(schedules).forEach(([day, schedule]) => {
-        if (schedule.isWorking && schedule.branchId > 0) {
-          const scheduleData: AddDoctorScheduleDTO = {
-            medicalProfessionalId: doctorId,
-            branchSettingId: schedule.branchId,
-            weekDay: day.charAt(0).toUpperCase() + day.slice(1),
-            startTime: formatTimeForBackend(schedule.startTime),
-            endTime: formatTimeForBackend(schedule.endTime),
-          };
-          schedulePromises.push(doctorScheduleService.create(scheduleData));
+      Object.entries(schedules).forEach(([dayKey, daySchedule]) => {
+        if (daySchedule.isWorking) {
+          // Create a schedule for each valid slot
+          daySchedule.slots.forEach(slot => {
+            if (slot.branchId > 0 && slot.startTime && slot.endTime) {
+              const scheduleData: AddDoctorScheduleDTO = {
+                medicalProfessionalId: doctorId,
+                branchSettingId: slot.branchId,
+                weekDay: dayKey.charAt(0).toUpperCase() + dayKey.slice(1),
+                startTime: formatTimeForBackend(slot.startTime),
+                endTime: formatTimeForBackend(slot.endTime),
+              };
+              schedulePromises.push(doctorScheduleService.create(scheduleData));
+            }
+          });
         }
       });
 
@@ -875,62 +1102,377 @@ const DoctorsPage = () => {
     }
   };
 
-  // Update doctor schedules (Smart Sync: PUT for update, POST for create, DELETE for removal)
+  // Update doctor schedules - Now handles multiple slots per day
   const updateDoctorSchedules = async (doctorId: number, schedules: typeof editSchedules) => {
     try {
       const schedulePromises: Promise<any>[] = [];
-      const days = Object.keys(schedules);
-
-      // 1. Process each day in the frontend state
-      days.forEach((dayKey) => {
-        const schedule = schedules[dayKey];
-        const existingForDay = existingSchedules.find(
-          (s) => s.weekDay.toLowerCase() === dayKey.toLowerCase()
-        );
-
-        if (schedule.isWorking && schedule.branchId > 0) {
-          // Should be working
-          if (existingForDay) {
-            // Already exists -> Update (PUT)
-            const updateData: DoctorScheduleDTO = {
-              id: existingForDay.id,
-              medicalProfessionalId: doctorId,
-              branchSettingId: schedule.branchId,
-              weekDay: dayKey.charAt(0).toUpperCase() + dayKey.slice(1),
-              startTime: formatTimeForBackend(schedule.startTime),
-              endTime: formatTimeForBackend(schedule.endTime),
-            };
-            schedulePromises.push(doctorScheduleService.update(updateData));
-          } else {
-            // New -> Create (POST)
-            const addData: AddDoctorScheduleDTO = {
-              medicalProfessionalId: doctorId,
-              branchSettingId: schedule.branchId,
-              weekDay: dayKey.charAt(0).toUpperCase() + dayKey.slice(1),
-              startTime: formatTimeForBackend(schedule.startTime),
-              endTime: formatTimeForBackend(schedule.endTime),
-            };
-            schedulePromises.push(doctorScheduleService.create(addData));
-          }
-        } else if (existingForDay) {
-          // No longer working but existed -> Delete (DELETE)
-          schedulePromises.push(doctorScheduleService.delete(existingForDay.id));
+      
+      // First, delete all existing schedules for this doctor
+      const deletePromises = existingSchedules.map(schedule => 
+        doctorScheduleService.delete(schedule.id)
+      );
+      await Promise.all(deletePromises);
+      
+      // Then create new schedules based on current state
+      Object.entries(schedules).forEach(([dayKey, daySchedule]) => {
+        if (daySchedule.isWorking) {
+          daySchedule.slots.forEach(slot => {
+            if (slot.branchId > 0 && slot.startTime && slot.endTime) {
+              const scheduleData: AddDoctorScheduleDTO = {
+                medicalProfessionalId: doctorId,
+                branchSettingId: slot.branchId,
+                weekDay: dayKey.charAt(0).toUpperCase() + dayKey.slice(1),
+                startTime: formatTimeForBackend(slot.startTime),
+                endTime: formatTimeForBackend(slot.endTime),
+              };
+              schedulePromises.push(doctorScheduleService.create(scheduleData));
+            }
+          });
         }
       });
 
       if (schedulePromises.length > 0) {
         await Promise.all(schedulePromises);
       }
+      
+      // Refresh existing schedules
+      const updatedSchedules = await doctorScheduleService.getByDoctorId(doctorId);
+      setExistingSchedules(updatedSchedules);
+      
     } catch (error) {
       console.error("Error in updateDoctorSchedules:", error);
       throw error;
     }
   };
 
+  // ===== NEW: Day Schedule Component =====
+  const DayScheduleComponent = ({ 
+    day, 
+    isCreate = false 
+  }: { 
+    day: { key: string, name: string }, 
+    isCreate?: boolean 
+  }) => {
+    const daySchedule = isCreate ? createSchedules[day.key] : editSchedules[day.key];
+    const schedule = isCreate ? createSchedules : editSchedules;
+    const setSchedule = isCreate ? setCreateSchedules : setEditSchedules;
+
+    return (
+      <div className={`border rounded-lg p-4 transition-colors ${daySchedule.isWorking ? 'bg-card' : 'bg-muted/30'}`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={daySchedule.isWorking}
+              onCheckedChange={() => toggleWorkingDay(day.key, isCreate)}
+            />
+            <div className="w-28">
+              <span className={`font-medium ${!daySchedule.isWorking ? 'text-muted-foreground' : ''}`}>
+                {day.name}
+              </span>
+            </div>
+            {daySchedule.isWorking && (
+              <Badge variant="outline" className="ml-2">
+                {daySchedule.slots.length} shift{daySchedule.slots.length !== 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
+          
+          {daySchedule.isWorking && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => addTimeSlot(day.key, isCreate)}
+              className="h-8"
+            >
+              <Plus className="w-3 h-3 mr-1" />
+              Add Shift
+            </Button>
+          )}
+        </div>
+
+        {daySchedule.isWorking ? (
+          <div className="space-y-3">
+            {daySchedule.slots.map((slot, slotIndex) => (
+              <div key={slot.id} className="flex items-center gap-3 p-3 border rounded-md bg-background">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Branch</Label>
+                    <Select
+                      value={slot.branchId > 0 ? slot.branchId.toString() : ""}
+                      onValueChange={(value) => updateTimeSlot(day.key, slot.id, 'branchId', parseInt(value), isCreate)}
+                    >
+                      <SelectTrigger className={`${slot.branchId === 0 ? 'border-red-300' : ''}`}>
+                        <SelectValue placeholder="Select branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Select branch</SelectItem>
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.id.toString()}>
+                            {branch.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {slot.branchId === 0 && (
+                      <span className="text-xs text-red-500">Required</span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Start Time</Label>
+                    <Input
+                      type="time"
+                      value={slot.startTime}
+                      onChange={(e) => updateTimeSlot(day.key, slot.id, 'startTime', e.target.value, isCreate)}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">End Time</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={slot.endTime}
+                        onChange={(e) => updateTimeSlot(day.key, slot.id, 'endTime', e.target.value, isCreate)}
+                        className="flex-1"
+                      />
+                      {daySchedule.slots.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeTimeSlot(day.key, slot.id, isCreate)}
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Example schedule suggestion */}
+            {daySchedule.slots.length === 1 && (
+              <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/20 rounded">
+                <strong>Tip:</strong> Add multiple shifts to work at different branches on the same day.
+                Example: Morning at Main Branch (8:00 - 12:00), Afternoon at Downtown Branch (01:00 - 06:00)
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-sm text-muted-foreground italic p-3 bg-muted/20 rounded">
+            Not working on {day.name}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ===== BranchServiceSelector Component =====
+  const BranchServiceSelector = ({
+    isEdit = false,
+    availableBranches,
+    branchServices,
+    onAddBranchService,
+    onRemoveBranchService,
+    onAddServiceToBranch,
+    onRemoveServiceFromBranch,
+  }: {
+    isEdit?: boolean;
+    availableBranches: BranchSettingDTO[];
+    branchServices: BranchServiceSelection[];
+    onAddBranchService: (branchId: number, serviceIds: number[]) => void;
+    onRemoveBranchService: (branchId: number) => void;
+    onAddServiceToBranch: (branchId: number, serviceId: number) => void;
+    onRemoveServiceFromBranch: (branchId: number, serviceId: number) => void;
+  }) => {
+    const [selectedBranchId, setSelectedBranchId] = useState<number>(0);
+    const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
+
+    const handleAddBranch = () => {
+      if (selectedBranchId && selectedServiceIds.length > 0) {
+        onAddBranchService(selectedBranchId, selectedServiceIds);
+        setSelectedBranchId(0);
+        setSelectedServiceIds([]);
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        {/* Add New Branch-Service Section */}
+        <div className="space-y-4">
+          <h4 className="font-medium text-md flex items-center gap-2">
+            <Building className="w-4 h-4" />
+            Add Branch with Services
+          </h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Branch Selection */}
+            <div className="space-y-2">
+              <Label htmlFor={`branch-select-${isEdit ? 'edit' : 'create'}`}>Select Branch</Label>
+              <Select
+                value={selectedBranchId.toString()}
+                onValueChange={(value) => setSelectedBranchId(parseInt(value))}
+              >
+                <SelectTrigger id={`branch-select-${isEdit ? 'edit' : 'create'}`}>
+                  <SelectValue placeholder="Choose a branch..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableBranches.map((branch) => (
+                    <SelectItem key={branch.id} value={branch.id.toString()}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Service Selection */}
+            <div className="space-y-2">
+              <Label>Select Services for this Branch</Label>
+              <Select
+                value=""
+                onValueChange={(value) => {
+                  const serviceId = parseInt(value);
+                  if (!selectedServiceIds.includes(serviceId)) {
+                    setSelectedServiceIds([...selectedServiceIds, serviceId]);
+                  }
+                }}
+                disabled={selectedBranchId === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={selectedBranchId === 0 ? "Select branch first" : "Choose services..."} />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
+                      {service.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {selectedServiceIds.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedServiceIds.map((serviceId) => {
+                    const service = services.find(s => s.id === serviceId);
+                    return service ? (
+                      <Badge key={serviceId} variant="secondary" className="flex items-center gap-1 px-2 py-1">
+                        {service.name}
+                        <XCircle
+                          className="w-3 h-3 cursor-pointer hover:text-destructive"
+                          onClick={() => setSelectedServiceIds(selectedServiceIds.filter(id => id !== serviceId))}
+                        />
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleAddBranch}
+            disabled={selectedBranchId === 0 || selectedServiceIds.length === 0}
+            size="sm"
+            variant="outline"
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            Add Branch with Services
+          </Button>
+        </div>
+
+        {/* Display Selected Branch-Services */}
+        {branchServices.length > 0 && (
+          <div className="space-y-4">
+            <h4 className="font-medium text-md">Configured Branch Services</h4>
+            <div className="space-y-3">
+              {branchServices.map((branchService) => {
+                const branch = branches.find(b => b.id === branchService.branchId);
+                return branch ? (
+                  <div key={branch.id} className="border rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{branch.name}</span>
+                        <Badge variant="outline" className="ml-2">
+                          {branchService.serviceIds.length} service{branchService.serviceIds.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemoveBranchService(branch.id)}
+                        className="h-8 px-2 text-destructive hover:text-destructive"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    {/* Services for this branch */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Services at this branch:</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {branchService.serviceIds.map((serviceId) => {
+                          const service = services.find(s => s.id === serviceId);
+                          return service ? (
+                            <Badge key={serviceId} variant="secondary" className="flex items-center gap-1 px-3 py-1.5">
+                              {service.name}
+                              <XCircle
+                                className="w-3 h-3 cursor-pointer hover:text-destructive"
+                                onClick={() => onRemoveServiceFromBranch(branch.id, service.id)}
+                              />
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Add more services to this branch */}
+                    <div className="pt-2 border-t">
+                      <div className="flex items-center gap-2">
+                        <Select
+                          value=""
+                          onValueChange={(value) => {
+                            const serviceId = parseInt(value);
+                            onAddServiceToBranch(branch.id, serviceId);
+                          }}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Add more services to this branch..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {services
+                              .filter(service => !branchService.serviceIds.includes(service.id))
+                              .map((service) => (
+                                <SelectItem key={service.id} value={service.id.toString()}>
+                                  {service.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <DashboardLayout
-      title="Dental Professionals" // Changed text
-      subtitle="Manage dental professionals" // Changed text
+      title="Dental Professionals"
+      subtitle="Manage dental professionals"
       actions={
         <Dialog open={openCreate} onOpenChange={(open) => {
           if (!open) {
@@ -940,13 +1482,13 @@ const DoctorsPage = () => {
         }}>
           <DialogTrigger asChild>
             <Button variant="dental">
-              <Plus className="w-4 h-4 mr-1" /> Add Dental Professional {/* Changed text */}
+              <Plus className="w-4 h-4 mr-1" /> Add Dental Professional
             </Button>
           </DialogTrigger>
 
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
             <DialogHeader className="p-6 pb-0">
-              <DialogTitle className="py-3">Add New Dental Professional</DialogTitle> {/* Changed text */}
+              <DialogTitle className="py-3">Add New Dental Professional</DialogTitle>
             </DialogHeader>
 
             <Tabs defaultValue="basic" className="w-full">
@@ -1102,7 +1644,6 @@ const DoctorsPage = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Profile Picture</h3>
                   <div className="flex items-start gap-6">
-                    {/* Avatar Preview */}
                     <div className="flex flex-col items-center gap-2">
                       <Avatar className="w-24 h-24 border-2">
                         {createProfilePicturePreview ? (
@@ -1119,7 +1660,6 @@ const DoctorsPage = () => {
                       </span>
                     </div>
 
-                    {/* Upload Controls */}
                     <div className="flex-1 space-y-4">
                       <div className="space-y-2">
                         <Label>Upload Profile Picture</Label>
@@ -1147,7 +1687,6 @@ const DoctorsPage = () => {
                         </div>
                       </div>
 
-                      {/* Status Indicators */}
                       <div className="space-y-2">
                         {isCreateUploading && (
                           <div className="flex items-center gap-2 text-amber-600">
@@ -1178,7 +1717,7 @@ const DoctorsPage = () => {
                       className="w-4 h-4"
                     />
                     <Label htmlFor="requiresUserAccount" className="cursor-pointer">
-                      Create user account for this dental professional {/* Changed text */}
+                      Create user account for this dental professional
                     </Label>
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -1188,92 +1727,20 @@ const DoctorsPage = () => {
               </TabsContent>
 
               <TabsContent value="services" className="p-6 space-y-6 mt-0">
-                {/* Branches Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Branches *</h3>
-                  <div className="space-y-2">
-                    <Label>Select Branches</Label>
-                    <Select onValueChange={handleCreateBranchSelect}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose branches..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableCreateBranches.map((branch) => (
-                          <SelectItem key={branch.id} value={branch.id.toString()}>
-                            {branch.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {createSelectedBranchIds.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Selected Branches</Label>
-                      <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                        {createSelectedBranchIds.map((branchId) => {
-                          const branch = branches.find(b => b.id === branchId);
-                          return branch ? (
-                            <Badge
-                              key={branch.id}
-                              variant="secondary"
-                              className="px-3 py-1.5 flex items-center gap-2"
-                            >
-                              {branch.name}
-                              <XCircle
-                                className="w-3 h-3 cursor-pointer hover:text-destructive"
-                                onClick={() => removeCreateBranch(branch.id)}
-                              />
-                            </Badge>
-                          ) : null;
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Dental Services Section */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Dental Services *</h3> {/* Changed text */}
-                  <div className="space-y-2">
-                    <Label>Select Services</Label>
-                    <Select onValueChange={handleCreateServiceSelect}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choose services..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableCreateServices.map((service) => (
-                          <SelectItem key={service.id} value={service.id.toString()}>
-                            {service.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {createSelectedServiceIds.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Selected Services</Label>
-                      <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                        {createSelectedServiceIds.map((serviceId) => {
-                          const service = services.find(s => s.id === serviceId);
-                          return service ? (
-                            <Badge
-                              key={service.id}
-                              variant="secondary"
-                              className="px-3 py-1.5 flex items-center gap-2"
-                            >
-                              {service.name}
-                              <XCircle
-                                className="w-3 h-3 cursor-pointer hover:text-destructive"
-                                onClick={() => removeCreateService(service.id)}
-                              />
-                            </Badge>
-                          ) : null;
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  <h3 className="text-lg font-semibold">Branch-Specific Services *</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Add branches and assign specific services to each branch. For example, "Teeth Cleaning" might be available only at specific branches.
+                  </p>
+                  
+                  <BranchServiceSelector
+                    availableBranches={availableCreateBranches}
+                    branchServices={createBranchServices}
+                    onAddBranchService={handleAddBranchServiceCreate}
+                    onRemoveBranchService={handleRemoveBranchServiceCreate}
+                    onAddServiceToBranch={handleAddServiceToBranchCreate}
+                    onRemoveServiceFromBranch={handleRemoveServiceFromBranchCreate}
+                  />
                 </div>
               </TabsContent>
 
@@ -1281,107 +1748,19 @@ const DoctorsPage = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5" />
+                      <Calendar className="w-5 h-5" />
                       <h3 className="text-lg font-semibold">Weekly Schedule</h3>
                     </div>
-                    {/* Test button for schedule operations */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        if (editingDoctor) {
-                          console.log("=== Testing Schedule Update for Dental Professional", editingDoctor.id, "===");
-                          try {
-                            await updateDoctorSchedules(editingDoctor.id, editSchedules);
-                            toast({
-                              title: "Schedule test successful",
-                              description: "Schedule operations are working correctly",
-                            });
-                          } catch (error) {
-                            toast({
-                              title: "Schedule test failed",
-                              description: "Check console for details",
-                              variant: "destructive",
-                            });
-                          }
-                        }
-                      }}
-                    >
-                      Test Schedule Update
-                    </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Configure working hours for each day of the week. Select a branch for each working day.
+                    Configure working hours for each day. You can add multiple time slots to work at different branches on the same day.
                     <br />
-                    <span className="text-xs text-blue-600">Default Ethiopian working hours: 2:00 AM - 11:00 AM</span>
+                    <span className="text-xs text-blue-600">Example: Morning at Main Branch (8:00-12:00), Afternoon at Downtown Branch (1:00 - 6:00)</span>
                   </p>
 
                   <div className="space-y-4">
                     {daysOfWeek.map((day) => (
-                      <div
-                        key={day.key}
-                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${createSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
-                          }`}
-                      >
-                        <div className="flex items-center gap-4">
-                          <Switch
-                            checked={createSchedules[day.key].isWorking}
-                            onCheckedChange={(checked) => updateCreateSchedule(day.key, 'isWorking', checked)}
-                          />
-                          <div className="w-28">
-                            <span className={`font-medium ${!createSchedules[day.key].isWorking ? 'text-muted-foreground' : ''}`}>
-                              {day.name}
-                            </span>
-                          </div>
-                        </div>
-
-                        {createSchedules[day.key].isWorking ? (
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-2">
-                              <Label className="text-sm text-muted-foreground">Branch</Label>
-                              <Select
-                                value={createSchedules[day.key].branchId > 0 ? createSchedules[day.key].branchId.toString() : ""}
-                                onValueChange={(value) => updateCreateSchedule(day.key, 'branchId', parseInt(value))}
-                              >
-                                <SelectTrigger className={`w-40 ${createSchedules[day.key].branchId === 0 ? 'border-red-300' : ''}`}>
-                                  <SelectValue placeholder="Select branch" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {branches.map((branch) => (
-                                    <SelectItem key={branch.id} value={branch.id.toString()}>
-                                      {branch.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {createSchedules[day.key].branchId === 0 && (
-                                <span className="text-xs text-red-500">Required</span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Label className="text-sm text-muted-foreground">Start</Label>
-                              <Input
-                                type="time"
-                                value={createSchedules[day.key].startTime}
-                                onChange={(e) => updateCreateSchedule(day.key, 'startTime', e.target.value)}
-                                className="w-32"
-                              />
-                            </div>
-                            <span className="text-muted-foreground">to</span>
-                            <div className="flex items-center gap-2">
-                              <Label className="text-sm text-muted-foreground">End</Label>
-                              <Input
-                                type="time"
-                                value={createSchedules[day.key].endTime}
-                                onChange={(e) => updateCreateSchedule(day.key, 'endTime', e.target.value)}
-                                className="w-32"
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground italic">Not working</span>
-                        )}
-                      </div>
+                      <DayScheduleComponent key={day.key} day={day} isCreate={true} />
                     ))}
                   </div>
                 </div>
@@ -1401,10 +1780,10 @@ const DoctorsPage = () => {
               <Button
                 variant="dental"
                 onClick={handleSave}
-                disabled={isCreateUploading}
+                disabled={isCreateUploading || isCreating}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                {isCreateUploading ? "Uploading..." : "Add Dental Professional"} {/* Changed text */}
+                {isCreating ? "Adding..." : "Add Dental Professional"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1431,7 +1810,6 @@ const DoctorsPage = () => {
         {filteredDoctors.map((doc) => (
           <Card key={doc.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             <CardContent className="p-0">
-              {/* Dental Professional Avatar Header */}
               <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 p-6 flex flex-col items-center">
                 <div className="absolute top-4 right-4">
                   <StatusBadge status={doc.status} />
@@ -1455,7 +1833,6 @@ const DoctorsPage = () => {
                 <p className="text-sm text-muted-foreground text-center">{doc.specialty || "General Dentist"}</p>
               </div>
 
-              {/* Dental Professional Details */}
               <div className="p-2 space-y-2">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
@@ -1476,7 +1853,6 @@ const DoctorsPage = () => {
                   </div>
                 </div>
 
-                {/* Services Badges */}
                 {doc.medicalServices && doc.medicalServices.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">Services</p>
@@ -1495,7 +1871,6 @@ const DoctorsPage = () => {
                   </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="pt-4 border-t flex gap-2">
                   <Button
                     variant="outline"
@@ -1524,7 +1899,7 @@ const DoctorsPage = () => {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Dental Professional</AlertDialogTitle> {/* Changed text */}
+            <AlertDialogTitle>Delete Dental Professional</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete{" "}
               <span className="font-semibold">
@@ -1541,7 +1916,7 @@ const DoctorsPage = () => {
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete Dental Professional {/* Changed text */}
+              Delete Dental Professional
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1557,7 +1932,7 @@ const DoctorsPage = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="py-3">
-              Edit Dental Professional - Dr. {editForm.fName} {editForm.lName} {/* Changed text */}
+              Edit Dental Professional - Dr. {editForm.fName} {editForm.lName}
             </DialogTitle>
           </DialogHeader>
 
@@ -1714,7 +2089,6 @@ const DoctorsPage = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Profile Picture</h3>
                 <div className="flex items-start gap-6">
-                  {/* Avatar Preview */}
                   <div className="flex flex-col items-center gap-2">
                     <Avatar className="w-24 h-24 border-2">
                       {editProfilePicturePreview ? (
@@ -1731,7 +2105,6 @@ const DoctorsPage = () => {
                     </span>
                   </div>
 
-                  {/* Upload Controls */}
                   <div className="flex-1 space-y-4">
                     <div className="space-y-2">
                       <Label>Change Profile Picture</Label>
@@ -1759,7 +2132,6 @@ const DoctorsPage = () => {
                       </div>
                     </div>
 
-                    {/* Status Indicators */}
                     <div className="space-y-2">
                       {isEditUploading && (
                         <div className="flex items-center gap-2 text-amber-600">
@@ -1790,7 +2162,7 @@ const DoctorsPage = () => {
                     className="w-4 h-4"
                   />
                   <Label htmlFor="edit-requiresUserAccount" className="cursor-pointer">
-                    User account for this dental professional {/* Changed text */}
+                    User account for this dental professional
                   </Label>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -1800,173 +2172,39 @@ const DoctorsPage = () => {
             </TabsContent>
 
             <TabsContent value="services" className="p-6 space-y-6 mt-0">
-              {/* Branches Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Branches *</h3>
-                <div className="space-y-2">
-                  <Label>Select Branches</Label>
-                  <Select onValueChange={handleEditBranchSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose branches..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableEditBranches.map((branch) => (
-                        <SelectItem key={branch.id} value={branch.id.toString()}>
-                          {branch.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {editSelectedBranchIds.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Selected Branches</Label>
-                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                      {editSelectedBranchIds.map((branchId) => {
-                        const branch = branches.find(b => b.id === branchId);
-                        return branch ? (
-                          <Badge
-                            key={branch.id}
-                            variant="secondary"
-                            className="px-3 py-1.5 flex items-center gap-2"
-                          >
-                            {branch.name}
-                            <XCircle
-                              className="w-3 h-3 cursor-pointer hover:text-destructive"
-                              onClick={() => removeEditBranch(branch.id)}
-                            />
-                          </Badge>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Dental Services Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Dental Services *</h3> {/* Changed text */}
-                <div className="space-y-2">
-                  <Label>Select Services</Label>
-                  <Select onValueChange={handleEditServiceSelect}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose services..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableEditServices.map((service) => (
-                        <SelectItem key={service.id} value={service.id.toString()}>
-                          {service.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {editSelectedServiceIds.length > 0 && (
-                  <div className="space-y-2">
-                    <Label>Selected Services</Label>
-                    <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
-                      {editSelectedServiceIds.map((serviceId) => {
-                        const service = services.find(s => s.id === serviceId);
-                        return service ? (
-                          <Badge
-                            key={service.id}
-                            variant="secondary"
-                            className="px-3 py-1.5 flex items-center gap-2"
-                          >
-                            {service.name}
-                            <XCircle
-                              className="w-3 h-3 cursor-pointer hover:text-destructive"
-                              onClick={() => removeEditService(service.id)}
-                            />
-                          </Badge>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                )}
+                <h3 className="text-lg font-semibold">Branch-Specific Services *</h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure which services are available at each branch. Services can be repeated across branches.
+                </p>
+                
+                <BranchServiceSelector
+                  isEdit={true}
+                  availableBranches={availableEditBranches}
+                  branchServices={editBranchServices}
+                  onAddBranchService={handleAddBranchServiceEdit}
+                  onRemoveBranchService={handleRemoveBranchServiceEdit}
+                  onAddServiceToBranch={handleAddServiceToBranchEdit}
+                  onRemoveServiceFromBranch={handleRemoveServiceFromBranchEdit}
+                />
               </div>
             </TabsContent>
 
             <TabsContent value="schedule" className="p-6 space-y-6 mt-0">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
+                  <Calendar className="w-5 h-5" />
                   <h3 className="text-lg font-semibold">Weekly Schedule</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Configure working hours for each day of the week. Select a branch for each working day.
+                  Configure working hours for each day. You can add multiple time slots to work at different branches on the same day.
                   <br />
-                  <span className="text-xs text-blue-600">Default Ethiopian working hours: 2:00 AM - 11:00 AM</span>
+                  <span className="text-xs text-blue-600">Example: Morning at Main Branch (8:00-12:00), Afternoon at Downtown Branch (1:00 - 6:00)</span>
                 </p>
 
                 <div className="space-y-4">
                   {daysOfWeek.map((day) => (
-                    <div
-                      key={day.key}
-                      className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${editSchedules[day.key].isWorking ? 'bg-card' : 'bg-muted/30'
-                        }`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Switch
-                          checked={editSchedules[day.key].isWorking}
-                          onCheckedChange={(checked) => updateEditSchedule(day.key, 'isWorking', checked)}
-                        />
-                        <div className="w-28">
-                          <span className={`font-medium ${!editSchedules[day.key].isWorking ? 'text-muted-foreground' : ''}`}>
-                            {day.name}
-                          </span>
-                        </div>
-                      </div>
-
-                      {editSchedules[day.key].isWorking ? (
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-2">
-                            <Label className="text-sm text-muted-foreground">Branch</Label>
-                            <Select
-                              value={editSchedules[day.key].branchId > 0 ? editSchedules[day.key].branchId.toString() : ""}
-                              onValueChange={(value) => updateEditSchedule(day.key, 'branchId', parseInt(value))}
-                            >
-                              <SelectTrigger className={`w-40 ${editSchedules[day.key].branchId === 0 ? 'border-red-300' : ''}`}>
-                                <SelectValue placeholder="Select branch" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {branches.map((branch) => (
-                                  <SelectItem key={branch.id} value={branch.id.toString()}>
-                                    {branch.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {editSchedules[day.key].branchId === 0 && (
-                              <span className="text-xs text-red-500">Required</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-sm text-muted-foreground">Start</Label>
-                            <Input
-                              type="time"
-                              value={editSchedules[day.key].startTime}
-                              onChange={(e) => updateEditSchedule(day.key, 'startTime', e.target.value)}
-                              className="w-32"
-                            />
-                          </div>
-                          <span className="text-muted-foreground">to</span>
-                          <div className="flex items-center gap-2">
-                            <Label className="text-sm text-muted-foreground">End</Label>
-                            <Input
-                              type="time"
-                              value={editSchedules[day.key].endTime}
-                              onChange={(e) => updateEditSchedule(day.key, 'endTime', e.target.value)}
-                              className="w-32"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground italic">Not working</span>
-                      )}
-                    </div>
+                    <DayScheduleComponent key={day.key} day={day} isCreate={false} />
                   ))}
                 </div>
               </div>
@@ -1986,10 +2224,10 @@ const DoctorsPage = () => {
             <Button
               variant="dental"
               onClick={handleUpdate}
-              disabled={isEditUploading}
+              disabled={isEditUploading || isUpdating}
             >
               <Pencil className="w-4 h-4 mr-2" />
-              {isEditUploading ? "Uploading..." : "Update Dental Professional"} {/* Changed text */}
+              {isUpdating ? "Updating..." : "Update Dental Professional"}
             </Button>
           </DialogFooter>
         </DialogContent>

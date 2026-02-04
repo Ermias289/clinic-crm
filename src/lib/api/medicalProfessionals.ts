@@ -1,6 +1,10 @@
 import apiClient from "./client";
 
-// Separate DTO interfaces - don't use extends to avoid circular references
+export interface BranchServiceDTO {
+  branchId: number;
+  serviceId: number;
+}
+
 export interface CreateMedicalProfessionalDTO {
   fName: string;
   mName?: string;
@@ -17,6 +21,7 @@ export interface CreateMedicalProfessionalDTO {
   requiresUserAccount: boolean;
   medicalServicesId: number[];
   branches: number[];
+  branchServices?: BranchServiceDTO[]; // New field for branch-specific services
 }
 
 export interface UpdateMedicalProfessionalDTO {
@@ -36,6 +41,7 @@ export interface UpdateMedicalProfessionalDTO {
   requiresUserAccount: boolean;
   medicalServicesId: number[];
   branches: number[];
+  branchServices?: BranchServiceDTO[]; // New field for branch-specific services
 }
 
 export interface MedicalProfessional {
@@ -55,9 +61,11 @@ export interface MedicalProfessional {
   requiresUserAccount: boolean;
   medicalServices: { id: number; name: string }[];
   branches: { id: number; name: string }[];
+  branchServices?: BranchServiceDTO[]; // New field for branch-specific services
   createdAt: string;
   updatedAt: string;
 }
+
 
 export const medicalProfessionalsService = {
   getAll: async (): Promise<MedicalProfessional[]> => {
@@ -89,4 +97,4 @@ export const medicalProfessionalsService = {
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/MedicalProfessional/${id}`);
   },
-} as const; 
+} as const;

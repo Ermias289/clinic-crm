@@ -29,13 +29,14 @@ export const statusIcons = {
 
 export const getAvailableActions = (status: string): string[] => {
   switch (status) {
+    case "Auto-Prepared":
+      return ["request", "cancel"];
+    case "Partially-Paid":
+      return ["request", "cancel"];
     case "Requested":
       return ["check", "cancel"];
     case "Checked":
       return ["approve", "reject"];
-    case "Auto-Prepared":
-    case "Partially-Paid":
-      return ["cancel"];
     default:
       return [];
   }

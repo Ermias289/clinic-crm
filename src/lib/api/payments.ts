@@ -1,4 +1,3 @@
-// lib/api/payments.ts
 import apiClient from './client';
 
 /* ------------------ CARD ------------------ */
@@ -34,6 +33,13 @@ export interface PaymentUser {
   updatedAt?: string;
 }
 
+/* ------------------ PAYMENT TYPE ------------------ */
+export interface PaymentType {
+  id: number;
+  name: string;
+  description: string;
+}
+
 /* ------------------ PAYMENT ------------------ */
 export interface Payment {
   id: number;
@@ -46,6 +52,8 @@ export interface Payment {
   paidAmount: number;
   requestedAmount: number;
   paymentProof?: string;
+  paymentTypeId?: number;
+  paymentType?: PaymentType;
   isInsuranceCovered?: boolean;
   requestedBy: PaymentUser;
   requestedById: number;
@@ -91,6 +99,17 @@ export interface CancelPaymentRequest {
   canceledRemark: string;
 }
 
+export interface RequestPaymentRequest {
+  id: number;
+  paymentTypeId: number;
+  paymentProof?: string;
+}
+
+export interface UploadFileResponse {
+  fileName: string;
+  filePath: string;
+}
+
 /* ------------------ SERVICE ------------------ */
 export const paymentsService = {
   getAll: async (): Promise<Payment[]> => {
@@ -113,6 +132,11 @@ export const paymentsService = {
     return response.data;
   },
 
+  getPaymentTypes: async (): Promise<PaymentType[]> => {
+    const response = await apiClient.get<PaymentType[]>('/api/PaymentType');
+    return response.data;
+  },
+
   checkPayment: async (data: CheckPaymentRequest): Promise<Payment> => {
     const response = await apiClient.put<Payment>("/api/Payment/checkPayment", data);
     return response.data;
@@ -130,6 +154,23 @@ export const paymentsService = {
 
   cancelPayment: async (data: CancelPaymentRequest): Promise<Payment> => {
     const response = await apiClient.put<Payment>("/api/Payment/cancelPayment", data);
+    return response.data;
+  },
+
+  requestPayment: async (data: RequestPaymentRequest): Promise<Payment> => {
+    const response = await apiClient.put<Payment>("/api/Payment/paymentRequest", data);
+    return response.data;
+  },
+
+  uploadFile: async (file: File): Promise<UploadFileResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await apiClient.post<UploadFileResponse>('/api/FileUpload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 };
