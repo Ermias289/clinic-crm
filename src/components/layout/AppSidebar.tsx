@@ -19,7 +19,7 @@ import {
   Loader2
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { authService } from '@/lib/api/auth';
 import { companySettingService, CompanySettingDTO } from '@/lib/api/companySettings';
 import { fileUploadService } from '@/lib/api/fileUpload';
@@ -77,36 +77,52 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>(['/settings']);
-  const [companyData, setCompanyData] = useState<CompanySettingDTO | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [companyData, setCompanyData] = useState<CompanySettingDTO | null>(() => {
+    // Try to load from cache on initial render
+    const cached = localStorage.getItem('companyData');
+    return cached ? JSON.parse(cached) : null;
+  });
+  const [loading, setLoading] = useState(!companyData); // Only load if no cache
   const [logoError, setLogoError] = useState(false);
 
   const user = authService.getCurrentUser();
 
-  // Fetch company data on component mount
+  // Fetch company data only if not cached or cache is old
   useEffect(() => {
-    fetchCompanyData();
-  }, []);
+    const fetchIfNeeded = async () => {
+      const cacheTimestamp = localStorage.getItem('companyDataTimestamp');
+      const now = Date.now();
+      const oneHour = 60 * 60 * 1000;
+      
+      // If we have no cache or cache is older than 1 hour, fetch fresh data
+      if (!companyData || !cacheTimestamp || (now - parseInt(cacheTimestamp)) > oneHour) {
+        try {
+          setLoading(true);
+          const data = await companySettingService.get();
+          setCompanyData(data);
+          setLogoError(false);
+          
+          // Cache the data
+          localStorage.setItem('companyData', JSON.stringify(data));
+          localStorage.setItem('companyDataTimestamp', now.toString());
+        } catch (error) {
+          console.error("Failed to fetch company data:", error);
+          setLogoError(true);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
 
-  const fetchCompanyData = async () => {
-    try {
-      setLoading(true);
-      const data = await companySettingService.get();
-      setCompanyData(data);
-      setLogoError(false);
-    } catch (error) {
-      console.error("Failed to fetch company data:", error);
-      setLogoError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchIfNeeded();
+  }, []); // Empty dependency array - only run once on mount
 
-  // Get logo URL
-  const getLogoUrl = () => {
+  // Memoize the logo URL to prevent unnecessary re-renders
+  const logoUrl = useMemo(() => {
     if (!companyData?.logo) return '';
-    return fileUploadService.getFileUrl(companyData.logo);
-  };
+    const url = fileUploadService.getFileUrl(companyData.logo);
+    return url;
+  }, [companyData?.logo]);
 
   const toggleExpand = (href: string) => {
     setExpandedItems(prev => 
@@ -125,6 +141,8 @@ export function AppSidebar() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("companyData"); // Clear cache on logout
+    localStorage.removeItem("companyDataTimestamp");
     navigate("/login");
   };
 
@@ -137,21 +155,20 @@ export function AppSidebar() {
             {loading ? (
               <Loader2 className="w-6 h-6 text-sidebar-primary-foreground animate-spin" />
             ) : companyData?.logo && !logoError ? (
-              <>
-                <img
-                  src={getLogoUrl()}
-                  alt={`${companyData.name || 'Company'} Logo`}
-                  className="w-full h-full object-cover"
-                  onError={() => setLogoError(true)}
-                />
-                {logoError && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-sidebar-primary">
-                    <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
-                  </div>
-                )}
-              </>
+              <img
+                src={logoUrl}
+                alt={`${companyData.name || 'Company'} Logo`}
+                className="w-full h-full object-cover"
+                onError={() => setLogoError(true)}
+                key={`logo-${companyData.logo}`} // Key helps React identify image changes
+              />
             ) : (
               <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
+            )}
+            {logoError && companyData?.logo && (
+              <div className="absolute inset-0 flex items-center justify-center bg-sidebar-primary">
+                <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
+              </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
