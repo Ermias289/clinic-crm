@@ -15,11 +15,14 @@ import {
   Building,
   Shield,
   UserCircle,
-  LogOut
+  LogOut,
+  Loader2
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { authService } from '@/lib/api/auth';
+import { companySettingService, CompanySettingDTO } from '@/lib/api/companySettings';
+import { fileUploadService } from '@/lib/api/fileUpload';
 import avatar from '../../assets/avatar.png';
 import { NotificationsButton } from "@/components/NotificationsButton";
 
@@ -45,7 +48,6 @@ const navItems: NavItem[] = [
     children: [
       { title: "Company", href: "/settings/company", icon: Building },
       { title: "Branches", href: "/settings/branches", icon: Building2 },
-      // { title: "Card Settings", href: "/settings/cards", icon: CardIcon },
       { title: "Card Types", href: "/settings/card-types", icon: CreditCard },
       { title: "Payment Types", href: "/settings/payment-types", icon: CreditCard },
       { title: "Bank Account", href: "/settings/bank-account", icon: CreditCard },
@@ -56,7 +58,7 @@ const navItems: NavItem[] = [
   },
 ];
 
-// Tooth icon SVG component
+// Tooth icon SVG component (fallback)
 const ToothIcon = ({ className }: { className?: string }) => (
   <svg 
     viewBox="0 0 24 24" 
@@ -75,11 +77,36 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [expandedItems, setExpandedItems] = useState<string[]>(['/settings']);
-
+  const [companyData, setCompanyData] = useState<CompanySettingDTO | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [logoError, setLogoError] = useState(false);
 
   const user = authService.getCurrentUser();
-  // console.log(user);
 
+  // Fetch company data on component mount
+  useEffect(() => {
+    fetchCompanyData();
+  }, []);
+
+  const fetchCompanyData = async () => {
+    try {
+      setLoading(true);
+      const data = await companySettingService.get();
+      setCompanyData(data);
+      setLogoError(false);
+    } catch (error) {
+      console.error("Failed to fetch company data:", error);
+      setLogoError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get logo URL
+  const getLogoUrl = () => {
+    if (!companyData?.logo) return '';
+    return fileUploadService.getFileUrl(companyData.logo);
+  };
 
   const toggleExpand = (href: string) => {
     setExpandedItems(prev => 
@@ -94,7 +121,7 @@ export function AppSidebar() {
     return location.pathname.startsWith(href);
   };
 
-    // LOGOUT function
+  // LOGOUT function
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -105,13 +132,35 @@ export function AppSidebar() {
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Logo and Notifications */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-primary">
-            <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-primary overflow-hidden mt-0.5">
+            {loading ? (
+              <Loader2 className="w-6 h-6 text-sidebar-primary-foreground animate-spin" />
+            ) : companyData?.logo && !logoError ? (
+              <>
+                <img
+                  src={getLogoUrl()}
+                  alt={`${companyData.name || 'Company'} Logo`}
+                  className="w-full h-full object-cover"
+                  onError={() => setLogoError(true)}
+                />
+                {logoError && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-sidebar-primary">
+                    <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
+                  </div>
+                )}
+              </>
+            ) : (
+              <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
+            )}
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">Lucid</h1>
-            <p className="text-xs text-sidebar-foreground/60">Dental Clinic CRM</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold text-sidebar-foreground break-words leading-tight">
+              {loading ? 'Loading...' : companyData?.name || 'Lucid'}
+            </h1>
+            <p className="text-xs text-sidebar-foreground/60 mt-1">
+              {companyData?.prefix ? `${companyData.prefix} Clinic` : 'Dental Clinic CRM'}
+            </p>
           </div>
         </div>
         {/* Notifications Button */}
@@ -189,19 +238,27 @@ export function AppSidebar() {
       {/* Footer */}
       <div className="px-4 py-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-sidebar-accent">
-          <img src={avatar} alt="user avatar" className="w-8 h-8 rounded-full"/>
+          <img 
+            src={avatar} 
+            alt={`${user?.fName || 'User'} avatar`} 
+            className="w-8 h-8 rounded-full object-cover"
+          />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.fName} {user?.lName}</p>
-            <p className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">
+              {user?.fName} {user?.lName}
+            </p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">
+              {user?.email}
+            </p>
           </div>
         </div>
         {/* Logout button */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-3 py-2 mt-2 rounded-lg text-sm text-red-600 hover:bg-red-100"
+          className="flex items-center gap-2 px-3 py-2 mt-2 w-full rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
         >
-          <LogOut className="w-4 h-3" />
-          Logout
+          <LogOut className="w-4 h-4" />
+          <span>Logout</span>
         </button>
       </div>
     </aside>
