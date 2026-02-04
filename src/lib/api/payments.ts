@@ -101,14 +101,18 @@ export interface CancelPaymentRequest {
 
 export interface RequestPaymentRequest {
   id: number;
+  requestedAmount: number;
   paymentTypeId: number;
   paymentProof?: string;
+  isInsuranceCovered?: boolean;
 }
 
-export interface UploadFileResponse {
-  fileName: string;
-  filePath: string;
-}
+/* ------------------ PAYMENT TYPE NAMES ------------------ */
+export const PAYMENT_TYPE_NAMES = {
+  CASH: 'Cash',
+  BANK_TRANSFER: 'Bank-Transfer',
+  INSURANCE: 'Insurance'
+} as const;
 
 /* ------------------ SERVICE ------------------ */
 export const paymentsService = {
@@ -161,16 +165,19 @@ export const paymentsService = {
     const response = await apiClient.put<Payment>("/api/Payment/paymentRequest", data);
     return response.data;
   },
-
-  uploadFile: async (file: File): Promise<UploadFileResponse> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await apiClient.post<UploadFileResponse>('/api/FileUpload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+  
+  // Helper method to check if payment type requires proof
+  requiresProof: (paymentTypeName: string): boolean => {
+    return paymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER;
   },
+  
+  // Helper method to get payment type by name
+  getPaymentTypeByName: (types: PaymentType[], name: string): PaymentType | undefined => {
+    return types.find(type => type.name === name);
+  },
+  
+  // Helper method to get payment type ID by name
+  getPaymentTypeIdByName: (types: PaymentType[], name: string): number | undefined => {
+    return types.find(type => type.name === name)?.id;
+  }
 };

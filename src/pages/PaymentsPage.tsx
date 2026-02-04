@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -38,15 +37,18 @@ import {
   AlertCircle,
   CalendarDays,
   RefreshCw,
-  Clock,
-  Calendar,
   FileCheck,
   Ban,
   Image as ImageIcon,
-  Upload,
 } from "lucide-react";
 
-import { paymentsService, Payment, PaymentType } from "@/lib/api/payments";
+import { 
+  paymentsService, 
+  Payment, 
+  PaymentType,
+  PAYMENT_TYPE_NAMES 
+} from "@/lib/api/payments";
+import { fileUploadService } from "@/lib/api/fileUpload";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { 
@@ -81,6 +83,7 @@ const PaymentsPage = () => {
   // Request payment states
   const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([]);
   const [selectedPaymentType, setSelectedPaymentType] = useState<number>(1); // Default to Cash
+  const [selectedPaymentTypeName, setSelectedPaymentTypeName] = useState<string>("Cash"); // Default to Cash
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -110,6 +113,18 @@ const PaymentsPage = () => {
     try {
       const types = await paymentsService.getPaymentTypes();
       setPaymentTypes(types);
+      
+      // Set default payment type (Cash if exists, otherwise first type)
+      if (types.length > 0) {
+        const cashType = types.find(t => t.name === PAYMENT_TYPE_NAMES.CASH);
+        if (cashType) {
+          setSelectedPaymentType(cashType.id);
+          setSelectedPaymentTypeName(cashType.name);
+        } else {
+          setSelectedPaymentType(types[0].id);
+          setSelectedPaymentTypeName(types[0].name);
+        }
+      }
     } catch (err) {
       console.error("Failed to fetch payment types", err);
       toast({
@@ -162,18 +177,16 @@ const PaymentsPage = () => {
 
   // Reset payment proof when payment type changes
   useEffect(() => {
-    if (selectedPaymentType !== 3) { // Not "Via Mobile App Payment"
+    if (selectedPaymentTypeName !== PAYMENT_TYPE_NAMES.BANK_TRANSFER) {
       setPaymentProofFile(null);
       setPaymentProofPreview(null);
     }
-  }, [selectedPaymentType]);
+  }, [selectedPaymentTypeName]);
 
-  // Get image URL for payment proof
+  // Get image URL for payment proof using fileUploadService
   const getPaymentProofUrl = (filename?: string): string | null => {
     if (!filename) return null;
-    // Clean the filename in case it already contains the full URL
-    const cleanFilename = filename.replace('https://crmgate.nexabusinessgroup.com/api/FileUpload/', '');
-    return `https://crmgate.nexabusinessgroup.com/api/FileUpload/${cleanFilename}`;
+    return fileUploadService.getFileUrl(filename);
   };
 
   // Reset form states when payment is selected
@@ -184,7 +197,17 @@ const PaymentsPage = () => {
     setApprovalRemark("");
     setRejectionRemark("");
     setCancelRemark("");
-    setSelectedPaymentType(1);
+    
+    // Reset to default payment type (Cash)
+    const cashType = paymentTypes.find(t => t.name === PAYMENT_TYPE_NAMES.CASH);
+    if (cashType) {
+      setSelectedPaymentType(cashType.id);
+      setSelectedPaymentTypeName(cashType.name);
+    } else if (paymentTypes.length > 0) {
+      setSelectedPaymentType(paymentTypes[0].id);
+      setSelectedPaymentTypeName(paymentTypes[0].name);
+    }
+    
     setPaymentProofFile(null);
     setPaymentProofPreview(null);
   };
@@ -245,15 +268,17 @@ const PaymentsPage = () => {
     reader.readAsDataURL(file);
   };
 
-  // Handle request payment
+  // Handle request payment using fileUploadService
   const handleRequestPayment = async () => {
     if (!selectedPayment) return;
 
     // Validate payment type selection
-    if (selectedPaymentType === 3 && !paymentProofFile) { // Via Mobile App Payment
+    const isBankTransfer = selectedPaymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER;
+    
+    if (isBankTransfer && !paymentProofFile) {
       toast({
         title: "Validation Error",
-        description: "Please upload a payment proof screenshot for mobile app payments",
+        description: "Payment proof is required for Bank-Transfer payments",
         variant: "destructive",
       });
       return;
@@ -263,13 +288,38 @@ const PaymentsPage = () => {
     try {
       let uploadedFileName = "";
 
-      // Upload file if payment type requires it
+      // Upload file if payment type is Bank-Transfer
       if (paymentProofFile) {
-        const uploadResponse = await paymentsService.uploadFile(paymentProofFile);
-        uploadedFileName = uploadResponse.fileName;
+        try {
+          console.log("Uploading payment proof file...");
+          uploadedFileName = await fileUploadService.upload(paymentProofFile);
+          console.log("File uploaded successfully:", uploadedFileName);
+          
+          toast({
+            title: "Payment proof uploaded",
+            description: "Image successfully uploaded to server",
+          });
+        } catch (uploadError: any) {
+          console.error("Upload failed:", uploadError);
+          toast({
+            title: "Upload Failed",
+            description: "Could not upload payment proof. Please try again.",
+            variant: "destructive",
+          });
+          setIsUploading(false);
+          return;
+        }
       }
 
       // Request payment with the correct API format
+      console.log("Submitting payment request with:", {
+        id: selectedPayment.id,
+        requestedAmount: selectedPayment.requestedAmount,
+        paymentTypeId: selectedPaymentType,
+        paymentProof: uploadedFileName || undefined,
+        isInsuranceCovered: selectedPayment.isInsuranceCovered || false,
+      });
+
       await paymentsService.requestPayment({
         id: selectedPayment.id,
         requestedAmount: selectedPayment.requestedAmount, 
@@ -288,7 +338,13 @@ const PaymentsPage = () => {
       setSelectedPayment(null);
       setPaymentProofFile(null);
       setPaymentProofPreview(null);
-      setSelectedPaymentType(1);
+      
+      // Reset to default payment type
+      const cashType = paymentTypes.find(t => t.name === PAYMENT_TYPE_NAMES.CASH);
+      if (cashType) {
+        setSelectedPaymentType(cashType.id);
+        setSelectedPaymentTypeName(cashType.name);
+      }
       
       // Refresh payments list
       fetchPayments();
@@ -296,14 +352,15 @@ const PaymentsPage = () => {
       console.error("Failed to request payment:", error);
       toast({
         title: "Failed to request payment",
-        description: error.response?.data?.message || "Please try again",
+        description: error.response?.data?.message || error.message || "Please try again",
         variant: "destructive",
       });
     } finally {
       setIsUploading(false);
     }
   };
-  // Action handlers
+
+  // Action handlers (unchanged from before)
   const handleCheckPayment = async () => {
     if (!selectedPayment) return;
     
@@ -457,6 +514,22 @@ const PaymentsPage = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Handle payment type selection change
+  const handlePaymentTypeChange = (value: string) => {
+    const typeId = parseInt(value);
+    const selectedType = paymentTypes.find(type => type.id === typeId);
+    
+    if (selectedType) {
+      setSelectedPaymentType(typeId);
+      setSelectedPaymentTypeName(selectedType.name);
+    }
+  };
+
+  // Check if current payment type is Bank-Transfer
+  const isBankTransfer = () => {
+    return selectedPaymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER;
   };
 
   // Render status badge
@@ -674,7 +747,6 @@ const PaymentsPage = () => {
                               selectedPayment.status === "Approved" || 
                               selectedPayment.status === "Rejected") && (
                               <div>
-                                <p className="text-sm text-muted-foreground">Payment Type</p>
                                 <div className="mt-1">
                                   {selectedPayment.paymentType ? (
                                     <Badge variant="secondary">{selectedPayment.paymentType.name}</Badge>
@@ -1127,7 +1199,7 @@ const PaymentsPage = () => {
               <Label htmlFor="paymentType">Payment Type *</Label>
               <Select 
                 value={selectedPaymentType.toString()} 
-                onValueChange={(value) => setSelectedPaymentType(parseInt(value))}
+                onValueChange={handlePaymentTypeChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select payment type" />
@@ -1142,12 +1214,13 @@ const PaymentsPage = () => {
               </Select>
             </div>
             
-            {selectedPaymentType === 3 && ( // Via Mobile App Payment
+            {/* Show file upload only for Bank-Transfer */}
+            {isBankTransfer() && (
               <div className="space-y-2">
                 <Label htmlFor="paymentProof">
-                  Payment Proof (Screenshot) *
+                  Payment Proof (Screenshot/Receipt) *
                   <span className="text-muted-foreground text-sm ml-2">
-                    Required for mobile app payments
+                    Required for Bank-Transfer payments
                   </span>
                 </Label>
                 
@@ -1193,7 +1266,7 @@ const PaymentsPage = () => {
                     <>
                       <ImageIcon className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-sm text-muted-foreground mb-2">
-                        Upload payment screenshot
+                        Upload bank transfer proof (screenshot or receipt)
                       </p>
                     </>
                   )}
@@ -1212,10 +1285,10 @@ const PaymentsPage = () => {
                   </p>
                 </div>
                 
-                {selectedPaymentType === 3 && !paymentProofFile && (
+                {isBankTransfer() && !paymentProofFile && (
                   <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
-                    Payment proof is required for mobile app payments
+                    Payment proof is required for Bank-Transfer payments
                   </p>
                 )}
               </div>
@@ -1229,7 +1302,12 @@ const PaymentsPage = () => {
                 setShowRequestModal(false);
                 setPaymentProofFile(null);
                 setPaymentProofPreview(null);
-                setSelectedPaymentType(1);
+                // Reset to default payment type
+                const cashType = paymentTypes.find(t => t.name === PAYMENT_TYPE_NAMES.CASH);
+                if (cashType) {
+                  setSelectedPaymentType(cashType.id);
+                  setSelectedPaymentTypeName(cashType.name);
+                }
               }}
               disabled={isUploading}
             >
@@ -1237,7 +1315,7 @@ const PaymentsPage = () => {
             </Button>
             <Button 
               onClick={handleRequestPayment}
-              disabled={isUploading || (selectedPaymentType === 3 && !paymentProofFile)}
+              disabled={isUploading || (isBankTransfer() && !paymentProofFile)}
             >
               {isUploading ? (
                 <>
