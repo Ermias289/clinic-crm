@@ -62,6 +62,7 @@ const PaymentsPage = () => {
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [paymentTypeFilter, setPaymentTypeFilter] = useState<string>("all"); // New: Payment Type filter
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -95,7 +96,7 @@ const PaymentsPage = () => {
     try {
       const data = await paymentsService.getAll();
       setPayments(data);
-      applyFilters(data, searchQuery, statusFilter);
+      applyFilters(data, searchQuery, statusFilter, paymentTypeFilter);
     } catch (err) {
       console.error("Failed to fetch payments", err);
       toast({
@@ -136,7 +137,7 @@ const PaymentsPage = () => {
   };
 
   // Apply filters
-  const applyFilters = (data: Payment[], query: string, status: string) => {
+  const applyFilters = (data: Payment[], query: string, status: string, paymentType: string) => {
     let filtered = [...data];
 
     // Apply search filter
@@ -163,6 +164,23 @@ const PaymentsPage = () => {
       );
     }
 
+    // Apply payment type filter
+    if (paymentType !== "all") {
+      filtered = filtered.filter((payment) => {
+        // First check if payment has paymentType object
+        if (payment.paymentType) {
+          return payment.paymentType.name === paymentType;
+        }
+        // If not, check if it has paymentTypeId and find the corresponding type
+        if (payment.paymentTypeId) {
+          const type = paymentTypes.find(t => t.id === payment.paymentTypeId);
+          return type?.name === paymentType;
+        }
+        // If no payment type info, only include if filter is "no-type"
+        return paymentType === "no-type";
+      });
+    }
+
     setFilteredPayments(filtered);
   };
 
@@ -172,8 +190,8 @@ const PaymentsPage = () => {
   }, []);
 
   useEffect(() => {
-    applyFilters(payments, searchQuery, statusFilter);
-  }, [searchQuery, statusFilter, payments]);
+    applyFilters(payments, searchQuery, statusFilter, paymentTypeFilter);
+  }, [searchQuery, statusFilter, paymentTypeFilter, payments, paymentTypes]);
 
   // Reset payment proof when payment type changes
   useEffect(() => {
@@ -187,6 +205,17 @@ const PaymentsPage = () => {
   const getPaymentProofUrl = (filename?: string): string | null => {
     if (!filename) return null;
     return fileUploadService.getFileUrl(filename);
+  };
+
+  // Get payment type display name
+  const getPaymentTypeDisplay = (payment: Payment): string => {
+    if (payment.paymentType) {
+      return payment.paymentType.name;
+    } else if (payment.paymentTypeId) {
+      const type = paymentTypes.find(t => t.id === payment.paymentTypeId);
+      return type?.name || "Unknown";
+    }
+    return "Not specified";
   };
 
   // Reset form states when payment is selected
@@ -561,6 +590,7 @@ const PaymentsPage = () => {
               </div>
             </div>
 
+            {/* Status Filter */}
             <div className="w-full md:w-auto">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[180px]">
@@ -574,6 +604,24 @@ const PaymentsPage = () => {
                   <SelectItem value="Checked">Checked</SelectItem>
                   <SelectItem value="Approved">Approved</SelectItem>
                   <SelectItem value="Rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Payment Type Filter - ADDED */}
+            <div className="w-full md:w-auto">
+              <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="All Payment Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Payment Types</SelectItem>
+                  <SelectItem value="no-type">No Payment Type</SelectItem>
+                  {paymentTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.name}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -611,7 +659,7 @@ const PaymentsPage = () => {
               <FileText className="w-12 h-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No payments found</h3>
               <p className="text-muted-foreground mt-2">
-                {searchQuery || statusFilter !== "all" 
+                {searchQuery || statusFilter !== "all" || paymentTypeFilter !== "all"
                   ? "Try adjusting your filters" 
                   : "No payment requests available"}
               </p>
@@ -625,8 +673,8 @@ const PaymentsPage = () => {
                     <th className="text-left p-4 font-medium">Patient</th>
                     <th className="text-left p-4 font-medium">Card</th>
                     <th className="text-left p-4 font-medium">Amount</th>
+                    <th className="text-left p-4 font-medium">Payment Type</th> {/* NEW: Payment Type column */}
                     <th className="text-left p-4 font-medium">Status</th>
-                    <th className="text-left p-4 font-medium">Requested</th>
                     <th className="text-left p-4 font-medium">Actions</th>
                   </tr>
                 </thead>
@@ -661,12 +709,16 @@ const PaymentsPage = () => {
                         </div>
                       </td>
                       <td className="p-4">
-                        {renderStatusBadge(payment.status)}
+                        {/* Payment Type Column - SIMPLE: just show the type */}
+                        <div>
+                          <span className="text-sm">
+                            {getPaymentTypeDisplay(payment)}
+                          </span>
+                        </div>
                       </td>
                       <td className="p-4">
-                        <div className="text-sm text-muted-foreground">
-                          {formatDate(payment.requestedAt)}
-                        </div>
+                        {/* Status Column - SIMPLE: just show the badge */}
+                        {renderStatusBadge(payment.status)}
                       </td>
                       <td className="p-4">
                         <div className="flex gap-2">
