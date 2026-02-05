@@ -194,8 +194,13 @@ const PaymentsPage = () => {
   }, [searchQuery, statusFilter, paymentTypeFilter, payments, paymentTypes]);
 
   // Reset payment proof when payment type changes
+ // Reset payment proof only if selected type does NOT require proof
   useEffect(() => {
-    if (selectedPaymentTypeName !== PAYMENT_TYPE_NAMES.BANK_TRANSFER) {
+    const requiresProof =
+      selectedPaymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER ||
+      selectedPaymentTypeName === PAYMENT_TYPE_NAMES.INSURANCE;
+
+    if (!requiresProof) {
       setPaymentProofFile(null);
       setPaymentProofPreview(null);
     }
@@ -298,16 +303,19 @@ const PaymentsPage = () => {
   };
 
   // Handle request payment using fileUploadService
+
   const handleRequestPayment = async () => {
     if (!selectedPayment) return;
 
-    // Validate payment type selection
-    const isBankTransfer = selectedPaymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER;
-    
-    if (isBankTransfer && !paymentProofFile) {
+    // Proof required for Bank Transfer OR Insurance
+    const requiresProof =
+      selectedPaymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER ||
+      selectedPaymentTypeName === PAYMENT_TYPE_NAMES.INSURANCE;
+
+    if (requiresProof && !paymentProofFile) {
       toast({
         title: "Validation Error",
-        description: "Payment proof is required for Bank-Transfer payments",
+        description: "Payment proof is required for Bank-Transfer or Insurance payments",
         variant: "destructive",
       });
       return;
@@ -317,13 +325,13 @@ const PaymentsPage = () => {
     try {
       let uploadedFileName = "";
 
-      // Upload file if payment type is Bank-Transfer
+      // Upload file if proof is provided
       if (paymentProofFile) {
         try {
           console.log("Uploading payment proof file...");
           uploadedFileName = await fileUploadService.upload(paymentProofFile);
           console.log("File uploaded successfully:", uploadedFileName);
-          
+
           toast({
             title: "Payment proof uploaded",
             description: "Image successfully uploaded to server",
@@ -340,7 +348,7 @@ const PaymentsPage = () => {
         }
       }
 
-      // Request payment with the correct API format
+      // Submit request
       console.log("Submitting payment request with:", {
         id: selectedPayment.id,
         requestedAmount: selectedPayment.requestedAmount,
@@ -351,8 +359,8 @@ const PaymentsPage = () => {
 
       await paymentsService.requestPayment({
         id: selectedPayment.id,
-        requestedAmount: selectedPayment.requestedAmount, 
-        paymentProof: uploadedFileName || undefined, 
+        requestedAmount: selectedPayment.requestedAmount,
+        paymentProof: uploadedFileName || undefined,
         isInsuranceCovered: selectedPayment.isInsuranceCovered || false,
         paymentTypeId: selectedPaymentType,
       });
@@ -367,15 +375,14 @@ const PaymentsPage = () => {
       setSelectedPayment(null);
       setPaymentProofFile(null);
       setPaymentProofPreview(null);
-      
+
       // Reset to default payment type
       const cashType = paymentTypes.find(t => t.name === PAYMENT_TYPE_NAMES.CASH);
       if (cashType) {
         setSelectedPaymentType(cashType.id);
         setSelectedPaymentTypeName(cashType.name);
       }
-      
-      // Refresh payments list
+
       fetchPayments();
     } catch (error: any) {
       console.error("Failed to request payment:", error);
@@ -556,10 +563,14 @@ const PaymentsPage = () => {
     }
   };
 
-  // Check if current payment type is Bank-Transfer
-  const isBankTransfer = () => {
-    return selectedPaymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER;
+  // NEW — proof required for Bank Transfer OR Insurance
+  const isProofRequired = () => {
+    return (
+      selectedPaymentTypeName === PAYMENT_TYPE_NAMES.BANK_TRANSFER ||
+      selectedPaymentTypeName === PAYMENT_TYPE_NAMES.INSURANCE
+    );
   };
+
 
   // Render status badge
   const renderStatusBadge = (status: string) => {
@@ -1267,12 +1278,12 @@ const PaymentsPage = () => {
             </div>
             
             {/* Show file upload only for Bank-Transfer */}
-            {isBankTransfer() && (
+            {isProofRequired() && (
               <div className="space-y-2">
                 <Label htmlFor="paymentProof">
                   Payment Proof (Screenshot/Receipt) *
                   <span className="text-muted-foreground text-sm ml-2">
-                    Required for Bank-Transfer payments
+                    Required for Bank-Transfer or Insurance payments
                   </span>
                 </Label>
                 
@@ -1337,10 +1348,10 @@ const PaymentsPage = () => {
                   </p>
                 </div>
                 
-                {isBankTransfer() && !paymentProofFile && (
+                {isProofRequired() && !paymentProofFile && (
                   <p className="text-sm text-red-500 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
-                    Payment proof is required for Bank-Transfer payments
+                    Payment proof is required for Bank-Transfer or Insurance payments
                   </p>
                 )}
               </div>
@@ -1367,7 +1378,7 @@ const PaymentsPage = () => {
             </Button>
             <Button 
               onClick={handleRequestPayment}
-              disabled={isUploading || (isBankTransfer() && !paymentProofFile)}
+              disabled={isUploading || (isProofRequired() && !paymentProofFile)}
             >
               {isUploading ? (
                 <>
