@@ -47,7 +47,10 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     _controller = Get.find<DoctorSchedulePickerController>();
     // Ensure fresh state each time this page is opened
     _controller.resetAll();
-    _controller.init(serviceDurationInMinutes: _service.durationInMinutes);
+    _controller.init(
+      serviceDurationInMinutes: _service.durationInMinutes,
+      serviceId: _service.id,
+    );
   }
 
   @override
@@ -784,7 +787,8 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
       }
 
       if (_controller.isLoadingSchedules.value ||
-          _controller.isLoadingAppointments.value) {
+          _controller.isLoadingAppointments.value ||
+          _controller.isLoadingFreeSlots.value) {
         return _LoadingCard(label: 'Loading available times...');
       }
 
@@ -861,8 +865,14 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                   final times = _controller.availableTimes;
                   final selected = _controller.selectedTime.value;
 
-                  final morningSlots = times.where((t) => (t.hour < 12) || (t.hour == 12 && t.minute <= 30)).toList();
-                  final afternoonSlots = times.where((t) => (t.hour > 12) || (t.hour == 12 && t.minute > 30)).toList();
+                  final morningSlots = times.where((t) {
+                    final minutes = t.hour * 60 + t.minute;
+                    return minutes >= 120 && minutes <= 390; // 2:00 AM to 6:30 AM
+                  }).toList();
+                  final afternoonSlots = times.where((t) {
+                    final minutes = t.hour * 60 + t.minute;
+                    return minutes < 120 || minutes > 390;
+                  }).toList();
 
                   return SingleChildScrollView(
                     padding: const EdgeInsets.all(16),

@@ -13,7 +13,12 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   }
 
   @override
-  Future<List<AppointmentModel>> getAppointments(int userId) async {
+  Future<List<AppointmentModel>> getAppointmentsByPatientId(int id) async {
+    return await remoteDataSource.getAppointmentsByPatientId(id);
+  }
+
+  @override
+  Future<List<AppointmentModel>> getAppointmentsByUserId(int userId) async {
     return await remoteDataSource.getAppointmentsByUserId(userId);
   }
 
@@ -25,5 +30,15 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   @override
   Future<bool> cancelAppointment(int id, String reason) async {
     return await remoteDataSource.cancelAppointment(id, reason);
+  }
+
+  @override
+  Future<List<String>> getFreeSlots(
+    int docId,
+    String date,
+    int branchId,
+    int serviceId,
+  ) async {
+    return await remoteDataSource.getFreeSlots(docId, date, branchId, serviceId);
   }
 }

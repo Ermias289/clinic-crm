@@ -129,7 +129,7 @@ class AppointmentController extends GetxController {
         return;
       }
 
-      final result = await repository.getAppointments(userId);
+      final result = await repository.getAppointmentsByUserId(userId);
       appointments.assignAll(result);
     } catch (e) {
       error.value = e.toString();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../data/repositories/doctor_repository_impl.dart';
 import '../../domain/models/medical_professional_model.dart';
@@ -60,13 +61,18 @@ class DoctorSchedulePickerController extends GetxController {
 
   // Optional constraints
   int? _serviceDurationInMinutes;
+  int? _serviceId;
+
+  // Loading free slots
+  final isLoadingFreeSlots = false.obs;
 
   // User-friendly error
   final errorMessage = RxnString();
 
   /// Initialize controller by loading doctors.
-  Future<void> init({int? serviceDurationInMinutes}) async {
+  Future<void> init({int? serviceDurationInMinutes, int? serviceId}) async {
     _serviceDurationInMinutes = serviceDurationInMinutes;
+    _serviceId = serviceId;
     // Load branches and doctors sequentially
     await loadBranches();
     await loadDoctors();
@@ -202,6 +208,59 @@ class DoctorSchedulePickerController extends GetxController {
     selectedTime.value = null;
 
     _recomputeAvailableTimesForDate(normalized);
+  }
+
+  Future<void> _recomputeAvailableTimesForDate(DateTime date) async {
+    availableTimes.clear();
+    selectedTime.value = null;
+
+    // If we have all required IDs, fetch from API
+    if (selectedDoctor.value != null &&
+        selectedBranch.value != null &&
+        _serviceId != null) {
+      await _fetchFreeSlotsFromApi(
+        selectedDoctor.value!.id,
+        DateFormat('yyyy-MM-dd').format(date),
+        selectedBranch.value!.id,
+        _serviceId!,
+      );
+    } else {
+      // Fallback to local computation if API cannot be called
+      _recomputeAvailableTimesLocally(date);
+    }
+  }
+
+  Future<void> _fetchFreeSlotsFromApi(
+    int docId,
+    String dateStr,
+    int branchId,
+    int serviceId,
+  ) async {
+    isLoadingFreeSlots.value = true;
+    try {
+      final slots = await _appointmentRepository.getFreeSlots(
+        docId,
+        dateStr,
+        branchId,
+        serviceId,
+      );
+
+      final parsedSlots = slots
+          .map((s) => _parseTimeOfDay(s))
+          .whereType<TimeOfDay>()
+          .toList();
+
+      availableTimes.assignAll(parsedSlots);
+
+      if (availableTimes.isNotEmpty) {
+        selectedTime.value = availableTimes.first;
+      }
+    } catch (e) {
+      errorMessage.value = 'Failed to load available times from server.';
+      debugPrint('_fetchFreeSlotsFromApi error: $e');
+    } finally {
+      isLoadingFreeSlots.value = false;
+    }
   }
 
   void selectTime(TimeOfDay time) {
@@ -379,10 +438,7 @@ class DoctorSchedulePickerController extends GetxController {
     }
   }
 
-  void _recomputeAvailableTimesForDate(DateTime date) {
-    availableTimes.clear();
-    selectedTime.value = null;
-
+  void _recomputeAvailableTimesLocally(DateTime date) {
     final schedules = schedulesForSelectedDoctor;
     if (schedules.isEmpty) return;
 
@@ -415,7 +471,7 @@ class DoctorSchedulePickerController extends GetxController {
       });
     }
 
-    // NEW: Remove slots that are already booked by existing appointments
+    // Filter out booked slots
     final availableSlots = _filterOutBookedSlots(list, date);
 
     availableTimes.assignAll(availableSlots);
