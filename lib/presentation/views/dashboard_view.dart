@@ -6,6 +6,7 @@ import '../widgets/dashboard_card.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../config/app_routes.dart';
+import '../../core/utils/error_handler.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -166,60 +167,44 @@ class DashboardView extends GetView<DashboardController> {
                               title: 'Patients',
                               iconColor: AppColors.primaryBlue,
                               onTap: () {
-                                Get.snackbar(
-                                  'Coming Soon',
-                                  'Patient management feature is under development',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: AppColors.primaryBlue
-                                      .withOpacity(0.1),
-                                  colorText: AppColors.primaryBlue,
-                                );
-                              },
+                                  ErrorHandler.showError(
+                                    'Patient management feature is under development',
+                                    title: 'Coming Soon',
+                                  );
+                                },
                             ),
                             DashboardCard(
                               icon: Icons.calendar_today_outlined,
                               title: 'Appointments',
                               iconColor: AppColors.accentBlue,
                               onTap: () {
-                                Get.snackbar(
-                                  'Coming Soon',
-                                  'Appointment scheduling feature is under development',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: AppColors.accentBlue
-                                      .withOpacity(0.1),
-                                  colorText: AppColors.accentBlue,
-                                );
-                              },
+                                  ErrorHandler.showError(
+                                    'Appointment scheduling feature is under development',
+                                    title: 'Coming Soon',
+                                  );
+                                },
                             ),
                             DashboardCard(
                               icon: Icons.medical_services_outlined,
                               title: 'Treatments',
                               iconColor: AppColors.successGreen,
                               onTap: () {
-                                Get.snackbar(
-                                  'Coming Soon',
-                                  'Treatment management feature is under development',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: AppColors.successGreen
-                                      .withOpacity(0.1),
-                                  colorText: AppColors.successGreen,
-                                );
-                              },
+                                  ErrorHandler.showError(
+                                    'Treatment management feature is under development',
+                                    title: 'Coming Soon',
+                                  );
+                                },
                             ),
                             DashboardCard(
                               icon: Icons.analytics_outlined,
                               title: 'Reports',
                               iconColor: AppColors.warningOrange,
                               onTap: () {
-                                Get.snackbar(
-                                  'Coming Soon',
-                                  'Analytics and reports feature is under development',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: AppColors.warningOrange
-                                      .withOpacity(0.1),
-                                  colorText: AppColors.warningOrange,
-                                );
-                              },
+                                  ErrorHandler.showError(
+                                    'Analytics and reports feature is under development',
+                                    title: 'Coming Soon',
+                                  );
+                                },
                             ),
                             DashboardCard(
                               icon: Icons.credit_card,
@@ -232,15 +217,11 @@ class DashboardView extends GetView<DashboardController> {
                               title: 'Settings',
                               iconColor: AppColors.textSecondary,
                               onTap: () {
-                                Get.snackbar(
-                                  'Coming Soon',
-                                  'Settings feature is under development',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: AppColors.textSecondary
-                                      .withOpacity(0.1),
-                                  colorText: AppColors.textSecondary,
-                                );
-                              },
+                                  ErrorHandler.showError(
+                                    'Settings feature is under development',
+                                    title: 'Coming Soon',
+                                  );
+                                },
                             ),
                             DashboardCard(
                               icon: Icons.logout,

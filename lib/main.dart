@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:ui';
+import 'core/utils/error_handler.dart';
 import 'config/app_pages.dart';
 import 'config/app_routes.dart';
 import 'core/theme/app_theme.dart';
@@ -16,6 +18,18 @@ import 'presentation/controllers/medical_service_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global Error Handling
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    ErrorHandler.handleError(details.exception, customTitle: 'Application Error');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    ErrorHandler.handleError(error, customTitle: 'Async Error');
+    return true;
+  };
+
   await GetStorage.init();
   await dotenv.load(fileName: ".env");
   final apiClient = Get.put(ApiClient());

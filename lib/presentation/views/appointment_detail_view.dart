@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../controllers/appointment_detail_controller.dart';
+import '../../core/utils/error_handler.dart';
 
 class AppointmentDetailView extends GetView<AppointmentDetailController> {
   const AppointmentDetailView({super.key});
@@ -278,7 +279,7 @@ class AppointmentDetailView extends GetView<AppointmentDetailController> {
           ElevatedButton(
             onPressed: () {
               if (reasonController.text.trim().isEmpty) {
-                Get.snackbar('Required', 'Please enter a reason', snackPosition: SnackPosition.BOTTOM);
+                ErrorHandler.showError('Please enter a reason', title: 'Required');
                 return;
               }
               Get.back(); // Close dialog

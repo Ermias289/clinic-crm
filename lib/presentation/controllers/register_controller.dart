@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../data/models/register_request_model.dart';
 import '../../../domain/usecases/register_usecase.dart';
 import '../../config/app_routes.dart';
+import '../../core/utils/error_handler.dart';
 
 class RegisterController extends GetxController {
   final RegisterUseCase registerUseCase;
@@ -37,60 +38,57 @@ class RegisterController extends GetxController {
   Future<void> register() async {
     // Validate required fields
     if (usernameController.text.isEmpty) {
-      Get.snackbar('Error', 'Username is required');
+      ErrorHandler.showError('Username is required');
       return;
     }
 
     if (fNameController.text.isEmpty) {
-      Get.snackbar('Error', 'First name is required');
+      ErrorHandler.showError('First name is required');
       return;
     }
 
     if (lNameController.text.isEmpty) {
-      Get.snackbar('Error', 'Last name is required');
+      ErrorHandler.showError('Last name is required');
       return;
     }
 
     if (emailController.text.isEmpty) {
-      Get.snackbar('Error', 'Email is required');
+      ErrorHandler.showError('Email is required');
       return;
     }
 
     if (!_isValidEmail(emailController.text)) {
-      Get.snackbar('Error', 'Please enter a valid email address');
+      ErrorHandler.showError('Please enter a valid email address');
       return;
     }
 
     if (phoneController.text.isEmpty) {
-      Get.snackbar('Error', 'Phone number is required');
+      ErrorHandler.showError('Phone number is required');
       return;
     }
 
     if (!_isValidPhone(phoneController.text)) {
-      Get.snackbar(
-        'Error',
-        'Please enter a valid phone number (e.g., +1234567890)',
-      );
+      ErrorHandler.showError('Please enter a valid phone number (e.g., +1234567890)');
       return;
     }
 
     if (passwordController.text.isEmpty) {
-      Get.snackbar('Error', 'Password is required');
+      ErrorHandler.showError('Password is required');
       return;
     }
 
     if (passwordController.text.length < 8) {
-      Get.snackbar('Error', 'Password must be at least 8 characters long');
+      ErrorHandler.showError('Password must be at least 8 characters long');
       return;
     }
 
     if (confirmPasswordController.text.isEmpty) {
-      Get.snackbar('Error', 'Please confirm your password');
+      ErrorHandler.showError('Please confirm your password');
       return;
     }
 
     if (passwordController.text != confirmPasswordController.text) {
-      Get.snackbar('Error', 'Passwords do not match');
+      ErrorHandler.showError('Passwords do not match');
       return;
     }
 
@@ -118,28 +116,16 @@ class RegisterController extends GetxController {
       final response = await registerUseCase(request);
 
       if (response.success) {
-        Get.snackbar(
-          'Success',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        ErrorHandler.showSuccess(response.message);
         Get.offNamed(
           Routes.otpVerification,
           arguments: emailController.text.trim(),
         );
       } else {
-        Get.snackbar(
-          'Registration Failed',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        ErrorHandler.showError(response.message, title: 'Registration Failed');
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString().replaceAll('Exception: ', ''),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Registration Error');
     } finally {
       isLoading.value = false;
     }

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/models/user_model.dart';
+import '../../core/utils/error_handler.dart';
 
 class ProfileController extends GetxController {
   final UserRemoteDataSource userDataSource;
@@ -97,13 +98,7 @@ class ProfileController extends GetxController {
         phoneController.text = user.phoneNumber ?? '';
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load profile: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Load Profile Failed');
     } finally {
       isLoading.value = false;
     }
@@ -141,21 +136,11 @@ class ProfileController extends GetxController {
 
       isEditing.value = false;
 
-      Get.snackbar(
-        'Success',
-        'Profile updated successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade100,
-        colorText: Colors.green.shade900,
-      );
+      isEditing.value = false;
+
+      ErrorHandler.showSuccess('Profile updated successfully');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to update profile: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Update Failed');
     } finally {
       isLoading.value = false;
     }
@@ -165,20 +150,12 @@ class ProfileController extends GetxController {
     if (oldPasswordController.text.isEmpty ||
         newPasswordController.text.isEmpty ||
         confirmPasswordController.text.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Please fill in all password fields',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.showError('Please fill in all password fields');
       return;
     }
 
     if (newPasswordController.text != confirmPasswordController.text) {
-      Get.snackbar(
-        'Error',
-        'New passwords do not match',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.showError('New passwords do not match');
       return;
     }
 
@@ -201,21 +178,11 @@ class ProfileController extends GetxController {
 
       Get.back(); // Close password dialog
 
-      Get.snackbar(
-        'Success',
-        'Password changed successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade100,
-        colorText: Colors.green.shade900,
-      );
+      Get.back(); // Close password dialog
+
+      ErrorHandler.showSuccess('Password changed successfully');
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to change password: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade900,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Change Password Failed');
     } finally {
       isLoading.value = false;
     }

@@ -4,6 +4,8 @@ import 'package:get_storage/get_storage.dart';
 import '../../../data/models/login_request_model.dart';
 import '../../../domain/usecases/login_usecase.dart';
 
+import '../../core/utils/error_handler.dart';
+
 class LoginController extends GetxController {
   final LoginUseCase loginUseCase;
   final box = GetStorage();
@@ -16,7 +18,7 @@ class LoginController extends GetxController {
 
   Future<void> login() async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      Get.snackbar('Error', 'Please fill in all fields');
+      ErrorHandler.showError('Please fill in all fields', title: 'Start Login');
       return;
     }
 
@@ -47,7 +49,7 @@ class LoginController extends GetxController {
       // Redirect to dashboard and set services tab as active
       Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      ErrorHandler.handleError(e, customTitle: 'Login Failed');
     } finally {
       isLoading.value = false;
     }

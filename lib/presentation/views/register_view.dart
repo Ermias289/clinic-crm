@@ -6,6 +6,7 @@ import '../controllers/register_controller.dart';
 import '../widgets/custom_text_field.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/error_handler.dart';
 
 class RegisterView extends GetView<RegisterController> {
   RegisterView({super.key});
@@ -18,13 +19,7 @@ class RegisterView extends GetView<RegisterController> {
       'https://termsandconditions.nexabusinessgroup.com/',
     );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      Get.snackbar(
-        'Error',
-        'Could not open Terms and Conditions',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      ErrorHandler.showError('Could not open Terms and Conditions');
     }
   }
 

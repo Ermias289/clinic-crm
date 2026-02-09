@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../data/models/company_setting_model.dart';
 import '../../domain/repositories/company_setting_repository.dart';
+import '../../core/utils/error_handler.dart';
 
 class ContactUsController extends GetxController {
   final CompanySettingRepository repository;
@@ -24,11 +25,7 @@ class ContactUsController extends GetxController {
       final setting = await repository.getCompanySetting();
       companySetting.value = setting;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load company information: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Load Failed');
     } finally {
       isLoading.value = false;
     }

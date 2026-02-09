@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../data/models/user_notification_model.dart';
 import '../../domain/repositories/notification_repository.dart';
+import '../../core/utils/error_handler.dart';
 
 class NotificationController extends GetxController {
   final NotificationRepository repository;
@@ -53,7 +54,7 @@ class NotificationController extends GetxController {
       _updateUnreadCount();
     } catch (e) {
       error.value = e.toString();
-      Get.snackbar('Error', 'Failed to fetch notifications: ${e.toString()}');
+      ErrorHandler.handleError(e, customTitle: 'Fetch Failed');
     } finally {
       isLoading.value = false;
     }
@@ -92,7 +93,7 @@ class NotificationController extends GetxController {
         _updateUnreadCount();
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to mark notification as read');
+      ErrorHandler.handleError(e, customTitle: 'Update Failed');
     }
   }
 
@@ -124,10 +125,10 @@ class NotificationController extends GetxController {
           );
         }
         _updateUnreadCount();
-        Get.snackbar('Success', 'All notifications marked as read');
+        ErrorHandler.showSuccess('All notifications marked as read');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to mark all notifications as read');
+      ErrorHandler.handleError(e, customTitle: 'Update Failed');
     }
   }
 

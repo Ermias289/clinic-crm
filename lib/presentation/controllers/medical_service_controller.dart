@@ -1,9 +1,11 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:flutter/foundation.dart';
 import '../../data/repositories/medical_service_repository_impl.dart';
 import '../../data/repositories/card_repository_impl.dart';
 import '../../domain/models/medical_service_model.dart';
 import '../../config/app_routes.dart';
+import '../../core/utils/error_handler.dart';
 
 class MedicalServiceController extends GetxController {
   final MedicalServiceRepository _medicalServiceRepository;
@@ -18,6 +20,8 @@ class MedicalServiceController extends GetxController {
   );
 
   final services = <MedicalService>[].obs;
+  final filteredServices = <MedicalService>[].obs;
+  final searchQuery = ''.obs;
   final isLoading = false.obs;
   bool _hasLoadedOnce = false;
 
@@ -71,6 +75,11 @@ class MedicalServiceController extends GetxController {
         'last_services_load_time',
         DateTime.now().millisecondsSinceEpoch,
       );
+
+      // Apply current search if any
+      if (searchQuery.value.isNotEmpty) {
+        searchServices(searchQuery.value);
+      }
     } catch (e) {
       // If it's a token-related error, retry once after a short delay
       if (e.toString().contains('401') || e.toString().contains('token')) {
@@ -82,18 +91,56 @@ class MedicalServiceController extends GetxController {
             'last_services_load_time',
             DateTime.now().millisecondsSinceEpoch,
           );
+
+          // Apply current search if any
+          if (searchQuery.value.isNotEmpty) {
+            searchServices(searchQuery.value);
+          }
         } catch (retryError) {
-          // Retry failed, but we'll let the UI handle the empty state
+          // Retry failed
+          debugPrint('Retry fetchServices failed: $retryError');
+          // Only show error if we have no services to show
+          if (services.isEmpty) {
+             ErrorHandler.handleError(retryError, customTitle: 'Failed to load services');
+          }
         }
+      } else {
+         // Handle other errors
+         if (services.isEmpty) {
+            ErrorHandler.handleError(e, customTitle: 'Failed to load services');
+         } else {
+            debugPrint('Background fetchServices failed: $e');
+         }
       }
     } finally {
       isLoading.value = false;
     }
   }
 
+  void searchServices(String query) {
+    searchQuery.value = query;
+
+    if (query.isEmpty) {
+      filteredServices.clear();
+      return;
+    }
+
+    final lowercaseQuery = query.toLowerCase();
+    filteredServices.value = services.where((service) {
+      return service.name.toLowerCase().contains(lowercaseQuery) ||
+          service.description.toLowerCase().contains(lowercaseQuery);
+    }).toList();
+  }
+
   Future<void> onServiceSelected(MedicalService service) async {
     // Navigate to service detail page instead of directly to booking
     Get.toNamed(Routes.serviceDetail, arguments: service);
+  }
+
+  void onQuickAppointment() {
+    // Navigate to doctor schedule picker for quick appointment
+    // This allows users to select any service during the booking process
+    Get.toNamed(Routes.doctorSchedulePicker);
   }
 
   // Method to force refresh (for pull-to-refresh)
@@ -104,6 +151,8 @@ class MedicalServiceController extends GetxController {
   // Method to reset state (for logout)
   void resetState() {
     services.clear();
+    filteredServices.clear();
+    searchQuery.value = '';
     _hasLoadedOnce = false;
     isLoading.value = false;
   }

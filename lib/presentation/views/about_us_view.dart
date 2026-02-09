@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../controllers/about_us_controller.dart';
+import '../../core/utils/error_handler.dart';
 
 class AboutUsView extends GetView<AboutUsController> {
   const AboutUsView({super.key});
@@ -451,14 +452,9 @@ class AboutUsView extends GetView<AboutUsController> {
                               );
                             } catch (e) {
                               // Show error message if URL can't be launched
-                              Get.snackbar(
-                                'Error',
-                                'Could not launch website. Please check your internet connection.',
-                                snackPosition: SnackPosition.BOTTOM,
-                                backgroundColor: Colors.red,
-                                colorText: Colors.white,
-                                duration: const Duration(seconds: 3),
-                              );
+                            } catch (e) {
+                              // Show error message if URL can't be launched
+                              ErrorHandler.showError('Could not launch website. Please check your internet connection.');
                             }
                           },
                           style: ElevatedButton.styleFrom(

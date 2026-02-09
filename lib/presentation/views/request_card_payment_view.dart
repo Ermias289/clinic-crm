@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../controllers/card_controller.dart';
 import '../../domain/models/medical_service_model.dart';
+import '../../core/utils/error_handler.dart';
 import 'dart:io';
 
 class RequestCardPaymentView extends StatefulWidget {
@@ -298,25 +299,11 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
 
   void _submitAppointmentPayment() {
     if (selectedPaymentProof == null) {
-      Get.snackbar(
-        'Required',
-        'Please attach payment proof',
-        backgroundColor: AppColors.warningOrange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-      );
+      ErrorHandler.showError('Please attach payment proof', title: 'Required');
       return;
     }
 
-    Get.snackbar(
-      'Payment Successful',
-      'Appointment Request Sent successfully',
-      backgroundColor: AppColors.successGreen,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
+    ErrorHandler.showSuccess('Appointment Request Sent successfully', title: 'Payment Successful');
     Future.delayed(const Duration(seconds: 2), () {
       Get.offAllNamed('/dashboard');
     });

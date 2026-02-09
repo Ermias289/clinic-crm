@@ -17,6 +17,8 @@ import '../../core/theme/app_colors.dart';
 import 'package:get_storage/get_storage.dart';
 import 'profile_controller.dart';
 
+import '../../core/utils/error_handler.dart';
+
 class CardController extends GetxController {
   final CardRepositoryImpl cardRepository;
   final PatientRepositoryImpl patientRepository;
@@ -238,12 +240,9 @@ class CardController extends GetxController {
       // Step 4: Navigate to reactivation payment view
       Get.toNamed(Routes.cardReactivationPayment);
 
-      Get.snackbar(
-        'Payment Required',
+      ErrorHandler.showError(
         'Complete the payment to reactivate your expired card.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.primaryBlue,
-        colorText: Colors.white,
+        title: 'Payment Required',
       );
     } catch (e) {
       String errorMessage = 'Failed to find payment for reactivation: $e';
@@ -254,13 +253,7 @@ class CardController extends GetxController {
             'No payment found for card reactivation. The auto-prepared payment may not have been created yet. Please contact support.';
       }
 
-      Get.snackbar(
-        'Error',
-        errorMessage,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      ErrorHandler.showError(errorMessage);
     } finally {
       isLoading.value = false;
     }
@@ -269,20 +262,12 @@ class CardController extends GetxController {
   /// Complete card reactivation payment (reactivates existing expired card)
   Future<void> submitReactivationPayment() async {
     if (selectedPaymentProof.value == null) {
-      Get.snackbar(
-        'Required',
-        'Please upload a payment receipt.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.showError('Please upload a payment receipt.', title: 'Required');
       return;
     }
 
     if (autoPreparedPayment.value == null) {
-      Get.snackbar(
-        'Error',
-        'No payment found for reactivation.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.showError('No payment found for reactivation.');
       return;
     }
 
@@ -313,23 +298,12 @@ class CardController extends GetxController {
       // Step 4: Navigate back to dashboard
       Get.offAllNamed(Routes.dashboard, arguments: {'initialTab': 2});
 
-      Get.snackbar(
-        'Reactivation Payment Submitted',
+      ErrorHandler.showSuccess(
         'Your reactivation payment has been submitted successfully! Your card will be reactivated once the payment is approved.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
+        title: 'Reactivation Payment Submitted',
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to submit reactivation payment: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
+      ErrorHandler.handleError(e, customTitle: 'Payment Submission Failed');
     } finally {
       isLoading.value = false;
     }
@@ -341,11 +315,7 @@ class CardController extends GetxController {
       final settings = await cardRepository.getCardSettings();
       cardSettings.assignAll(settings);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load card settings: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Load Settings Failed');
     } finally {
       isLoading.value = false;
     }
@@ -360,11 +330,7 @@ class CardController extends GetxController {
       final accountList = await getBankDetailsUseCase.getAllBankAccounts();
       bankAccounts.assignAll(accountList);
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to load bank details: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Load Banks Failed');
     } finally {
       isBankLoading.value = false;
     }
@@ -382,24 +348,18 @@ class CardController extends GetxController {
         lNameController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty ||
         dobController.text.trim().isEmpty) {
-      Get.snackbar(
-        'Missing Information',
+      ErrorHandler.showError(
         'Please fill in all required fields (Name, Phone, DOB).',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
+        title: 'Missing Information',
       );
       return;
     }
 
     if (emailController.text.trim().isEmpty ||
         !emailController.text.contains('@')) {
-      Get.snackbar(
-        'Invalid Email',
+      ErrorHandler.showError(
         'Please enter a valid email address.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
+        title: 'Invalid Email',
       );
       return;
     }
@@ -466,22 +426,14 @@ class CardController extends GetxController {
         selectedPaymentProof.value = File(image.path);
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to pick image: $e',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.handleError(e, customTitle: 'Pick Image Failed');
     }
   }
 
   /// PM's Specified Flow Implementation
   Future<void> submitCardRequest() async {
     if (selectedPaymentProof.value == null) {
-      Get.snackbar(
-        'Required',
-        'Please upload a payment receipt.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      ErrorHandler.showError('Please upload a payment receipt.', title: 'Required');
       return;
     }
 
@@ -585,23 +537,11 @@ class CardController extends GetxController {
       // Success - Navigate to dashboard (don't refresh card data to avoid disposal issues)
       Get.offAllNamed(Routes.dashboard, arguments: {'initialTab': 2});
 
-      Get.snackbar(
-        'Success',
+      ErrorHandler.showSuccess(
         'Your card request and payment have been submitted successfully! Your card will be activated once the payment is approved.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
       );
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to submit request: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 5),
-      );
+      ErrorHandler.handleError(e, customTitle: 'Request Failed');
     } finally {
       isLoading.value = false;
     }

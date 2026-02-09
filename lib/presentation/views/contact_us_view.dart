@@ -8,6 +8,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
 import '../../data/models/company_setting_model.dart';
 import '../controllers/contact_us_controller.dart';
+import '../../core/utils/error_handler.dart';
 
 class ContactUsView extends GetView<ContactUsController> {
   const ContactUsView({super.key});
@@ -209,11 +210,7 @@ class ContactUsView extends GetView<ContactUsController> {
                                 mode: LaunchMode.externalApplication,
                               );
                             } catch (e) {
-                              Get.snackbar(
-                                'Error',
-                                'Could not launch phone dialer',
-                                snackPosition: SnackPosition.BOTTOM,
-                              );
+                              ErrorHandler.showError('Could not launch phone dialer');
                             }
                           },
                         ),
@@ -242,11 +239,7 @@ class ContactUsView extends GetView<ContactUsController> {
                                 mode: LaunchMode.externalApplication,
                               );
                             } catch (e) {
-                              Get.snackbar(
-                                'Error',
-                                'Could not launch phone dialer',
-                                snackPosition: SnackPosition.BOTTOM,
-                              );
+                              ErrorHandler.showError('Could not launch phone dialer');
                             }
                           },
                         ),
@@ -271,11 +264,7 @@ class ContactUsView extends GetView<ContactUsController> {
                                 mode: LaunchMode.externalApplication,
                               );
                             } catch (e) {
-                              Get.snackbar(
-                                'Error',
-                                'Could not open email app',
-                                snackPosition: SnackPosition.BOTTOM,
-                              );
+                              ErrorHandler.showError('Could not open email app');
                             }
                           },
                         ),
@@ -301,11 +290,7 @@ class ContactUsView extends GetView<ContactUsController> {
                                       mode: LaunchMode.externalApplication,
                                     );
                                   } catch (e) {
-                                    Get.snackbar(
-                                      'Error',
-                                      'Could not open maps',
-                                      snackPosition: SnackPosition.BOTTOM,
-                                    );
+                                    ErrorHandler.showError('Could not open maps');
                                   }
                                 }
                               : null,
@@ -358,11 +343,7 @@ class ContactUsView extends GetView<ContactUsController> {
                                 mode: LaunchMode.externalApplication,
                               );
                             } catch (e) {
-                              Get.snackbar(
-                                'Error',
-                                'Could not launch phone dialer',
-                                snackPosition: SnackPosition.BOTTOM,
-                              );
+                              ErrorHandler.showError('Could not launch phone dialer');
                             }
                           },
                         ),

@@ -38,22 +38,28 @@ class BannerCarousel extends StatelessWidget {
 
         // Show banners
         return Container(
-          height: 120,
+          height: 140, // Increased height
           margin: const EdgeInsets.symmetric(vertical: 16),
           child: PageView.builder(
-            controller: PageController(viewportFraction: 0.85),
-            itemCount: controller.banners.length,
+            controller: PageController(
+              viewportFraction: 0.92,
+            ), // Increased viewport fraction
+            itemCount: controller.banners.length > 4
+                ? 4
+                : controller.banners.length, // Limit to 4 banners
             itemBuilder: (context, index) {
               final banner = controller.banners[index];
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 4,
+                ), // Reduced margin for more space
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),

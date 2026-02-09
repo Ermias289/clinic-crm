@@ -1,11 +1,13 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import '../../data/models/appointment_model.dart';
 import '../../data/models/card_model.dart';
 import '../../core/api_client.dart';
 import '../../domain/repositories/appointment_repository.dart';
 import '../../core/services/appointment_event_service.dart';
+import '../../core/utils/error_handler.dart';
 
 class AppointmentController extends GetxController {
   final AppointmentRepository repository;
@@ -32,7 +34,8 @@ class AppointmentController extends GetxController {
       ever(eventService.refreshTrigger, (_) {
         refreshAppointments();
       });
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('AppointmentController onInit error: $e\n$stackTrace');
     }
 
     // Periodic refresh disabled to improve performance
@@ -73,7 +76,8 @@ class AppointmentController extends GetxController {
         try {
           userId = int.parse(userIdRaw);
         } catch (e) {
-          return;
+           debugPrint('Error parsing user ID from string: $e');
+           return;
         }
       } else {
         return;
@@ -90,6 +94,7 @@ class AppointmentController extends GetxController {
         userCard.value = null;
       }
     } catch (e) {
+      debugPrint('Error fetching user card: $e');
       userCard.value = null;
     }
   }
@@ -113,13 +118,14 @@ class AppointmentController extends GetxController {
         try {
           userId = int.parse(userIdRaw);
         } catch (e) {
+          debugPrint('Error parsing user ID from string: $e');
           error.value = 'Invalid user ID format: $userIdRaw';
-          Get.snackbar('Error', 'Invalid user session. Please log in again.');
+          ErrorHandler.showError('Invalid user session. Please log in again.');
           return;
         }
       } else {
         error.value = 'Invalid user ID type: ${userIdRaw.runtimeType}';
-        Get.snackbar('Error', 'Invalid user session. Please log in again.');
+        ErrorHandler.showError('Invalid user session. Please log in again.');
         return;
       }
 
@@ -127,7 +133,7 @@ class AppointmentController extends GetxController {
       appointments.assignAll(result);
     } catch (e) {
       error.value = e.toString();
-      Get.snackbar('Error', 'Failed to fetch appointments: ${e.toString()}');
+      ErrorHandler.handleError(e, customTitle: 'Fetch Appointments Failed');
     } finally {
       isLoading.value = false;
     }

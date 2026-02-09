@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../controllers/profile_controller.dart';
+import '../../core/utils/error_handler.dart';
 import '../controllers/dashboard_controller.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
@@ -18,13 +19,7 @@ class ProfileView extends GetView<ProfileController> {
       'https://termsandconditions.nexabusinessgroup.com/',
     );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      Get.snackbar(
-        'Error',
-        'Could not open Terms and Conditions',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      ErrorHandler.showError('Could not open Terms and Conditions');
     }
   }
 

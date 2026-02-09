@@ -7,6 +7,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
 import '../../domain/models/medical_service_model.dart';
 import '../controllers/doctor_schedule_picker_controller.dart';
+import '../../core/utils/error_handler.dart';
 
 /// Flow: Service (already chosen) -> Doctor -> Date -> Time (from schedule only)
 ///
@@ -58,14 +59,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
   void _continue() {
     if (!_controller.canContinue) {
-      Get.snackbar(
-        'Required',
-        'Please select branch, doctor, date, and time',
-        backgroundColor: AppColors.warningOrange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-      );
+      ErrorHandler.showError('Please select branch, doctor, date, and time', title: 'Required');
       return;
     }
 

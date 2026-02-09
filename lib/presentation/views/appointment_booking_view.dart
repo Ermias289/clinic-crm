@@ -10,6 +10,7 @@ import '../../core/api_client.dart';
 import '../../data/models/card_model.dart';
 import '../controllers/appointment_controller.dart';
 import '../../core/services/appointment_event_service.dart';
+import '../../core/utils/error_handler.dart';
 
 class AppointmentBookingView extends StatefulWidget {
   const AppointmentBookingView({super.key});
@@ -131,14 +132,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         await _bookAppointment();
       }
     } else {
-      Get.snackbar(
-        'Required',
-        'Please select doctor, date and time',
-        backgroundColor: AppColors.warningOrange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-      );
+      ErrorHandler.showError('Please select doctor, date and time', title: 'Required');
     }
   }
 
@@ -348,15 +342,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       }
 
       // Show success message
-      Get.snackbar(
-        'Success',
-        'Appointment booked successfully!',
-        backgroundColor: AppColors.successGreen,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
-      );
+      // Show success message
+      ErrorHandler.showSuccess('Appointment booked successfully!');
 
       // Notify that a new appointment was created
       try {
@@ -377,15 +364,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         Get.back();
       }
 
-      Get.snackbar(
-        'Error',
-        'Failed to book appointment: ${e.toString()}',
-        backgroundColor: AppColors.warningOrange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 4),
-      );
+      ErrorHandler.handleError(e, customTitle: 'Booking Failed');
     }
   }
 

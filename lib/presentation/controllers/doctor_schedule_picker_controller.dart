@@ -126,7 +126,7 @@ class DoctorSchedulePickerController extends GetxController {
       errorMessage.value = 'Failed to load doctors.';
       // Keep a dev-friendly log.
       // ignore: avoid_print
-      print('loadDoctors error: $e');
+      debugPrint('loadDoctors error: $e');
     } finally {
       isLoadingDoctors.value = false;
     }
@@ -270,7 +270,7 @@ class DoctorSchedulePickerController extends GetxController {
     } catch (e) {
       errorMessage.value = 'Failed to load schedule for this doctor.';
       // ignore: avoid_print
-      print('_loadSchedulesForDoctor error: $e');
+      debugPrint('_loadSchedulesForDoctor error: $e');
     } finally {
       isLoadingSchedules.value = false;
     }

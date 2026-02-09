@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../config/app_routes.dart';
 import '../../../core/api_client.dart';
+import '../../core/utils/error_handler.dart';
 
 class ResetPasswordController extends GetxController {
   /// Uses the same GetConnect-based client as the rest of the app (respects `.env` API_BASE_URL)
@@ -92,16 +93,7 @@ class ResetPasswordController extends GetxController {
       successMessage.value = message;
 
       // Show success message
-      Get.snackbar(
-        'Success',
-        message,
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(10),
-        borderRadius: 8,
-      );
+      ErrorHandler.showSuccess(message);
 
       // Wait for 2 seconds before navigating to login
       await Future.delayed(const Duration(seconds: 2));
@@ -113,8 +105,7 @@ class ResetPasswordController extends GetxController {
         arguments: {'success': message},
       );
     } catch (e) {
-      errorMessage.value =
-          'Network error. Please check your connection and try again.';
+      ErrorHandler.handleError(e, customTitle: 'Reset Failed');
     } finally {
       isLoading.value = false;
     }

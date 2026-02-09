@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/api_client.dart';
 import '../../config/app_routes.dart';
+import '../../core/utils/error_handler.dart';
 
 class OTPVerificationController extends GetxController {
   final ApiClient apiClient = ApiClient();
@@ -66,12 +67,12 @@ class OTPVerificationController extends GetxController {
             _extractMessage(response.body) ??
             response.bodyString ??
             'Failed to resend code';
-        Get.snackbar('Error', msg);
+        ErrorHandler.showError(msg);
       } else {
-        Get.snackbar('Success', 'Code sent successfully');
+        ErrorHandler.showSuccess('Code sent successfully');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to resend code: $e');
+      ErrorHandler.handleError(e, customTitle: 'Resend Failed');
     } finally {
       isLoading.value = false;
     }
@@ -79,7 +80,7 @@ class OTPVerificationController extends GetxController {
 
   Future<void> verifyOtp() async {
     if (otpController.text.isEmpty) {
-      Get.snackbar('Error', 'Please enter the code');
+      ErrorHandler.showError('Please enter the code');
       return;
     }
 
@@ -102,14 +103,14 @@ class OTPVerificationController extends GetxController {
             _extractMessage(response.body) ??
             response.bodyString ??
             'Invalid Code';
-        Get.snackbar('Error', 'Verification failed: $msg');
+        ErrorHandler.showError('Verification failed: $msg');
       } else {
-        Get.snackbar('Success', 'Email verified successfully!');
+        ErrorHandler.showSuccess('Email verified successfully!');
         // Navigate to Login
         Get.offAllNamed(Routes.login);
       }
     } catch (e) {
-      Get.snackbar('Error', 'An error occurred: $e');
+      ErrorHandler.handleError(e, customTitle: 'Verification Error');
     } finally {
       isLoading.value = false;
     }
