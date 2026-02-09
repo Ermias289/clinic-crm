@@ -712,77 +712,44 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                 ),
               ),
               const Divider(height: 1),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+              Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: const ColorScheme.light(
+                    primary: AppColors.primaryBlue,
+                    onPrimary: Colors.white,
+                    onSurface: AppColors.textPrimary,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                    ),
+                  ),
                 ),
                 child: Obx(() {
-                  final dates = _controller.availableDates;
                   final selected = _controller.selectedDate.value;
+                  final dates = _controller.availableDates;
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: dates.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final d = dates[index];
-                      final isSelected =
-                          selected != null && _isSameDate(d, selected);
+                  if (dates.isEmpty) {
+                    return Container(
+                      height: 200,
+                      alignment: Alignment.center,
+                      child: Text(
+                        'No available dates',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                    );
+                  }
 
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectDate(d);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
-                            ),
-                            boxShadow: AppColors.softShadow,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  DateFormat('EEEE, d MMM yyyy').format(d),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                  return CalendarDatePicker(
+                    initialDate: selected ?? (dates.any((d) => _isSameDate(d, DateTime.now())) ? dates.firstWhere((d) => _isSameDate(d, DateTime.now())) : dates.first),
+                    firstDate: dates.first,
+                    lastDate: dates.last,
+                    onDateChanged: (DateTime date) {
+                      _controller.selectDate(date);
+                      Get.back();
+                    },
+                    selectableDayPredicate: (DateTime date) {
+                      return dates.any((d) => _isSameDate(d, date));
                     },
                   );
                 }),
@@ -894,68 +861,53 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                   final times = _controller.availableTimes;
                   final selected = _controller.selectedTime.value;
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: times.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final t = times[index];
-                      final isSelected =
-                          selected != null && _isSameTime(t, selected);
+                  final morningSlots = times.where((t) => (t.hour < 12) || (t.hour == 12 && t.minute <= 30)).toList();
+                  final afternoonSlots = times.where((t) => (t.hour > 12) || (t.hour == 12 && t.minute > 30)).toList();
 
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectTime(t);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (morningSlots.isNotEmpty) ...[
+                          Text('Morning Slots', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                          const SizedBox(height: 12),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 2.2,
                             ),
-                            boxShadow: AppColors.softShadow,
+                            itemCount: morningSlots.length,
+                            itemBuilder: (context, index) {
+                              return _buildTimeSlotItem(morningSlots[index], selected);
+                            },
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time_rounded,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _formatTime(context, t),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
+                          const SizedBox(height: 24),
+                        ],
+                        if (afternoonSlots.isNotEmpty) ...[
+                          Text('Afternoon Slots', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                          const SizedBox(height: 12),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 2.2,
+                            ),
+                            itemCount: afternoonSlots.length,
+                            itemBuilder: (context, index) {
+                              return _buildTimeSlotItem(afternoonSlots[index], selected);
+                            },
                           ),
-                        ),
-                      );
-                    },
+                        ],
+                      ],
+                    ),
                   );
                 }),
               ),
@@ -965,6 +917,37 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
         ),
       ),
       isScrollControlled: true,
+    );
+  }
+
+  Widget _buildTimeSlotItem(TimeOfDay t, TimeOfDay? selected) {
+    final isSelected = selected != null && _isSameTime(t, selected);
+    return InkWell(
+      onTap: () {
+        _controller.selectTime(t);
+        Get.back();
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue.withOpacity(0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryBlue : AppColors.textHint.withOpacity(0.15),
+            width: 1.2,
+          ),
+          boxShadow: AppColors.softShadow,
+        ),
+        child: Text(
+          _formatTime(context, t),
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+          ),
+        ),
+      ),
     );
   }
 

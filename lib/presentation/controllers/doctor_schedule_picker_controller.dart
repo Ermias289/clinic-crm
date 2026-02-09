@@ -490,12 +490,17 @@ class DoctorSchedulePickerController extends GetxController {
       return const [];
     }
 
-    // Use 90 minutes (1:30) as requested
-    final slotMinutes = 90;
+    // Use 30 minutes as requested
+    final slotMinutes = 30;
+
+    // Cap the end time at 11:00 PM (1380 minutes) if schedule goes later.
+    // If schedule ends earlier, respect the schedule.
+    final capMin = 23 * 60; // 11:00 PM
+    final actualToMin = toMin > capMin ? capMin : toMin;
 
     // Build slots [start, end) with step = slotMinutes.
     final slots = <TimeOfDay>[];
-    for (var m = fromMin; m + slotMinutes <= toMin; m += slotMinutes) {
+    for (var m = fromMin; m + slotMinutes <= actualToMin; m += slotMinutes) {
       final slot = _minutesToTime(m);
       slots.add(slot);
     }
