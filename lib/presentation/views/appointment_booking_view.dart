@@ -31,6 +31,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   DateTime? selectedDate;
   String? selectedTime;
   DateTime? selectedDateTime;
+  int? selectedBranchId;
+  String? selectedBranchName;
 
   @override
   void initState() {
@@ -115,6 +117,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         selectedDate = result['date'] as DateTime?;
         selectedTime = result['time'] as String?;
         selectedDateTime = result['dateTime'] as DateTime?;
+        selectedBranchId = result['branchId'] as int?;
+        selectedBranchName = result['branchName'] as String?;
       });
     }
   }
@@ -202,6 +206,12 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                       Icons.access_time,
                       'Time',
                       DateFormat.jm().format(selectedDateTime!),
+                    ),
+                    const Divider(height: 24),
+                    _buildDetailRow(
+                      Icons.location_on,
+                      'Branch',
+                      selectedBranchName ?? 'N/A',
                     ),
                   ],
                 ),
@@ -309,9 +319,10 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       final response = await apiClient.post('/Appointment', {
         'dentistryId': service.id,
         'medicalProfessionalId': selectedDoctorId,
-        'patientId': patientId, // Added missing patient ID
+        'patientId': patientId,
         'day': dateOnly,
         'reservationTime': timeOnly,
+        'branchId': selectedBranchId,
       });
 
       // Close loading dialog
