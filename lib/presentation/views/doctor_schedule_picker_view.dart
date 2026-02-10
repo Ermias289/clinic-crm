@@ -807,9 +807,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
       final selected = _controller.selectedTime.value;
 
-      final label = selected != null
-          ? _formatTime(context, selected)
-          : 'Choose Time';
+      final label = selected ?? 'Choose Time';
 
       return _SelectionCard(
         title: 'Select Time',
@@ -866,12 +864,16 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                   final selected = _controller.selectedTime.value;
 
                   final morningSlots = times.where((t) {
-                    final minutes = t.hour * 60 + t.minute;
-                    return minutes >= 120 && minutes <= 390; // 2:00 AM to 6:30 AM
+                    final parsed = _controller.parseTimeOfDay(t);
+                    if (parsed == null) return false;
+                    final minutes = parsed.hour * 60 + parsed.minute;
+                    return minutes >= 120 && minutes <= 750; // 2:00 AM to 12:30 PM
                   }).toList();
                   final afternoonSlots = times.where((t) {
-                    final minutes = t.hour * 60 + t.minute;
-                    return minutes < 120 || minutes > 390;
+                    final parsed = _controller.parseTimeOfDay(t);
+                    if (parsed == null) return true;
+                    final minutes = parsed.hour * 60 + parsed.minute;
+                    return minutes < 120 || minutes > 750;
                   }).toList();
 
                   return SingleChildScrollView(
@@ -930,8 +932,8 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     );
   }
 
-  Widget _buildTimeSlotItem(TimeOfDay t, TimeOfDay? selected) {
-    final isSelected = selected != null && _isSameTime(t, selected);
+  Widget _buildTimeSlotItem(String t, String? selected) {
+    final isSelected = selected == t;
     return InkWell(
       onTap: () {
         _controller.selectTime(t);
@@ -950,7 +952,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
           boxShadow: AppColors.softShadow,
         ),
         child: Text(
-          _formatTime(context, t),
+          t,
           style: AppTextStyles.bodyMedium.copyWith(
             fontWeight: FontWeight.w600,
             fontSize: 13,

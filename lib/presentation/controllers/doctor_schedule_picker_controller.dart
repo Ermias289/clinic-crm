@@ -53,11 +53,11 @@ class DoctorSchedulePickerController extends GetxController {
   final selectedBranch = Rxn<BranchSettingModel>();
   final selectedDoctor = Rxn<MedicalProfessional>();
   final selectedDate = Rxn<DateTime>(); // date only (yyyy-mm-dd)
-  final selectedTime = Rxn<TimeOfDay>();
+  final selectedTime = RxnString();
 
   // Availability (derived)
   final availableDates = <DateTime>[].obs; // date only
-  final availableTimes = <TimeOfDay>[].obs;
+  final availableTimes = <String>[].obs;
 
   // Optional constraints
   int? _serviceDurationInMinutes;
@@ -225,8 +225,8 @@ class DoctorSchedulePickerController extends GetxController {
         _serviceId!,
       );
     } else {
-      // Fallback to local computation if API cannot be called
-      _recomputeAvailableTimesLocally(date);
+      // API call required but missing IDs
+      availableTimes.clear();
     }
   }
 
@@ -245,12 +245,7 @@ class DoctorSchedulePickerController extends GetxController {
         serviceId,
       );
 
-      final parsedSlots = slots
-          .map((s) => _parseTimeOfDay(s))
-          .whereType<TimeOfDay>()
-          .toList();
-
-      availableTimes.assignAll(parsedSlots);
+      availableTimes.assignAll(slots);
 
       if (availableTimes.isNotEmpty) {
         selectedTime.value = availableTimes.first;
@@ -263,7 +258,7 @@ class DoctorSchedulePickerController extends GetxController {
     }
   }
 
-  void selectTime(TimeOfDay time) {
+  void selectTime(String time) {
     selectedTime.value = time;
   }
 
@@ -279,7 +274,11 @@ class DoctorSchedulePickerController extends GetxController {
     final d = selectedDate.value;
     final t = selectedTime.value;
     if (d == null || t == null) return null;
-    return DateTime(d.year, d.month, d.day, t.hour, t.minute);
+
+    final time = parseTimeOfDay(t);
+    if (time == null) return null;
+
+    return DateTime(d.year, d.month, d.day, time.hour, time.minute);
   }
 
   /// Clears all selections (doctor included).
@@ -414,19 +413,16 @@ class DoctorSchedulePickerController extends GetxController {
       // If dayOfWeek is provided, only include matching days.
       final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
 
-      for (
-        var day = clampedStart;
-        !day.isAfter(clampedEnd);
-        day = day.add(const Duration(days: 1))
-      ) {
-        if (targetDow != null && day.weekday != targetDow) continue;
+        for (
+          var day = clampedStart;
+          !day.isAfter(clampedEnd);
+          day = day.add(const Duration(days: 1))
+        ) {
+          if (targetDow != null && day.weekday != targetDow) continue;
 
-        // Only add the date if it has at least one available slot.
-        final slots = _buildTimeSlotsForScheduleOnDate(schedule, day);
-        if (slots.isNotEmpty) {
+          // If the schedule applies to this day, it's potentially available.
           dates.add(day);
         }
-      }
     }
 
     final sorted = dates.toList()..sort((a, b) => a.compareTo(b));
@@ -439,47 +435,7 @@ class DoctorSchedulePickerController extends GetxController {
   }
 
   void _recomputeAvailableTimesLocally(DateTime date) {
-    final schedules = schedulesForSelectedDoctor;
-    if (schedules.isEmpty) return;
-
-    final slots = <TimeOfDay>{};
-
-    for (final schedule in schedules) {
-      // If dayOfWeek constraint exists, respect it.
-      final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
-      if (targetDow != null && date.weekday != targetDow) continue;
-
-      // If schedule has date bounds, respect them.
-      final start = _dateOnly(schedule.startDate ?? date);
-      final end = _dateOnly(schedule.endDate ?? date);
-      if (date.isBefore(start) || date.isAfter(end)) continue;
-
-      final scheduleSlots = _buildTimeSlotsForScheduleOnDate(schedule, date);
-      slots.addAll(scheduleSlots);
-    }
-
-    final list = slots.toList()
-      ..sort((a, b) => _timeToMinutes(a).compareTo(_timeToMinutes(b)));
-
-    // Remove slots that are in the past (if user chose today).
-    final now = DateTime.now();
-    if (_isSameDate(date, now)) {
-      list.removeWhere((t) {
-        final dt = DateTime(date.year, date.month, date.day, t.hour, t.minute);
-        // require at least a small lead time
-        return dt.isBefore(now.add(const Duration(minutes: 5)));
-      });
-    }
-
-    // Filter out booked slots
-    final availableSlots = _filterOutBookedSlots(list, date);
-
-    availableTimes.assignAll(availableSlots);
-
-    // Auto-select first available time.
-    if (availableTimes.isNotEmpty) {
-      selectedTime.value = availableTimes.first;
-    }
+    // This logic is now handled by the server
   }
 
   /// Filters out time slots that are already booked by existing appointments
@@ -531,37 +487,8 @@ class DoctorSchedulePickerController extends GetxController {
     DoctorSchedule schedule,
     DateTime date,
   ) {
-    final from = _parseTimeOfDay(schedule.startTime);
-    final to = _parseTimeOfDay(schedule.endTime);
-
-    if (from == null || to == null) {
-      return const [];
-    }
-
-    final fromMin = _timeToMinutes(from);
-    final toMin = _timeToMinutes(to);
-
-    // If end is not after start, treat as invalid.
-    if (toMin <= fromMin) {
-      return const [];
-    }
-
-    // Use 30 minutes as requested
-    final slotMinutes = 30;
-
-    // Cap the end time at 11:00 PM (1380 minutes) if schedule goes later.
-    // If schedule ends earlier, respect the schedule.
-    final capMin = 23 * 60; // 11:00 PM
-    final actualToMin = toMin > capMin ? capMin : toMin;
-
-    // Build slots [start, end) with step = slotMinutes.
-    final slots = <TimeOfDay>[];
-    for (var m = fromMin; m + slotMinutes <= actualToMin; m += slotMinutes) {
-      final slot = _minutesToTime(m);
-      slots.add(slot);
-    }
-
-    return slots;
+    // This logic is now handled by the server
+    return const [];
   }
 
   // -------------------------
@@ -610,7 +537,7 @@ class DoctorSchedulePickerController extends GetxController {
   /// - "14:00" -> 2:00 PM
   /// - "09:00:00" -> 9:00 AM
   /// - "2025-01-01T09:00:00" -> 9:00 AM
-  TimeOfDay? _parseTimeOfDay(String? value) {
+  TimeOfDay? parseTimeOfDay(String? value) {
     if (value == null) return null;
     final v = value.trim();
     if (v.isEmpty) return null;
@@ -639,9 +566,7 @@ class DoctorSchedulePickerController extends GetxController {
       'selectedDoctorId': selectedDoctor.value?.id,
       'selectedDoctorName': selectedDoctor.value?.fullName,
       'selectedDate': selectedDate.value?.toIso8601String(),
-      'selectedTime': selectedTime.value == null
-          ? null
-          : '${selectedTime.value!.hour.toString().padLeft(2, '0')}:${selectedTime.value!.minute.toString().padLeft(2, '0')}',
+      'selectedTime': selectedTime.value,
       'availableDatesCount': availableDates.length,
       'availableTimesCount': availableTimes.length,
       'schedulesCount': schedulesForSelectedDoctor.length,

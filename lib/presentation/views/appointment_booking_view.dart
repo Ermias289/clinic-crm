@@ -29,7 +29,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   String? selectedDoctorName;
   int? selectedDoctorId;
   DateTime? selectedDate;
-  TimeOfDay? selectedTime;
+  String? selectedTime;
   DateTime? selectedDateTime;
 
   @override
@@ -113,7 +113,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         selectedDoctorId = result['doctorId'] as int?;
         selectedDoctorName = result['doctorName'] as String?;
         selectedDate = result['date'] as DateTime?;
-        selectedTime = result['time'] as TimeOfDay?;
+        selectedTime = result['time'] as String?;
         selectedDateTime = result['dateTime'] as DateTime?;
       });
     }
