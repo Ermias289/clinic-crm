@@ -56,20 +56,33 @@ export const doctorScheduleService = {
   },
 
   getByDoctorId: async (doctorId: number): Promise<DoctorScheduleDTO[]> => {
-    // Since the server doesn't have the doctor-specific endpoint, use client-side filtering
-    console.log("Getting schedules for doctor:", doctorId, "using client-side filtering");
-    const response = await apiClient.get<DoctorScheduleDTO[]>('/api/DoctorSchedule');
-    const filtered = response.data.filter(schedule => schedule.medicalProfessionalId === doctorId);
-    console.log("Found", filtered.length, "schedules for doctor", doctorId);
-    return filtered;
+    const response = await apiClient.get<DoctorScheduleDTO[]>(`/api/DoctorSchedule/getByDocId${doctorId}`);
+    return response.data;
   },
 
-  create: async (data: AddDoctorScheduleDTO): Promise<DoctorScheduleDTO> => {
-    console.log("Creating doctor schedule:", data);
+create: async (data: AddDoctorScheduleDTO): Promise<DoctorScheduleDTO> => {
+  console.log("Creating doctor schedule:", data);
+  try {
     const response = await apiClient.post<DoctorScheduleDTO>('/api/DoctorSchedule', data);
     console.log("Schedule created successfully:", response.data);
     return response.data;
-  },
+  } catch (error: any) {
+    console.error("Schedule creation FAILED. Full error:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,  // <-- This contains the actual error message!
+      headers: error.response?.headers,
+      requestData: data,
+      errorMessage: error.message,
+      errorCode: error.code
+    });
+    
+    // Also log the raw response for debugging
+    console.error("Raw error response:", error.response);
+    
+    throw error;
+  }
+},
 
   update: async (data: UpdateDoctorScheduleDTO): Promise<DoctorScheduleDTO> => {
     console.log("Updating doctor schedule:", data);

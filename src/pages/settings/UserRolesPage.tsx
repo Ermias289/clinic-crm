@@ -695,7 +695,7 @@ const UserRolesPage = () => {
                           <Switch
                             checked={(selectedRole.permissions || []).includes(perm.id)}
                             onCheckedChange={() => handlePermissionToggle(selectedRole.id, perm.id)}
-                            disabled={selectedRole.name === 'Admin'}
+                            // disabled={selectedRole.name === 'Admin'}
                           />
                         </div>
                       ))}
@@ -716,7 +716,7 @@ const UserRolesPage = () => {
             <Button 
               variant="dental" 
               onClick={handleSavePermissions}
-              disabled={selectedRole?.name === 'Admin'}
+              // disabled={selectedRole?.name === 'Admin'}
             >
               Save Permissions
             </Button>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,13 +54,15 @@ import {
   MedicalProfessional,
   medicalProfessionalsService,
   UpdateMedicalProfessionalDTO,
-  CreateMedicalProfessionalDTO
+  CreateMedicalProfessionalDTO,
+  BranchServiceDTO
 } from "@/lib/api/medicalProfessionals";
 import { toast } from "@/hooks/use-toast";
 import { medicalServicesService, MedicalService } from "@/lib/api/medicalServices";
 import { branchService, BranchSettingDTO } from "@/lib/api/branches";
 import { fileUploadService } from "@/lib/api/fileUpload";
 import { doctorScheduleService, DoctorScheduleDTO, AddDoctorScheduleDTO } from "@/lib/api/doctorSchedules";
+import { docServiceService, DocServiceDTO, AddDocServiceDTO } from "@/lib/api/docServices";
 
 interface MedicalServiceWithName {
   id: number;
@@ -111,10 +113,19 @@ const DoctorsPage = () => {
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [editingDoctor, setEditingDoctor] = useState<MedicalProfessional | null>(null);
+  
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isServicesLoading, setIsServicesLoading] = useState(false);
+  const [isBranchesLoading, setIsBranchesLoading] = useState(false);
 
   // Delete confirmation state
   const [doctorToDelete, setDoctorToDelete] = useState<MedicalProfessional | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Error states
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
 
   // Create form states
   const [createForm, setCreateForm] = useState({
@@ -150,7 +161,7 @@ const DoctorsPage = () => {
           id: `slot-${day.key}-1`,
           branchId: 0,
           startTime: "08:00",
-          endTime: "06:00"
+          endTime: "17:00"
         }]
       }
     }), {})
@@ -190,14 +201,15 @@ const DoctorsPage = () => {
         slots: [{
           id: `edit-slot-${day.key}-1`,
           branchId: 0,
-          startTime: "02:00",
-          endTime: "11:00"
+          startTime: "08:00",
+          endTime: "17:00"
         }]
       }
     }), {})
   );
   
   const [existingSchedules, setExistingSchedules] = useState<DoctorScheduleDTO[]>([]);
+  const [existingDocServices, setExistingDocServices] = useState<DocServiceDTO[]>([]);
 
   const createFileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -209,28 +221,93 @@ const DoctorsPage = () => {
     fetchData();
   }, []);
 
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (createProfilePicturePreview) {
+        URL.revokeObjectURL(createProfilePicturePreview);
+      }
+      if (editProfilePicturePreview) {
+        URL.revokeObjectURL(editProfilePicturePreview);
+      }
+    };
+  }, [createProfilePicturePreview, editProfilePicturePreview]);
+
   const fetchData = async () => {
+    setIsLoading(true);
+    console.log("🔍 Starting data fetch...");
+    
     try {
-      const [doctorsData, servicesData, branchesData] = await Promise.all([
-        medicalProfessionalsService.getAll(),
-        medicalServicesService.getAll(),
-        branchService.getAll(),
-      ]);
+      // Fetch doctors
+      console.log("Fetching doctors...");
+      const doctorsData = await medicalProfessionalsService.getAll();
+      console.log("Doctors fetched:", doctorsData.length);
       setDoctors(doctorsData);
-      setServices(servicesData);
-      setBranches(branchesData);
-    } catch (error) {
+
+      // Fetch services
+      setIsServicesLoading(true);
+      try {
+        console.log("Fetching services...");
+        const servicesData = await medicalServicesService.getAll();
+        console.log("Services fetched:", servicesData.length);
+        
+        // Transform the services data
+        const transformedServices = servicesData.map(service => ({
+          id: service.id,
+          name: service.name || service.serviceReference || `Service ${service.id}`,
+          description: service.description,
+          durationInMinutes: service.durationInMinutes,
+          servicePicture: service.servicePicture
+        }));
+        setServices(transformedServices);
+      } catch (serviceError: any) {
+        console.error("Error fetching services:", serviceError);
+        toast({
+          title: "Services not loaded",
+          description: "Could not load medical services. Please refresh.",
+          variant: "destructive",
+        });
+        setServices([]);
+      } finally {
+        setIsServicesLoading(false);
+      }
+
+      // Fetch branches
+      setIsBranchesLoading(true);
+      try {
+        console.log("Fetching branches...");
+        const branchesData = await branchService.getAll();
+        console.log("Branches fetched:", branchesData.length);
+        setBranches(branchesData);
+      } catch (branchError: any) {
+        console.error("Error fetching branches:", branchError);
+        toast({
+          title: "Branches not loaded",
+          description: "Could not load branches. Please refresh.",
+          variant: "destructive",
+        });
+        setBranches([]);
+      } finally {
+        setIsBranchesLoading(false);
+      }
+
+    } catch (error: any) {
       console.error("Error fetching data:", error);
       toast({
         title: "Failed to load data",
+        description: error.response?.data?.message || "Please check your connection and try again",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const filteredDoctors = doctors.filter((d) =>
-    `${d.fName} ${d.lName}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredDoctors = useMemo(() => {
+    return doctors.filter((d) =>
+      `${d.fName} ${d.lName}`.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [doctors, search]);
 
   // Handle file selection for create dialog
   const handleCreateFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -315,13 +392,21 @@ const DoctorsPage = () => {
         title: "Profile picture uploaded",
         description: "Image successfully uploaded to server",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error uploading image:", error);
+      const errorMessage = error.response?.data?.message || "Could not upload profile picture";
       toast({
         title: "Upload failed",
-        description: "Could not upload profile picture",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Store the error for display in form
+      if (isCreate) {
+        setCreateError(errorMessage);
+      } else {
+        setEditError(errorMessage);
+      }
     } finally {
       if (isCreate) {
         setIsCreateUploading(false);
@@ -331,15 +416,15 @@ const DoctorsPage = () => {
     }
   };
 
-  // ===== NEW: Schedule Management Functions =====
+  // ===== Schedule Management Functions =====
 
   // Add a new time slot to a day
   const addTimeSlot = (dayKey: string, isCreate: boolean) => {
     const newSlot: DailyScheduleSlot = {
       id: generateId(),
       branchId: 0,
-      startTime: "02:00",
-      endTime: "11:00"
+      startTime: "08:00",
+      endTime: "17:00"
     };
 
     if (isCreate) {
@@ -477,6 +562,7 @@ const DoctorsPage = () => {
   // Add branch with services for create form
   const handleAddBranchServiceCreate = (branchId: number, serviceIds: number[]) => {
     if (branchId === 0 || serviceIds.length === 0) {
+      setCreateError("Please select both a branch and at least one service");
       toast({
         title: "Missing information",
         description: "Please select both a branch and at least one service",
@@ -486,6 +572,7 @@ const DoctorsPage = () => {
     }
 
     if (createBranchServices.some(bs => bs.branchId === branchId)) {
+      setCreateError("This branch already has services assigned. Please edit the existing entry.");
       toast({
         title: "Branch already added",
         description: "This branch already has services assigned. Please edit the existing entry.",
@@ -495,6 +582,7 @@ const DoctorsPage = () => {
     }
 
     setCreateBranchServices([...createBranchServices, { branchId, serviceIds }]);
+    setCreateError(null); // Clear error on success
   };
 
   // Remove branch service for create form
@@ -531,9 +619,13 @@ const DoctorsPage = () => {
 
   // Similar functions for edit form
   const handleAddBranchServiceEdit = (branchId: number, serviceIds: number[]) => {
-    if (branchId === 0 || serviceIds.length === 0) return;
+    if (branchId === 0 || serviceIds.length === 0) {
+      setEditError("Please select both a branch and at least one service");
+      return;
+    }
     
     if (editBranchServices.some(bs => bs.branchId === branchId)) {
+      setEditError("This branch already has services assigned");
       toast({
         title: "Branch already added",
         description: "This branch already has services assigned",
@@ -543,6 +635,7 @@ const DoctorsPage = () => {
     }
 
     setEditBranchServices([...editBranchServices, { branchId, serviceIds }]);
+    setEditError(null); // Clear error on success
   };
 
   const handleRemoveBranchServiceEdit = (branchId: number) => {
@@ -575,14 +668,18 @@ const DoctorsPage = () => {
   };
 
   // Get available branches (not already selected) for create form
-  const availableCreateBranches = branches.filter(
-    branch => !createBranchServices.some(bs => bs.branchId === branch.id)
-  );
+  const availableCreateBranches = useMemo(() => {
+    return branches.filter(
+      branch => !createBranchServices.some(bs => bs.branchId === branch.id)
+    );
+  }, [branches, createBranchServices]);
 
   // Get available branches for edit form
-  const availableEditBranches = branches.filter(
-    branch => !editBranchServices.some(bs => bs.branchId === branch.id)
-  );
+  const availableEditBranches = useMemo(() => {
+    return branches.filter(
+      branch => !editBranchServices.some(bs => bs.branchId === branch.id)
+    );
+  }, [branches, editBranchServices]);
 
   // Reset create form
   const resetCreateForm = () => {
@@ -610,6 +707,7 @@ const DoctorsPage = () => {
     if (createFileInputRef.current) {
       createFileInputRef.current.value = "";
     }
+    setCreateError(null);
     // Reset schedules to initial state
     setCreateSchedules(
       daysOfWeek.reduce((acc, day) => ({
@@ -619,8 +717,8 @@ const DoctorsPage = () => {
           slots: [{
             id: `slot-${day.key}-1`,
             branchId: 0,
-            startTime: "02:00",
-            endTime: "11:00"
+            startTime: "08:00",
+            endTime: "17:00"
           }]
         }
       }), {})
@@ -654,6 +752,7 @@ const DoctorsPage = () => {
     if (editFileInputRef.current) {
       editFileInputRef.current.value = "";
     }
+    setEditError(null);
     setActiveEditTab("basic");
     // Reset edit schedules
     setEditSchedules(
@@ -664,8 +763,8 @@ const DoctorsPage = () => {
           slots: [{
             id: `edit-slot-${day.key}-1`,
             branchId: 0,
-            startTime: "02:00",
-            endTime: "11:00"
+            startTime: "08:00",
+            endTime: "17:00"
           }]
         }
       }), {})
@@ -695,26 +794,44 @@ const DoctorsPage = () => {
       setEditProfilePicturePreview(getImageUrl(doctor.profilePicture));
     }
 
-    // Convert existing doctor data to branch-service format
-    const branchServices: BranchServiceSelection[] = [];
-    
-    if (doctor.branches && doctor.medicalServices) {
-      doctor.branches.forEach(branch => {
-        const branchId = typeof branch === 'object' ? branch.id : parseInt(branch as string);
-        const serviceIds = doctor.medicalServices.map(service =>
-          typeof service === 'object' ? service.id : parseInt(service as string)
-        ).filter(id => !isNaN(id));
+    // Fetch the doctor's DocService entries to populate branch services
+    try {
+      const docServices = await docServiceService.getByDoctorId(doctor.id);
+      setExistingDocServices(docServices);
+      
+      // Group services by branch
+      const branchServicesMap = new Map<number, number[]>();
+      
+      docServices.forEach(docService => {
+        const branchId = docService.branchSettingId;
+        const serviceId = docService.medicalServiceId;
         
-        if (branchId && serviceIds.length > 0) {
-          branchServices.push({
-            branchId,
-            serviceIds
-          });
+        if (!branchServicesMap.has(branchId)) {
+          branchServicesMap.set(branchId, []);
         }
+        branchServicesMap.get(branchId)?.push(serviceId);
+      });
+
+      // Convert to BranchServiceSelection array
+      const branchServices: BranchServiceSelection[] = [];
+      branchServicesMap.forEach((serviceIds, branchId) => {
+        branchServices.push({
+          branchId,
+          serviceIds
+        });
+      });
+      
+      setEditBranchServices(branchServices);
+    } catch (error: any) {
+      console.error("Error fetching doc services:", error);
+      const errorMessage = error.response?.data?.message || "Unable to load doctor's services.";
+      setEditError(errorMessage);
+      toast({
+        title: "Could not load services",
+        description: errorMessage,
+        variant: "destructive",
       });
     }
-    
-    setEditBranchServices(branchServices);
 
     // Load doctor schedules
     await loadDoctorSchedules(doctor.id);
@@ -728,9 +845,11 @@ const DoctorsPage = () => {
     if (isCreating) return;
     
     setIsCreating(true);
+    setCreateError(null); // Clear previous errors
 
     // Validate required fields
     if (!createForm.fName || !createForm.lName || !createForm.email || !createForm.phoneNumber) {
+      setCreateError("Please fill in all required fields (First Name, Last Name, Email, and Phone Number)");
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields",
@@ -741,6 +860,7 @@ const DoctorsPage = () => {
     }
 
     if (createBranchServices.length === 0) {
+      setCreateError("Please add at least one branch with services");
       toast({
         title: "No branch services configured",
         description: "Please add at least one branch with services",
@@ -751,19 +871,12 @@ const DoctorsPage = () => {
     }
 
     try {
-      // Flatten branchServices into format backend expects
-      const branchServicesFlattened = createBranchServices.flatMap(bs =>
-        bs.serviceIds.map(serviceId => ({
-          branchId: bs.branchId,
-          serviceId: serviceId
-        }))
-      );
-
-      // Extract all unique branch IDs and service IDs for backward compatibility
+      // Extract all unique branch IDs and service IDs
       const allBranchIds = Array.from(new Set(createBranchServices.map(bs => bs.branchId)));
       const allServiceIds = Array.from(new Set(createBranchServices.flatMap(bs => bs.serviceIds)));
 
-      const newDoctor = await medicalProfessionalsService.create({
+      // Create the doctor first
+      const doctorData: CreateMedicalProfessionalDTO = {
         fName: createForm.fName,
         mName: createForm.mName,
         lName: createForm.lName,
@@ -777,23 +890,55 @@ const DoctorsPage = () => {
         status: createForm.status,
         profilePicture: createForm.profilePicture,
         requiresUserAccount: createForm.requiresUserAccount,
-        branches: allBranchIds,
         medicalServicesId: allServiceIds,
-        branchServices: branchServicesFlattened,
-      } as any);
+        branches: allBranchIds,
+      };
 
-      // Save doctor schedules
+      const newDoctor = await medicalProfessionalsService.create(doctorData);
+
+      // Create DocService entries for each branch-service combination
       try {
-        await saveDoctorSchedules(newDoctor.id, createSchedules);
-      } catch (scheduleError) {
+        const docServicePromises: AddDocServiceDTO[] = [];
+        
+        createBranchServices.forEach(branchService => {
+          branchService.serviceIds.forEach(serviceId => {
+            docServicePromises.push({
+              medicalProfessionalId: newDoctor.id,
+              medicalServiceId: serviceId,
+              branchSettingId: branchService.branchId
+            });
+          });
+        });
+
+        if (docServicePromises.length > 0) {
+          await docServiceService.createMultiple(docServicePromises);
+        }
+      } catch (docServiceError: any) {
+        console.error("DocService creation error:", docServiceError);
+        const errorMessage = docServiceError.response?.data?.message || "There was an issue assigning services to branches.";
         toast({
-          title: "Dental professional added but schedules failed",
-          description: "The dental professional was created but there was an issue saving the schedule.",
+          title: "Doctor added but services assignment failed",
+          description: errorMessage,
           variant: "destructive",
         });
       }
 
-      setDoctors((prev) => [...prev, newDoctor]);
+      // Save doctor schedules
+      try {
+        await saveDoctorSchedules(newDoctor.id, createSchedules);
+      } catch (scheduleError: any) {
+        console.error("Schedule creation error:", scheduleError);
+        const errorMessage = scheduleError.response?.data?.message || "There was an issue saving the schedule.";
+        toast({
+          title: "Doctor added but schedules failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+
+      // Refresh doctors list
+      const updatedDoctors = await medicalProfessionalsService.getAll();
+      setDoctors(updatedDoctors);
 
       toast({
         title: "Dental professional added successfully",
@@ -804,9 +949,11 @@ const DoctorsPage = () => {
       setOpenCreate(false);
     } catch (err: any) {
       console.error("Error adding dental professional:", err);
+      const errorMessage = err.response?.data?.message || "Please check the form and try again";
+      setCreateError(errorMessage);
       toast({
         title: "Failed to add dental professional",
-        description: err.response?.data?.message || "Please check the form and try again",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -819,9 +966,11 @@ const DoctorsPage = () => {
     if (!editingDoctor || isUpdating) return;
     
     setIsUpdating(true);
+    setEditError(null); // Clear previous errors
 
     // Validate required fields
     if (!editForm.fName || !editForm.lName || !editForm.email || !editForm.phoneNumber) {
+      setEditError("Please fill in all required fields (First Name, Last Name, Email, and Phone Number)");
       toast({
         title: "Missing required fields",
         description: "Please fill in all required fields",
@@ -832,6 +981,7 @@ const DoctorsPage = () => {
     }
 
     if (editBranchServices.length === 0) {
+      setEditError("Please add at least one branch with services");
       toast({
         title: "No branch services configured",
         description: "Please add at least one branch with services",
@@ -845,19 +995,12 @@ const DoctorsPage = () => {
 
     if (activeEditTab === "basic" || activeEditTab === "services") {
       try {
-        // Flatten branchServices for backend
-        const branchServicesFlattened = editBranchServices.flatMap(bs =>
-          bs.serviceIds.map(serviceId => ({
-            branchId: bs.branchId,
-            serviceId: serviceId
-          }))
-        );
-
         // Extract all unique branch IDs and service IDs
         const allBranchIds = Array.from(new Set(editBranchServices.map(bs => bs.branchId)));
         const allServiceIds = Array.from(new Set(editBranchServices.flatMap(bs => bs.serviceIds)));
 
-        const updatedDoctor = await medicalProfessionalsService.update({
+        // Update the doctor
+        const updateData: UpdateMedicalProfessionalDTO = {
           id: editingDoctor.id,
           fName: editForm.fName,
           mName: editForm.mName,
@@ -872,14 +1015,46 @@ const DoctorsPage = () => {
           status: editForm.status,
           profilePicture: editForm.profilePicture,
           requiresUserAccount: editForm.requiresUserAccount,
-          branches: allBranchIds,
           medicalServicesId: allServiceIds,
-          branchServices: branchServicesFlattened,
-        } as any);
+          branches: allBranchIds,
+        };
 
-        setDoctors((prev) =>
-          prev.map((doc) => (doc.id === editingDoctor.id ? updatedDoctor : doc))
-        );
+        // First, delete all existing DocService entries for this doctor
+        try {
+          await docServiceService.deleteByDoctorId(editingDoctor.id);
+        } catch (deleteError: any) {
+          console.error("Error deleting old DocService entries:", deleteError);
+        }
+
+        // Create new DocService entries
+        try {
+          const docServicePromises: AddDocServiceDTO[] = [];
+          
+          editBranchServices.forEach(branchService => {
+            branchService.serviceIds.forEach(serviceId => {
+              docServicePromises.push({
+                medicalProfessionalId: editingDoctor.id,
+                medicalServiceId: serviceId,
+                branchSettingId: branchService.branchId
+              });
+            });
+          });
+
+          if (docServicePromises.length > 0) {
+            await docServiceService.createMultiple(docServicePromises);
+          }
+        } catch (docServiceError: any) {
+          console.error("DocService creation error:", docServiceError);
+          const errorMessage = docServiceError.response?.data?.message || "Error assigning services";
+          setEditError(`Services assignment failed: ${errorMessage}`);
+        }
+
+        // Update doctor information
+        await medicalProfessionalsService.update(updateData);
+
+        // Refresh doctors list
+        const updatedDoctors = await medicalProfessionalsService.getAll();
+        setDoctors(updatedDoctors);
 
         toast({
           title: "Doctor information updated",
@@ -887,9 +1062,12 @@ const DoctorsPage = () => {
         });
         success = true;
       } catch (err: any) {
+        console.error("Update error:", err);
+        const errorMessage = err.response?.data?.message || `Error: ${err.response?.status} ${err.response?.statusText}`;
+        setEditError(errorMessage);
         toast({
           title: "Doctor info update failed",
-          description: `Error: ${err.response?.status} ${err.response?.statusText}`,
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -901,10 +1079,13 @@ const DoctorsPage = () => {
           description: "The doctor's schedule has been updated successfully",
         });
         success = true;
-      } catch (scheduleError) {
+      } catch (scheduleError: any) {
+        console.error("Schedule update error:", scheduleError);
+        const errorMessage = scheduleError.response?.data?.message || "There was an issue updating the doctor's schedule.";
+        setEditError(errorMessage);
         toast({
           title: "Schedule update failed",
-          description: "There was an issue updating the doctor's schedule.",
+          description: errorMessage,
           variant: "destructive",
         });
       }
@@ -939,18 +1120,41 @@ const DoctorsPage = () => {
     if (!doctorToDelete) return;
 
     try {
+      // First delete all DocService entries for this doctor
+      try {
+        await docServiceService.deleteByDoctorId(doctorToDelete.id);
+      } catch (docServiceError: any) {
+        console.error("Error deleting doc services:", docServiceError);
+      }
+
+      // Delete all schedules for this doctor
+      try {
+        const schedules = await doctorScheduleService.getByDoctorId(doctorToDelete.id);
+        const deletePromises = schedules.map(schedule => 
+          doctorScheduleService.delete(schedule.id)
+        );
+        await Promise.all(deletePromises);
+      } catch (scheduleError: any) {
+        console.error("Error deleting schedules:", scheduleError);
+      }
+
+      // Finally delete the doctor
       await medicalProfessionalsService.delete(doctorToDelete.id);
-      setDoctors((prev) => prev.filter((d) => d.id !== doctorToDelete.id));
+      
+      // Refresh doctors list
+      const updatedDoctors = await medicalProfessionalsService.getAll();
+      setDoctors(updatedDoctors);
 
       toast({
         title: "Dental professional deleted",
         description: `${doctorToDelete.fName} ${doctorToDelete.lName} has been removed`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting dental professional:", error);
+      const errorMessage = error.response?.data?.message || "Could not delete the dental professional";
       toast({
         title: "Delete failed",
-        description: "Could not delete the dental professional",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -965,15 +1169,18 @@ const DoctorsPage = () => {
   };
 
   // Helper function to get service name safely
-  const getServiceName = (service: MedicalServiceWithName | string | any): string => {
+  const getServiceName = useCallback((service: MedicalServiceWithName | string | any): string => {
     if (typeof service === 'object' && service !== null && 'name' in service) {
       return service.name;
     }
     if (typeof service === 'string') {
       return service;
     }
+    if (typeof service === 'object' && service !== null && 'serviceReference' in service) {
+      return service.serviceReference;
+    }
     return "Unknown Service";
-  };
+  }, []);
 
   // Update create form field
   const updateCreateForm = (field: keyof typeof createForm, value: any) => {
@@ -985,13 +1192,14 @@ const DoctorsPage = () => {
     setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
-  // Helper function to format time for display
+  // Helper function to format time for display - FIXED BUG HERE
   const formatTimeForDisplay = (timeString: string): string => {
     if (!timeString || timeString === "" || timeString === "00:00:00" || timeString === "00:00") {
-      return "02:00";
+      return "08:00";
     }
 
     if (timeString.length > 5) {
+      // Handle "02:00:00" format -> "02:00"
       return timeString.substring(0, 5);
     }
 
@@ -1002,13 +1210,13 @@ const DoctorsPage = () => {
       return `${hour}:${minute}`;
     }
 
-    return "02:00";
+    return "08:00";
   };
 
   // Helper function to format time for backend
   const formatTimeForBackend = (timeString: string): string => {
     if (!timeString || timeString === "") {
-      return "02:00";
+      return "08:00";
     }
 
     if (timeString.match(/^\d{1,2}:\d{2}$/)) {
@@ -1018,7 +1226,7 @@ const DoctorsPage = () => {
       return `${hour}:${minute}`;
     }
 
-    return "02:00";
+    return "08:00";
   };
 
   // Load doctor schedules for editing
@@ -1051,8 +1259,8 @@ const DoctorsPage = () => {
         const daySchedules = schedulesByDay[day.key] || [{
           id: generateId(),
           branchId: 0,
-          startTime: "02:00",
-          endTime: "11:00"
+          startTime: "08:00",
+          endTime: "17:00"
         }];
         
         updatedSchedules[day.key] = {
@@ -1063,9 +1271,12 @@ const DoctorsPage = () => {
 
       setEditSchedules(updatedSchedules);
     } catch (error: any) {
+      console.error("Error loading schedules:", error);
+      const errorMessage = error.response?.data?.message || "Unable to load existing schedules.";
+      setEditError(errorMessage);
       toast({
         title: "Could not load schedules",
-        description: "Unable to load existing schedules.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -1097,7 +1308,10 @@ const DoctorsPage = () => {
       if (schedulePromises.length > 0) {
         await Promise.all(schedulePromises);
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error saving schedules:", error);
+      const errorMessage = error.response?.data?.message || "Error saving schedules";
+      setCreateError(errorMessage);
       throw error;
     }
   };
@@ -1139,13 +1353,15 @@ const DoctorsPage = () => {
       const updatedSchedules = await doctorScheduleService.getByDoctorId(doctorId);
       setExistingSchedules(updatedSchedules);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in updateDoctorSchedules:", error);
+      const errorMessage = error.response?.data?.message || "Error updating schedules";
+      setEditError(errorMessage);
       throw error;
     }
   };
 
-  // ===== NEW: Day Schedule Component =====
+  // ===== Day Schedule Component =====
   const DayScheduleComponent = ({ 
     day, 
     isCreate = false 
@@ -1154,8 +1370,6 @@ const DoctorsPage = () => {
     isCreate?: boolean 
   }) => {
     const daySchedule = isCreate ? createSchedules[day.key] : editSchedules[day.key];
-    const schedule = isCreate ? createSchedules : editSchedules;
-    const setSchedule = isCreate ? setCreateSchedules : setEditSchedules;
 
     return (
       <div className={`border rounded-lg p-4 transition-colors ${daySchedule.isWorking ? 'bg-card' : 'bg-muted/30'}`}>
@@ -1293,12 +1507,27 @@ const DoctorsPage = () => {
     const [selectedBranchId, setSelectedBranchId] = useState<number>(0);
     const [selectedServiceIds, setSelectedServiceIds] = useState<number[]>([]);
 
+    // Get services that are NOT currently selected (for the dropdown)
+    const availableServicesForDropdown = useMemo(() => {
+      return services.filter(service => !selectedServiceIds.includes(service.id));
+    }, [services, selectedServiceIds]);
+
     const handleAddBranch = () => {
       if (selectedBranchId && selectedServiceIds.length > 0) {
         onAddBranchService(selectedBranchId, selectedServiceIds);
         setSelectedBranchId(0);
-        setSelectedServiceIds([]);
+        setSelectedServiceIds([]); // Clear the selected services after adding
       }
+    };
+
+    const handleAddService = (serviceId: number) => {
+      if (!selectedServiceIds.includes(serviceId)) {
+        setSelectedServiceIds([...selectedServiceIds, serviceId]);
+      }
+    };
+
+    const handleRemoveSelectedService = (serviceId: number) => {
+      setSelectedServiceIds(selectedServiceIds.filter(id => id !== serviceId));
     };
 
     return (
@@ -1316,12 +1545,16 @@ const DoctorsPage = () => {
               <Label htmlFor={`branch-select-${isEdit ? 'edit' : 'create'}`}>Select Branch</Label>
               <Select
                 value={selectedBranchId.toString()}
-                onValueChange={(value) => setSelectedBranchId(parseInt(value))}
+                onValueChange={(value) => {
+                  const newBranchId = parseInt(value);
+                  setSelectedBranchId(newBranchId);
+                }}
               >
                 <SelectTrigger id={`branch-select-${isEdit ? 'edit' : 'create'}`}>
                   <SelectValue placeholder="Choose a branch..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="0">Select branch...</SelectItem>
                   {availableBranches.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id.toString()}>
                       {branch.name}
@@ -1338,9 +1571,7 @@ const DoctorsPage = () => {
                 value=""
                 onValueChange={(value) => {
                   const serviceId = parseInt(value);
-                  if (!selectedServiceIds.includes(serviceId)) {
-                    setSelectedServiceIds([...selectedServiceIds, serviceId]);
-                  }
+                  handleAddService(serviceId);
                 }}
                 disabled={selectedBranchId === 0}
               >
@@ -1348,11 +1579,17 @@ const DoctorsPage = () => {
                   <SelectValue placeholder={selectedBranchId === 0 ? "Select branch first" : "Choose services..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  {services.map((service) => (
-                    <SelectItem key={service.id} value={service.id.toString()}>
-                      {service.name}
-                    </SelectItem>
-                  ))}
+                  {availableServicesForDropdown.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground">
+                      No more services available
+                    </div>
+                  ) : (
+                    availableServicesForDropdown.map((service) => (
+                      <SelectItem key={service.id} value={service.id.toString()}>
+                        {service.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               
@@ -1365,7 +1602,7 @@ const DoctorsPage = () => {
                         {service.name}
                         <XCircle
                           className="w-3 h-3 cursor-pointer hover:text-destructive"
-                          onClick={() => setSelectedServiceIds(selectedServiceIds.filter(id => id !== serviceId))}
+                          onClick={() => handleRemoveSelectedService(serviceId)}
                         />
                       </Badge>
                     ) : null;
@@ -1394,6 +1631,7 @@ const DoctorsPage = () => {
             <div className="space-y-3">
               {branchServices.map((branchService) => {
                 const branch = branches.find(b => b.id === branchService.branchId);
+                
                 return branch ? (
                   <div key={branch.id} className="border rounded-lg p-4 space-y-3">
                     <div className="flex items-center justify-between">
@@ -1469,6 +1707,33 @@ const DoctorsPage = () => {
     );
   };
 
+  // ===== Error Message Component =====
+  const ErrorMessage = ({ message, onClose }: { message: string | null; onClose: () => void }) => {
+    if (!message) return null;
+    
+    return (
+      <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-2">
+            <XCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" />
+            <div className="space-y-1">
+              <p className="font-medium text-destructive">Error</p>
+              <p className="text-sm">{message}</p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-6 w-6 p-0 hover:bg-destructive/10"
+          >
+            <XCircle className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <DashboardLayout
       title="Dental Professionals"
@@ -1490,6 +1755,14 @@ const DoctorsPage = () => {
             <DialogHeader className="p-6 pb-0">
               <DialogTitle className="py-3">Add New Dental Professional</DialogTitle>
             </DialogHeader>
+
+            {/* Error message for create dialog */}
+            <div className="px-6">
+              <ErrorMessage 
+                message={createError} 
+                onClose={() => setCreateError(null)} 
+              />
+            </div>
 
             <Tabs defaultValue="basic" className="w-full">
               <div className="px-6">
@@ -1805,95 +2078,116 @@ const DoctorsPage = () => {
         </CardContent>
       </Card>
 
-      {/* DENTAL PROFESSIONAL CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {filteredDoctors.map((doc) => (
-          <Card key={doc.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-            <CardContent className="p-0">
-              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 p-6 flex flex-col items-center">
-                <div className="absolute top-4 right-4">
-                  <StatusBadge status={doc.status} />
-                </div>
-
-                <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                  {doc.profilePicture ? (
-                    <AvatarImage
-                      src={getImageUrl(doc.profilePicture)}
-                      alt={`Dr. ${doc.fName} ${doc.lName}`}
-                    />
-                  ) : null}
-                  <AvatarFallback className="text-2xl bg-white">
-                    {getInitials(doc.fName, doc.lName)}
-                  </AvatarFallback>
-                </Avatar>
-
-                <h3 className="mt-4 text-xl font-bold text-center">
-                  Dr. {doc.fName} {doc.mName && `${doc.mName} `}{doc.lName}
-                </h3>
-                <p className="text-sm text-muted-foreground text-center">{doc.specialty || "General Dentist"}</p>
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading dental professionals...</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* DENTAL PROFESSIONAL CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {filteredDoctors.length === 0 ? (
+              <div className="col-span-3 text-center py-12">
+                <p className="text-muted-foreground">No dental professionals found</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  {search ? 'Try a different search term' : 'Add a new dental professional to get started'}
+                </p>
               </div>
+            ) : (
+              filteredDoctors.map((doc) => (
+                <Card key={doc.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <CardContent className="p-0">
+                    <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 p-6 flex flex-col items-center">
+                      <div className="absolute top-4 right-4">
+                        <StatusBadge status={doc.status} />
+                      </div>
 
-              <div className="p-2 space-y-2">
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Contact</span>
-                    <span className="font-medium">{doc.phoneNumber || "N/A"}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Email</span>
-                    <span className="font-medium truncate">{doc.email}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Experience</span>
-                    <span className="font-medium">{doc.yearsOfExperience || 0} years</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">License</span>
-                    <span className="font-medium">{doc.licenseNumber || "Not provided"}</span>
-                  </div>
-                </div>
+                      <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+                        {doc.profilePicture ? (
+                          <AvatarImage
+                            src={getImageUrl(doc.profilePicture)}
+                            alt={`Dr. ${doc.fName} ${doc.lName}`}
+                          />
+                        ) : null}
+                        <AvatarFallback className="text-2xl bg-white">
+                          {getInitials(doc.fName, doc.lName)}
+                        </AvatarFallback>
+                      </Avatar>
 
-                {doc.medicalServices && doc.medicalServices.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">Services</p>
-                    <div className="flex flex-wrap gap-1">
-                      {doc.medicalServices.slice(0, 3).map((service, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {getServiceName(service)}
-                        </Badge>
-                      ))}
-                      {doc.medicalServices.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{doc.medicalServices.length - 3} more
-                        </Badge>
-                      )}
+                      <h3 className="mt-4 text-xl font-bold text-center">
+                        Dr. {doc.fName} {doc.mName && `${doc.mName} `}{doc.lName}
+                      </h3>
+                      <p className="text-sm text-muted-foreground text-center">{doc.specialty || "General Dentist"}</p>
                     </div>
-                  </div>
-                )}
 
-                <div className="pt-4 border-t flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => handleEditClick(doc)}
-                  >
-                    <Pencil className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={() => handleDeleteClick(doc)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                    <div className="p-2 space-y-2">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Contact</span>
+                          <span className="font-medium">{doc.phoneNumber || "N/A"}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Email</span>
+                          <span className="font-medium truncate">{doc.email}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">Experience</span>
+                          <span className="font-medium">{doc.yearsOfExperience || 0} years</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-muted-foreground">License</span>
+                          <span className="font-medium">{doc.licenseNumber || "Not provided"}</span>
+                        </div>
+                      </div>
+
+                      {doc.medicalServices && doc.medicalServices.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-muted-foreground">Services</p>
+                          <div className="flex flex-wrap gap-1">
+                            {doc.medicalServices.slice(0, 3).map((service, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {getServiceName(service)}
+                              </Badge>
+                            ))}
+                            {doc.medicalServices.length > 3 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{doc.medicalServices.length - 3} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="pt-4 border-t flex gap-2">
+                        <Button
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => handleEditClick(doc)}
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1"
+                          onClick={() => handleDeleteClick(doc)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
@@ -1935,6 +2229,14 @@ const DoctorsPage = () => {
               Edit Dental Professional - Dr. {editForm.fName} {editForm.lName}
             </DialogTitle>
           </DialogHeader>
+
+          {/* Error message for edit dialog */}
+          <div className="px-6">
+            <ErrorMessage 
+              message={editError} 
+              onClose={() => setEditError(null)} 
+            />
+          </div>
 
           <Tabs value={activeEditTab} onValueChange={setActiveEditTab} className="w-full">
             <div className="px-6">

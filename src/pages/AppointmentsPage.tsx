@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,7 +72,9 @@ import {
   BriefcaseMedical,
   FileText,
   Home,
-  MapPinIcon
+  MapPinIcon,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { AppointmentDTO, appointmentService, FreeSlotDTO } from "@/lib/api/appointments";
@@ -81,6 +83,7 @@ import { MedicalService, medicalServicesService } from "@/lib/api/medicalService
 import { BranchSettingDTO, branchService } from "@/lib/api/branches";
 import { patientsService, Patient } from "@/lib/api/patients";
 import { notificationsService, Notification } from "@/lib/api/notifications";
+import { doctorScheduleService, DoctorScheduleDTO } from "@/lib/api/doctorSchedules";
 import { toast } from "sonner";
 
 const AppointmentsPage = () => {
@@ -116,6 +119,15 @@ const AppointmentsPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const [isTimeSlotDialogOpen, setIsTimeSlotDialogOpen] = useState(false);
+
+  // Doctor availability states
+  const [doctorSchedules, setDoctorSchedules] = useState<DoctorScheduleDTO[]>([]);
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
+
+  // Custom Date Picker states
+  const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const datePickerRef = useRef<HTMLDivElement>(null);
 
   // User ID for notifications
   const userId = 1;
@@ -182,6 +194,59 @@ const AppointmentsPage = () => {
     fetchData();
   }, []);
 
+  // Fetch doctor schedules when doctor is selected
+  useEffect(() => {
+    const fetchDoctorSchedules = async () => {
+      if (selectedDoctorId) {
+        try {
+          const schedules = await doctorScheduleService.getByDoctorId(parseInt(selectedDoctorId));
+          setDoctorSchedules(schedules || []);
+          
+          // Extract unique available days from schedules
+          const uniqueDays = Array.from(
+            new Set(schedules.map(schedule => schedule.weekDay))
+          );
+          setAvailableDays(uniqueDays);
+          
+          console.log("Doctor schedules:", schedules);
+          console.log("Available days:", uniqueDays);
+          
+          // Reset date if current selection is not available
+          if (appointmentDate) {
+            const selectedDay = new Date(appointmentDate).toLocaleDateString('en-US', { weekday: 'long' });
+            if (uniqueDays.length > 0 && !uniqueDays.includes(selectedDay)) {
+              setAppointmentDate(""); // Clear date if not available
+              toast.info("Selected date is not available for this doctor. Please choose another day.");
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching doctor schedules:", error);
+          setDoctorSchedules([]);
+          setAvailableDays([]);
+        }
+      } else {
+        setDoctorSchedules([]);
+        setAvailableDays([]);
+      }
+    };
+    
+    fetchDoctorSchedules();
+  }, [selectedDoctorId]);
+
+  // Close date picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setShowCustomDatePicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   // Filter appointments with branch filter
   const filteredAppointments = appointments.filter((apt) => {
     const searchTerm = searchQuery.toLowerCase();
@@ -237,8 +302,174 @@ const AppointmentsPage = () => {
     }
   };
 
+  // Get day name from date
+  const getDayName = (date: Date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'long' });
+  };
 
-  // Handle Add Appointment - KEEP TIME IN 24-HOUR FORMAT
+  // Check if a date is selectable based on doctor's available days
+  const isDateSelectable = (date: Date) => {
+    if (!selectedDoctorId || availableDays.length === 0) return false;
+    
+    const dayName = getDayName(date);
+    return availableDays.includes(dayName);
+  };
+
+  // Get days in month
+  const getDaysInMonth = (year: number, month: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  // Convert short day name to full day name
+  const getFullDayName = (shortDay: string) => {
+    const dayMap: { [key: string]: string } = {
+      'Sun': 'Sunday',
+      'Mon': 'Monday',
+      'Tue': 'Tuesday',
+      'Wed': 'Wednesday',
+      'Thu': 'Thursday',
+      'Fri': 'Friday',
+      'Sat': 'Saturday'
+    };
+    return dayMap[shortDay] || shortDay;
+  };
+
+  // Handle custom date selection
+  const handleCustomDateSelect = (date: Date) => {
+    if (isDateSelectable(date)) {
+      setAppointmentDate(date.toISOString().split('T')[0]);
+      setShowCustomDatePicker(false);
+    } else {
+      toast.error("This day is not available for the selected doctor");
+    }
+  };
+
+  // Render custom date picker
+  const renderCustomDatePicker = () => {
+    const today = new Date();
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    
+    const firstDay = new Date(year, month, 1);
+    const startingDay = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    
+    const days = [];
+    // Add empty cells for days before the first day of month
+    for (let i = 0; i < startingDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-10"></div>);
+    }
+    
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dayName = getDayName(date);
+      const isAvailable = isDateSelectable(date);
+      const isToday = date.toDateString() === today.toDateString();
+      const isSelected = appointmentDate === date.toISOString().split('T')[0];
+      
+      days.push(
+        <button
+          key={day}
+          type="button"
+          onClick={() => handleCustomDateSelect(date)}
+          disabled={!isAvailable}
+          className={`
+            h-10 w-10 flex items-center justify-center rounded-full text-sm
+            transition-colors
+            ${isSelected ? 'bg-dental text-white' : ''}
+            ${!isSelected && isToday ? 'border-2 border-dental text-dental' : ''}
+            ${!isSelected && !isToday && isAvailable ? 'hover:bg-gray-100 text-gray-900' : ''}
+            ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed text-gray-400 opacity-50'}
+            ${!isAvailable && day <= today.getDate() && month === today.getMonth() && year === today.getFullYear() ? 'line-through' : ''}
+          `}
+        >
+          {day}
+        </button>
+      );
+    }
+    
+    return (
+      <div ref={datePickerRef} className="absolute top-full left-0 mt-2 z-50 bg-white border rounded-lg shadow-lg p-4 w-64">
+        {/* Month header */}
+        <div className="flex items-center justify-between mb-4">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentMonth(new Date(year, month - 1, 1))}
+            className="h-8 w-8"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="font-semibold text-sm">
+            {monthNames[month]} {year}
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentMonth(new Date(year, month + 1, 1))}
+            className="h-8 w-8"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Day names - Highlight available days */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          {dayNames.map((day) => {
+            const fullDayName = getFullDayName(day);
+            const isAvailableDay = availableDays.includes(fullDayName);
+            
+            return (
+              <div 
+                key={day} 
+                className={`
+                  text-center text-xs font-medium h-8 flex items-center justify-center
+                  ${isAvailableDay ? 'text-blue-600 font-bold' : 'text-gray-500'}
+                `}
+              >
+                {day}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Calendar days */}
+        <div className="grid grid-cols-7 gap-1">
+          {days}
+        </div>
+        
+        {/* Legend */}
+        <div className="mt-4 pt-3 border-t text-xs">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-3 h-3 rounded-full bg-dental"></div>
+            <span className="text-gray-600">Selected date</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 border-2 border-dental rounded-full"></div>
+            <span className="text-gray-600">Today</span>
+          </div>
+          {availableDays.length > 0 && (
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+              <span className="text-blue-600 font-medium">Available day</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Handle Add Appointment
   const handleAddAppointment = async () => {
     if (!selectedPatientId || !selectedDoctorId || !selectedServiceId || 
         !selectedBranchId || !appointmentDate || !appointmentTime) {
@@ -246,11 +477,15 @@ const AppointmentsPage = () => {
       return;
     }
 
+    // Check if selected date is available for the doctor
+    const selectedDay = new Date(appointmentDate);
+    if (!isDateSelectable(selectedDay)) {
+      toast.error("Selected date is not available for this doctor. Please choose another day.");
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      // IMPORTANT: Time is already in 24-hour format from TimeSlotSelector
-      // Don't convert it to AM/PM for the API!
-      
       // Convert IDs to numbers
       const patientId = parseInt(selectedPatientId);
       const medicalProfessionalId = parseInt(selectedDoctorId);
@@ -322,6 +557,9 @@ const AppointmentsPage = () => {
       setSelectedBranchId("");
       setAppointmentDate("");
       setAppointmentTime("");
+      setAvailableDays([]);
+      setDoctorSchedules([]);
+      setShowCustomDatePicker(false);
       setIsAddDialogOpen(false);
       
       toast.success("Appointment created successfully!");
@@ -462,11 +700,6 @@ const AppointmentsPage = () => {
     }
   };
 
-  // Get today's date for min date
-  const getTodayDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
-
   // Notifications component remains the same
   const NotificationsButton = ({ userId }: { userId: number }) => {
     // ... (keep the existing NotificationsButton code)
@@ -531,7 +764,15 @@ const AppointmentsPage = () => {
                   <Label htmlFor="doctor" className="text-sm font-medium">
                     <span className="text-red-500">*</span> Medical Professional
                   </Label>
-                  <Select value={selectedDoctorId} onValueChange={setSelectedDoctorId}>
+                  <Select 
+                    value={selectedDoctorId} 
+                    onValueChange={(value) => {
+                      setSelectedDoctorId(value);
+                      // Reset date when doctor changes
+                      setAppointmentDate("");
+                      setShowCustomDatePicker(false);
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select doctor" />
                     </SelectTrigger>
@@ -593,23 +834,49 @@ const AppointmentsPage = () => {
                   </Select>
                 </div>
 
-                {/* Date and Time with Free Slots */}
+                {/* Date and Time with Custom Date Picker */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative">
                     <Label htmlFor="date" className="text-sm font-medium">
                       <span className="text-red-500">*</span> Date
                     </Label>
                     <div className="relative">
-                      <Calendar className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="date"
-                        type="date"
-                        value={appointmentDate}
-                        onChange={(e) => setAppointmentDate(e.target.value)}
-                        min={getTodayDate()}
-                        className="pl-10"
-                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal h-10"
+                        onClick={() => {
+                          if (selectedDoctorId) {
+                            setShowCustomDatePicker(!showCustomDatePicker);
+                          } else {
+                            toast.error("Please select a doctor first");
+                          }
+                        }}
+                        disabled={!selectedDoctorId}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {appointmentDate ? formatDate(appointmentDate) : "Select a date"}
+                      </Button>
+                      
+                      {showCustomDatePicker && selectedDoctorId && renderCustomDatePicker()}
                     </div>
+                    
+                    {/* Info message */}
+                    {selectedDoctorId && availableDays.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Only {availableDays.join(", ")} are available
+                      </p>
+                    )}
+                    
+                    {/* Warning if doctor has no schedule */}
+                    {selectedDoctorId && availableDays.length === 0 && (
+                      <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
+                        <div className="flex items-center gap-2 text-yellow-800 text-xs">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>No schedule set for this doctor</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
@@ -618,6 +885,7 @@ const AppointmentsPage = () => {
                     </Label>
                     <div className="relative">
                       <Button
+                        type="button"
                         variant="outline"
                         className="w-full justify-start text-left font-normal h-10"
                         disabled={!selectedDoctorId || !selectedBranchId || !appointmentDate}
@@ -677,7 +945,13 @@ const AppointmentsPage = () => {
               <DialogFooter>
                 <Button 
                   variant="outline" 
-                  onClick={() => setIsAddDialogOpen(false)}
+                  onClick={() => {
+                    setIsAddDialogOpen(false);
+                    // Reset doctor availability data
+                    setAvailableDays([]);
+                    setDoctorSchedules([]);
+                    setShowCustomDatePicker(false);
+                  }}
                   disabled={isProcessing}
                 >
                   Cancel

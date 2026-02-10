@@ -61,6 +61,7 @@ export interface MedicalProfessional {
   requiresUserAccount: boolean;
   medicalServices: { id: number; name: string }[];
   branches: { id: number; name: string }[];
+  medicalServicesId: number[];     //if sth wrong remove it
   branchServices?: BranchServiceDTO[]; // New field for branch-specific services
   createdAt: string;
   updatedAt: string;
