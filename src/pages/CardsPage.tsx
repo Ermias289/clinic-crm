@@ -150,7 +150,7 @@ const NotificationsButton = ({ userId }: NotificationsButtonProps) => {
       const data = await notificationsService.getByUserId(userId);
       setNotifications(data);
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      //nth
     } finally {
       setLoading(false);
     }
@@ -166,7 +166,7 @@ const NotificationsButton = ({ userId }: NotificationsButtonProps) => {
         )
       );
     } catch (error) {
-      console.error("Failed to mark as read:", error);
+     //nth
     }
   };
 
@@ -177,7 +177,7 @@ const NotificationsButton = ({ userId }: NotificationsButtonProps) => {
         prev.map(notif => ({ ...notif, isRead: true }))
       );
     } catch (error) {
-      console.error("Failed to mark all as read:", error);
+      //nth
     }
   };
 
@@ -363,9 +363,7 @@ const CardsPage = () => {
   };
 
 const getRequestedByName = (card: CardDTO): string => {
-  console.log('Debug - card ID:', card.id); // Add card ID to debug
-  console.log('Debug - requestedBy:', card.requestedBy); 
-  console.log('Debug - requestedById:', card.requestedById);
+
   
   // Check if requestedBy exists and has the name fields
   if (card.requestedBy && card.requestedBy.fName && card.requestedBy.lName) {
@@ -375,14 +373,12 @@ const getRequestedByName = (card: CardDTO): string => {
     }
     names.push(card.requestedBy.lName);
     const result = names.join(" ");
-    console.log('Debug - returning name:', result); // Debug the result
     return result;
   }
   
   // Fallback if requestedBy is not available
   if (!card.requestedById) return "N/A";
   const fallback = `User #${card.requestedById}`;
-  console.log('Debug - returning fallback:', fallback); // Debug fallback
   return fallback;
 };
 
@@ -438,7 +434,6 @@ const getRequestedByName = (card: CardDTO): string => {
       setSelectedCardDetails(mappedCard);
       setIsViewOpen(true);
     } catch (error) {
-      console.error("Error fetching card details:", error);
       setSelectedCardDetails(card);
       setIsViewOpen(true);
     }
@@ -494,7 +489,6 @@ const getRequestedByName = (card: CardDTO): string => {
       setPatients(updatedPatients);
 
     } catch (error: any) {
-      console.error("Error creating card:", error);
       setCreateError(
         error.response?.data?.message || 
         error.message || 

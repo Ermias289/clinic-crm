@@ -157,7 +157,6 @@ const Index = () => {
   // Fetch appointment report from backend - API accepts empty dates
   const fetchAppointmentReport = async (fromDate: string, toDate: string) => {
     try {
-      console.log(`Fetching appointment report from ${fromDate || 'empty'} to ${toDate || 'empty'}`);
       
       // Build URL with parameters (empty strings are okay for this API)
       const url = `https://crmgate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate || ''}&toDate=${toDate || ''}`;
@@ -169,7 +168,6 @@ const Index = () => {
       }
       
       const data: AppointmentReportResponse = await response.json();
-      console.log("Appointment report API response:", data);
       
       setAppointmentReport(data);
       
@@ -179,7 +177,6 @@ const Index = () => {
       const displayToDate = toDate || getTodayDate();
       transformAppointmentDataForChart(data, displayFromDate, displayToDate);
     } catch (err) {
-      console.error("Error fetching appointment report:", err);
       generateFallbackAppointmentReport(fromDate || getLast7Days(), toDate || getTodayDate());
     }
   };
@@ -223,10 +220,8 @@ const Index = () => {
         }
       });
       
-      console.log("Transformed chart data with dates:", chartData);
       setChartData(chartData);
     } catch (error) {
-      console.error("Error transforming chart data:", error);
       setChartData([]);
     }
   };
@@ -234,7 +229,6 @@ const Index = () => {
   // Fetch most booked services from backend
   const fetchMostBookedServices = async () => {
     try {
-      console.log("Fetching most booked services...");
       
       const response = await fetch(
         "https://crmgate.nexabusinessgroup.com/api/DashBoard/MostBookedServices"
@@ -245,7 +239,6 @@ const Index = () => {
       }
       
       const data: any = await response.json();
-      console.log("Most booked services API response:", data);
       
       let servicesData: MostBookedService[] = [];
       
@@ -280,14 +273,12 @@ const Index = () => {
         ...service,
         color: palette[index % palette.length]
       }));
-      
-      console.log("Processed services data:", servicesWithColors);
+
       setMostBookedServices(servicesWithColors);
       
       // Transform for pie chart
       transformServiceDataForChart(servicesWithColors);
     } catch (err) {
-      console.error("Error fetching most booked services:", err);
       calculateMostBookedServicesFromLocal();
     }
   };
@@ -302,10 +293,8 @@ const Index = () => {
         fullName: service.serviceName // Full name for the list below
       })).filter(item => item.value > 0);
       
-      console.log("Transformed service data for chart:", chartData);
       setServiceData(chartData);
     } catch (error) {
-      console.error("Error transforming service data:", error);
       setServiceData([]);
     }
   };
@@ -333,9 +322,7 @@ const Index = () => {
       
       setAppointmentReport(fallbackData);
       transformAppointmentDataForChart(fallbackData, fromDate, toDate);
-      console.log("Generated fallback appointment report:", fallbackData);
     } catch (error) {
-      console.error("Error generating fallback report:", error);
       setAppointmentReport(null);
       setChartData([]);
     }
@@ -369,12 +356,10 @@ const Index = () => {
         }))
         .sort((a, b) => b.bookingCount - a.bookingCount)
         .slice(0, 5);
-      
-      console.log("Calculated local services data:", servicesData);
+
       setMostBookedServices(servicesData);
       transformServiceDataForChart(servicesData);
     } catch (error) {
-      console.error("Error calculating local services:", error);
       setMostBookedServices([]);
       setServiceData([]);
     }
@@ -433,7 +418,6 @@ const Index = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        console.log("Starting data fetch...");
         
         const [allAppointments, allPayments, allServices] = await Promise.all([
           appointmentService.getAll(),
@@ -441,11 +425,6 @@ const Index = () => {
           medicalServicesService.getAll()
         ]);
 
-        console.log("Fetched basic data:", {
-          appointments: allAppointments.length,
-          payments: allPayments.length,
-          services: allServices.length
-        });
 
         setAppointments(allAppointments);
         setPayments(allPayments);
@@ -457,10 +436,9 @@ const Index = () => {
           fetchMostBookedServices()
         ]);
       } catch (err) {
-        console.error("Error fetching dashboard data:", err);
+        //nth
       } finally {
         setLoading(false);
-        console.log("Data fetch completed");
       }
     };
 

@@ -102,16 +102,12 @@ const ServicesPage = () => {
   /* -------------------- LOAD DATA -------------------- */
   const loadData = async () => {
     try {
-      console.log("Loading data...");
       const [srv, docs, brs] = await Promise.all([
         medicalServicesService.getAll(),
         medicalProfessionalsService.getAll(),
         branchService.getAll(),
       ]);
 
-      console.log("Services:", srv);
-      console.log("Doctors:", docs);
-      console.log("Branches:", brs);
 
       setServices(srv);
       setDoctors(docs);
@@ -130,7 +126,6 @@ const ServicesPage = () => {
             branchMap[service.id] = service.branches;
           }
         } catch (error) {
-          console.warn(`Could not load branches for service ${service.id}:`, error);
           // Fallback to service.branches if available
           if (service.branches && Array.isArray(service.branches)) {
             branchMap[service.id] = service.branches;
@@ -139,8 +134,6 @@ const ServicesPage = () => {
       }
       
       setServiceBranches(branchMap);
-
-      console.log("Data loading completed successfully");
 
     } catch (error) {
       console.error("Error fetching data:", error);

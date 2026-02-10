@@ -89,9 +89,7 @@ export const medicalProfessionalsService = {
   update: async (
     dto: UpdateMedicalProfessionalDTO
   ): Promise<MedicalProfessional> => {
-    console.log("MedicalProfessional UPDATE - Sending DTO:", dto);
     const response = await apiClient.put<MedicalProfessional>('/api/MedicalProfessional', dto);
-    console.log("MedicalProfessional UPDATE - Response:", response.data);
     return response.data;
   },
 

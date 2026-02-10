@@ -145,14 +145,6 @@ const AppointmentsPage = () => {
           patientsService.getAll(),
         ]);
 
-        console.log("Fetched data:", {
-          doctors: docs,
-          appointments: apts,
-          services: svcs,
-          branches: brs,
-          patients: pts
-        });
-
         setDoctors(docs || []);
         setServices(svcs || []);
         setBranches(brs || []);
@@ -185,7 +177,6 @@ const AppointmentsPage = () => {
         setAppointments(mappedAppointments || []);
       } catch (error) {
         toast.error("Failed to load appointments data");
-        console.error("Error fetching data:", error);
       } finally {
         setIsLoading(false);
       }
@@ -208,8 +199,6 @@ const AppointmentsPage = () => {
           );
           setAvailableDays(uniqueDays);
           
-          console.log("Doctor schedules:", schedules);
-          console.log("Available days:", uniqueDays);
           
           // Reset date if current selection is not available
           if (appointmentDate) {
@@ -220,7 +209,6 @@ const AppointmentsPage = () => {
             }
           }
         } catch (error) {
-          console.error("Error fetching doctor schedules:", error);
           setDoctorSchedules([]);
           setAvailableDays([]);
         }
@@ -272,8 +260,6 @@ const AppointmentsPage = () => {
     return matchesSearch && matchesDoctor && matchesStatus && matchesBranch;
   });
 
-  console.log("Filtered appointments:", filteredAppointments);
-
   // Status counts
   const statusCounts = {
     scheduled: appointments.filter(a => a.status?.toLowerCase() === "scheduled").length,
@@ -307,12 +293,53 @@ const AppointmentsPage = () => {
     return date.toLocaleDateString('en-US', { weekday: 'long' });
   };
 
-  // Check if a date is selectable based on doctor's available days
+  // FIXED: Check if a date is selectable based on doctor's available days
   const isDateSelectable = (date: Date) => {
     if (!selectedDoctorId || availableDays.length === 0) return false;
     
+    // Get today's date at midnight in local time
+    const today = new Date();
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    // Get the date to check at midnight in local time
+    const checkDateAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    // Check if date is before today (not including today)
+    if (checkDateAtMidnight < todayAtMidnight) {
+      return false;
+    }
+    
     const dayName = getDayName(date);
     return availableDays.includes(dayName);
+  };
+
+  // FIXED: Handle custom date selection
+  const handleCustomDateSelect = (date: Date) => {
+    // Get today's date at midnight in local time
+    const today = new Date();
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    // Get selected date at midnight in local time
+    const selectedDateAtMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    // Check if selected date is before today
+    if (selectedDateAtMidnight < todayAtMidnight) {
+      toast.error("Past dates are not selectable");
+      return;
+    }
+    
+    if (isDateSelectable(date)) {
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
+      setAppointmentDate(dateString);
+      setShowCustomDatePicker(false);
+    } else {
+      toast.error("This day is not available for the selected doctor");
+    }
   };
 
   // Get days in month
@@ -334,19 +361,11 @@ const AppointmentsPage = () => {
     return dayMap[shortDay] || shortDay;
   };
 
-  // Handle custom date selection
-  const handleCustomDateSelect = (date: Date) => {
-    if (isDateSelectable(date)) {
-      setAppointmentDate(date.toISOString().split('T')[0]);
-      setShowCustomDatePicker(false);
-    } else {
-      toast.error("This day is not available for the selected doctor");
-    }
-  };
-
-  // Render custom date picker
+  // FIXED: Render custom date picker
   const renderCustomDatePicker = () => {
     const today = new Date();
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const daysInMonth = getDaysInMonth(year, month);
@@ -370,10 +389,20 @@ const AppointmentsPage = () => {
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
+      const dateAtMidnight = new Date(year, month, day);
+      
       const dayName = getDayName(date);
       const isAvailable = isDateSelectable(date);
-      const isToday = date.toDateString() === today.toDateString();
-      const isSelected = appointmentDate === date.toISOString().split('T')[0];
+      const isToday = dateAtMidnight.getTime() === todayAtMidnight.getTime();
+      
+      // Check if this date is selected
+      const yearStr = date.getFullYear();
+      const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(date.getDate()).padStart(2, '0');
+      const dateString = `${yearStr}-${monthStr}-${dayStr}`;
+      const isSelected = appointmentDate === dateString;
+      
+      const isPast = dateAtMidnight < todayAtMidnight;
       
       days.push(
         <button
@@ -388,8 +417,9 @@ const AppointmentsPage = () => {
             ${!isSelected && isToday ? 'border-2 border-dental text-dental' : ''}
             ${!isSelected && !isToday && isAvailable ? 'hover:bg-gray-100 text-gray-900' : ''}
             ${isAvailable ? 'cursor-pointer' : 'cursor-not-allowed text-gray-400 opacity-50'}
-            ${!isAvailable && day <= today.getDate() && month === today.getMonth() && year === today.getFullYear() ? 'line-through' : ''}
+            ${isPast ? 'line-through' : ''}
           `}
+          title={isPast ? "Past dates are not selectable" : isAvailable ? "" : "This day is not available for the selected doctor"}
         >
           {day}
         </button>
@@ -478,9 +508,18 @@ const AppointmentsPage = () => {
     }
 
     // Check if selected date is available for the doctor
-    const selectedDay = new Date(appointmentDate);
-    if (!isDateSelectable(selectedDay)) {
-      toast.error("Selected date is not available for this doctor. Please choose another day.");
+    const selectedDate = new Date(appointmentDate);
+    if (!isDateSelectable(selectedDate)) {
+      const today = new Date();
+      const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      const selectedDateAtMidnight = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      
+      if (selectedDateAtMidnight < todayAtMidnight) {
+        toast.error("Past dates are not selectable. Please choose a future date.");
+      } else {
+        toast.error("Selected date is not available for this doctor. Please choose another day.");
+      }
       return;
     }
 
@@ -492,14 +531,6 @@ const AppointmentsPage = () => {
       const dentistryId = parseInt(selectedServiceId);
       const branchId = parseInt(selectedBranchId);
       
-      console.log("IDs being sent:", {
-        patientId,
-        medicalProfessionalId,
-        dentistryId,
-        branchId,
-        appointmentDate,
-        appointmentTime 
-      });
       
       // Check if any ID is NaN
       if (isNaN(patientId) || isNaN(medicalProfessionalId) || 
@@ -516,11 +547,7 @@ const AppointmentsPage = () => {
         reservationTime: appointmentTime, // Use as-is (24-hour format)
       };
 
-      console.log("Creating appointment with data:", appointmentData);
-      
       const newAppointment = await appointmentService.create(appointmentData);
-      
-      console.log("Appointment created successfully:", newAppointment);
       
       // Refresh appointments list
       const updatedAppointments = await appointmentService.getAll();
@@ -564,14 +591,12 @@ const AppointmentsPage = () => {
       
       toast.success("Appointment created successfully!");
     } catch (error: any) {
-      console.error("Error creating appointment:", error);
-      console.error("Error response:", error.response);
       
       let errorMessage = "Failed to create appointment";
       
       if (error.response) {
         const { data, status } = error.response;
-        console.error(`Server error ${status}:`, data);
+        
         
         if (data && data.message) {
           errorMessage = data.message;
@@ -582,7 +607,6 @@ const AppointmentsPage = () => {
           errorMessage = `Validation errors: ${validationErrors}`;
         }
       } else if (error.request) {
-        console.error("No response received:", error.request);
         errorMessage = "No response from server. Check your network connection.";
       } else {
         errorMessage = error.message || "Failed to create appointment";
@@ -616,7 +640,6 @@ const AppointmentsPage = () => {
       setIsCancelDialogOpen(false);
       toast.success("Appointment canceled successfully");
     } catch (error) {
-      console.error("Error canceling appointment:", error);
       toast.error("Failed to cancel appointment");
     } finally {
       setIsProcessing(false);
@@ -641,7 +664,6 @@ const AppointmentsPage = () => {
       setIsCompleteDialogOpen(false);
       toast.success("Appointment marked as completed");
     } catch (error) {
-      console.error("Error completing appointment:", error);
       toast.error("Failed to complete appointment");
     } finally {
       setIsProcessing(false);
@@ -662,7 +684,6 @@ const AppointmentsPage = () => {
       setIsDeleteDialogOpen(false);
       toast.success("Appointment deleted successfully");
     } catch (error) {
-      console.error("Error deleting appointment:", error);
       toast.error("Failed to delete appointment");
     } finally {
       setIsProcessing(false);
@@ -1109,7 +1130,7 @@ const AppointmentsPage = () => {
 <Card>
   <CardHeader>
     <CardTitle>Appointments List ({filteredAppointments.length})</CardTitle>
-  </CardHeader>
+</CardHeader>
   <CardContent className="p-0">
     <div className="overflow-x-auto">
       {isLoading ? (

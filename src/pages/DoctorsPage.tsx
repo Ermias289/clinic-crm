@@ -235,22 +235,16 @@ const DoctorsPage = () => {
 
   const fetchData = async () => {
     setIsLoading(true);
-    console.log("🔍 Starting data fetch...");
     
     try {
       // Fetch doctors
-      console.log("Fetching doctors...");
       const doctorsData = await medicalProfessionalsService.getAll();
-      console.log("Doctors fetched:", doctorsData.length);
       setDoctors(doctorsData);
 
       // Fetch services
       setIsServicesLoading(true);
       try {
-        console.log("Fetching services...");
         const servicesData = await medicalServicesService.getAll();
-        console.log("Services fetched:", servicesData.length);
-        
         // Transform the services data
         const transformedServices = servicesData.map(service => ({
           id: service.id,
@@ -275,9 +269,7 @@ const DoctorsPage = () => {
       // Fetch branches
       setIsBranchesLoading(true);
       try {
-        console.log("Fetching branches...");
         const branchesData = await branchService.getAll();
-        console.log("Branches fetched:", branchesData.length);
         setBranches(branchesData);
       } catch (branchError: any) {
         console.error("Error fetching branches:", branchError);
