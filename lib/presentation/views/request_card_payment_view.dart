@@ -8,6 +8,7 @@ import '../controllers/card_controller.dart';
 import '../../domain/models/medical_service_model.dart';
 import '../../core/utils/error_handler.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 class RequestCardPaymentView extends StatefulWidget {
   const RequestCardPaymentView({super.key});
@@ -21,6 +22,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
   MedicalService? service;
   Map<String, dynamic>? schedule;
   File? selectedPaymentProof;
+  bool isInsuranceCovered = false;
 
   @override
   void initState() {
@@ -250,6 +252,58 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                   ),
                                 ],
                               ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Insurance Toggle
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Insurance Covered',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                'Is this payment covered by insurance?',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Switch.adaptive(
+                            value: isInsuranceCovered,
+                            onChanged: (value) {
+                              setState(() {
+                                isInsuranceCovered = value;
+                              });
+                            },
+                            activeColor: AppColors.primaryBlue,
+                          ),
+                        ],
                       ),
                     ),
 
@@ -500,6 +554,60 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                             );
                           }),
                         ),
+                        const SizedBox(height: 24),
+
+                        // Insurance Toggle
+                        Obx(() => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Insurance Covered',
+                                        style: AppTextStyles.bodyMedium
+                                            .copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Is this payment covered by insurance?',
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Switch.adaptive(
+                                    value: controller.isInsuranceCovered.value,
+                                    onChanged: (value) {
+                                      controller.isInsuranceCovered.value =
+                                          value;
+                                    },
+                                    activeColor: AppColors.primaryBlue,
+                                  ),
+                                ],
+                              ),
+                            )),
 
                         const SizedBox(height: 24),
 
@@ -604,13 +712,51 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                       ],
                                     ),
                                     const SizedBox(height: 16),
-                                    Text(
-                                      bankAccount.accountNumber,
-                                      style: AppTextStyles.h3.copyWith(
-                                        color: Colors.white,
-                                        letterSpacing: 2,
-                                        fontFamily: 'Courier',
-                                      ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        SelectableText(
+                                          bankAccount.accountNumber,
+                                          style: AppTextStyles.h3.copyWith(
+                                            color: Colors.white,
+                                            letterSpacing: 2,
+                                            fontFamily: 'Courier',
+                                          ),
+                                        ),
+                                        Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.copy,
+                                                color: Colors.white70,
+                                                size: 20,
+                                              ),
+                                              onPressed: () {
+                                                Clipboard.setData(
+                                                  ClipboardData(
+                                                    text: bankAccount
+                                                        .accountNumber,
+                                                  ),
+                                                );
+                                                ErrorHandler.showSuccess(
+                                                  'Account number copied to clipboard',
+                                                  title: 'Copied',
+                                                );
+                                              },
+                                            ),
+                                            Text(
+                                              'Copy',
+                                              style: AppTextStyles.caption
+                                                  .copyWith(
+                                                color: Colors.white70,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(height: 16),
                                     Text(

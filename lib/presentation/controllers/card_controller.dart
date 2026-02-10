@@ -73,6 +73,7 @@ class CardController extends GetxController {
   final TextEditingController requestRemarkController = TextEditingController();
 
   final Rx<File?> selectedPaymentProof = Rx<File?>(null);
+  final RxBool isInsuranceCovered = false.obs;
 
   // Dependencies
   final ImagePicker _picker = ImagePicker();
@@ -285,7 +286,7 @@ class CardController extends GetxController {
         id: autoPreparedPayment.value!.id,
         requestedAmount: autoPreparedPayment.value!.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false,
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);
@@ -385,6 +386,7 @@ class CardController extends GetxController {
     dobController.clear();
     requestRemarkController.clear();
     selectedPaymentProof.value = null;
+    isInsuranceCovered.value = false;
     createdPatient.value = null;
     createdCardData.value = null;
     cardPayments.clear();
@@ -529,7 +531,7 @@ class CardController extends GetxController {
         id: autoPrepared.id,
         requestedAmount: autoPrepared.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false, // Default to false, can be made configurable
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);
