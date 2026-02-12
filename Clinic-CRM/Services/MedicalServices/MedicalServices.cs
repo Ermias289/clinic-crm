@@ -141,18 +141,69 @@ namespace Clinic_CRM.Services.MedicalServices
 
         public async Task<MedicalService> UpdateMedicalService(UpdateMedicalServiceDTO dto)
         {
-            var med = await _context.MedicalServices.FindAsync(dto.Id);
+            var med = await _context.MedicalServices
+                .Include(m => m.MedicalProfessionals)
+                .Include(m => m.Branches)
+                .FirstOrDefaultAsync(m => m.Id == dto.Id);
 
             if (med == null)
                 throw new KeyNotFoundException("Medical Service Not Found.");
 
             _mapper.Map(dto, med);
 
-            _context.MedicalServices.Update(med);
+            // ================= MEDICAL PROFESSIONALS =================
+            if (dto.MedicalProfessionalsId != null)
+            {
+                var newIds = dto.MedicalProfessionalsId.Distinct().ToList();
+                var existingIds = med.MedicalProfessionals.Select(mp => mp.Id).ToList();
+
+                var toRemove = med.MedicalProfessionals
+                    .Where(mp => !newIds.Contains(mp.Id))
+                    .ToList();
+
+                foreach (var mp in toRemove)
+                    med.MedicalProfessionals.Remove(mp);
+
+                var toAddIds = newIds.Except(existingIds).ToList();
+
+                var toAdd = await _context.MedicalProfessionals
+                    .Where(mp => toAddIds.Contains(mp.Id))
+                    .ToListAsync();
+
+                foreach (var mp in toAdd)
+                    med.MedicalProfessionals.Add(mp);
+            }
+
+            // ================= BRANCHES =================
+            if (dto.Branches != null)
+            {
+                var newIds = dto.Branches.Distinct().ToList();
+                var existingIds = med.Branches.Select(b => b.Id).ToList();
+
+                var toRemove = med.Branches
+                    .Where(b => !newIds.Contains(b.Id))
+                    .ToList();
+
+                foreach (var b in toRemove)
+                    med.Branches.Remove(b);
+
+                var toAddIds = newIds.Except(existingIds).ToList();
+
+                var toAdd = await _context.BranchSettings
+                    .Where(b => toAddIds.Contains(b.Id))
+                    .ToListAsync();
+
+                foreach (var b in toAdd)
+                    med.Branches.Add(b);
+            }
+
+            med.UpdatedAt = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
 
             return med;
         }
+
 
         public async Task<MedicalService> DeleteMedicalService(int Id)
         {

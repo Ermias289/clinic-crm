@@ -19,7 +19,7 @@ namespace Clinic_CRM.DTOs.MedicalProfessionalDTOs
         public string Status { get; set; } = MEDICAL_PROFESSIONS_STATUS.ACTIVE;
         public string ProfilePicture { get; set; } = string.Empty;
         public bool RequiresUserAccount { get; set; }
-        public ICollection<int>? MedicalServicesId { get; set; }
-        public ICollection<int>? Branches { get; set; }
+        //public ICollection<int>? MedicalServicesId { get; set; }
+        //public ICollection<int>? Branches { get; set; }
     }
 }

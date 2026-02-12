@@ -71,7 +71,7 @@ namespace Clinic_CRM.Services.PatientServices
 
                 var userN = await _context.Users.Where(x => x.PhoneNumber == patient.PhoneNumber || x.Email == patient.Email).FirstOrDefaultAsync();
 
-                if (userN != null)
+                if (userN == null)
                     throw new KeyNotFoundException("Error Creating User Account. Please Try Again Later.");
 
                 patient.UserId = userN.Id;
@@ -113,7 +113,7 @@ namespace Clinic_CRM.Services.PatientServices
 
             var userN = await _context.Users.Where(x => x.PhoneNumber == patient.PhoneNumber || x.Email == patient.Email).FirstOrDefaultAsync();
 
-            if (userN != null)
+            if (userN == null)
                 throw new KeyNotFoundException("Error Creating User Account. Please Try Again Later.");
 
             patient.UserId = userN.Id;

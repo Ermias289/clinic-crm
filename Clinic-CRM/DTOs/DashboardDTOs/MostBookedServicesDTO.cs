@@ -2,6 +2,7 @@
 {
     public class ServiceUsageDTO
     {
+        public int Id { get; set; }
         public string ServiceName { get; set; }
         public int BookingCount { get; set; }
     }

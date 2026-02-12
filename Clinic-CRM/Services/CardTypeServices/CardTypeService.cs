@@ -45,15 +45,15 @@ namespace Clinic_CRM.Services.CardTypeServices
             if (type == null)
                 throw new KeyNotFoundException("Card Type Not Found.");
 
-            var existingTypes = await _context.CardTypes.ToListAsync();
+            //var existingTypes = await _context.CardTypes.ToListAsync();
 
-            foreach (var t in existingTypes)
-            {
-                if (t.Name == dto.Name)
-                {
-                    throw new KeyNotFoundException("Type Already Exists.");
-                }
-            }
+            //foreach (var t in existingTypes)
+            //{
+            //    if (t.Name == dto.Name)
+            //    {
+            //        throw new KeyNotFoundException("Type Already Exists.");
+            //    }
+            //}
 
             _mapper.Map(dto, type);
             _context.CardTypes.Update(type);

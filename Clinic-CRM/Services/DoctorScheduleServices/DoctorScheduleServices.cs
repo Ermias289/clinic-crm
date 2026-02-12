@@ -35,9 +35,9 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
             if (doctor == null)
                 throw new KeyNotFoundException("Medical professional not found.");
 
-            var worksAtBranch = await _context.MedicalProfessionals
-                     .Where(d => d.Id == doc.MedicalProfessionalId)
-                     .AnyAsync(d => d.Branches.Any(b => b.Id == doc.BranchSettingId));
+            var worksAtBranch = await _context.DocServices
+                .AnyAsync(x => x.MedicalProfessionalId == doc.MedicalProfessionalId
+                            && x.BranchSettingId == doc.BranchSettingId);
 
             if (!worksAtBranch)
                 throw new InvalidOperationException(
@@ -61,7 +61,11 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
 
         public async Task<DoctorSchedule> UpdateDoctorSchedule(UpdateDoctorScheduleDTO dto)
         {
-            var doc = await _context.DoctorSchedules.FindAsync(dto.Id);
+            var doc = await _context.DoctorSchedules
+                .Include(x => x.MedicalProfessionals)
+                    .ThenInclude(x => x.User)
+                .Where(x => x.Id == dto.Id)
+                .FirstOrDefaultAsync();
 
             if (doc == null)
                 throw new KeyNotFoundException("Doctor Schedule Not Found.");
@@ -71,11 +75,12 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
 
             await _context.SaveChangesAsync();
 
-            await _notify.SendUserAsync(
+            if(doc.MedicalProfessionals.User != null && doc.MedicalProfessionals.User.Id != _userService.GetCurrentUserNoInclude().Id)
+                await _notify.SendUserAsync(
                        $"New Doctor Schedule Update",
                        $"Medical Professional schedule has been successfully updated.",
                        NOTIFICATION_CONSTANTS.DOCTORSCHEDULE,
-                       new List<int> { _userService.GetCurrentUserNoInclude().Id, doc.Id }
+                       new List<int> { _userService.GetCurrentUserNoInclude().Id, doc.MedicalProfessionals.User.Id }
                        );
 
             return doc;
@@ -98,7 +103,11 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
         }
         public async Task<DoctorSchedule> DeleteDoctorSchedule(int Id)
         {
-            var doc = await _context.DoctorSchedules.FindAsync(Id);
+            var doc = await _context.DoctorSchedules
+                .Include(x => x.MedicalProfessionals)
+                    .ThenInclude(x => x.User)
+                .Where(x => x.Id == Id)
+                .FirstOrDefaultAsync();
 
             if (doc == null)
                 throw new KeyNotFoundException("Doctor Schedule Not Found.");
@@ -107,7 +116,8 @@ namespace Clinic_CRM.Services.DoctorScheduleServices
             _context.DoctorSchedules.Remove(doc);
             await _context.SaveChangesAsync();
 
-            await _notify.SendUserAsync(
+            if (doc.MedicalProfessionals.User != null && doc.MedicalProfessionals.User.Id != _userService.GetCurrentUserNoInclude().Id)
+                await _notify.SendUserAsync(
                       $"New Doctor Schedule Deeleted",
                       $"Medical Professional schedule has been successfully deleted.",
                       NOTIFICATION_CONSTANTS.DOCTORSCHEDULE,

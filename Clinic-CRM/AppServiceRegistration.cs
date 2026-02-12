@@ -8,6 +8,7 @@ using Clinic_CRM.Services.CardSettingServices;
 using Clinic_CRM.Services.CardTypeServices;
 using Clinic_CRM.Services.CompanySettingServices;
 using Clinic_CRM.Services.DashBoardServices;
+using Clinic_CRM.Services.DocServiceServices;
 using Clinic_CRM.Services.DoctorScheduleServices;
 using Clinic_CRM.Services.EmailService;
 using Clinic_CRM.Services.FileUploadServices;
@@ -101,6 +102,10 @@ namespace Clinic_CRM
 
             //Payment Type
             services.AddScoped<IPaymentTypeService, PaymentTypeService>();
+
+            //Doc Service
+
+            services.AddScoped<IDocServiceService, DocServiceService>();
         }
     }
 }

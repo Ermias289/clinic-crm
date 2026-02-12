@@ -69,6 +69,10 @@ namespace Clinic_CRM.Services.PaymentServices
             payment.ExpectedAmount = cardPrice.Price;
             payment.UnPaidAmount = cardPrice.Price;
            
+            var paymentType = await _context.PaymentTypes.FirstOrDefaultAsync(x => x.Name.ToLower() == "via mobile app payment");
+
+            payment.PaymentTypeId = paymentType != null ? paymentType.Id : null;
+
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
 
@@ -116,6 +120,24 @@ namespace Clinic_CRM.Services.PaymentServices
             if (pendingPayments.Any())
                 throw new KeyNotFoundException("You have a pending payment.");
 
+            var paymentTypes = await _context.PaymentTypes.ToListAsync();
+            var currentUser = _userService.GetCurrentUserNoInclude();
+
+            if (paymentTypes != null && currentUser?.UserRole?.Name == USER_ROLES.PATIENT)
+            {
+                payment.PaymentTypeId = paymentTypes ?
+                        .FirstOrDefault(x => x.Name.ToLower() == "bank-transfer")?.Id;
+            }
+            
+            if (dto.IsInsuranceCovered)
+            {
+                payment.PaymentTypeId = paymentTypes?
+                    .FirstOrDefault(x => x.Name.ToLower() == "insurance")?.Id;
+
+            }
+
+
+
             _mapper.Map(dto, payment);
 
             var card = await _context.Cards.FindAsync(payment.CardId);
@@ -127,9 +149,10 @@ namespace Clinic_CRM.Services.PaymentServices
                 throw new KeyNotFoundException("Card Is Already Active. No Pending Payment");
 
             payment.Status = PAYMENT_STATUS.REQUESTED;
-            payment.CreatedAt = DateTime.UtcNow;
+            payment.CreatedAt = DateTime.Now;
             payment.UnPaidAmount = payment.ExpectedAmount;
             payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
+            payment.RequestedAt = DateTime.Now;
 
             //var existPayment = await _context.Payments.Where(x => x.CardId == payment.CardId && x.Status == PAYMENT_STATUS.AUTOPREPARED)
             //    .OrderBy(x => x.UnPaidAmount)
@@ -339,7 +362,7 @@ namespace Clinic_CRM.Services.PaymentServices
             if (payment.Status == PAYMENT_STATUS.REJECTED)
                 throw new KeyNotFoundException("Payment request has already been rejected.");
 
-            if (payment.Status != PAYMENT_STATUS.CHECKED || payment.Status != PAYMENT_STATUS.REQUESTED)
+            if (payment.Status != PAYMENT_STATUS.CHECKED && payment.Status != PAYMENT_STATUS.REQUESTED)
                 throw new KeyNotFoundException("Payment should be either on checked or requested status to cancel.");
 
             payment.Status = PAYMENT_STATUS.CANCELED;
@@ -393,7 +416,7 @@ namespace Clinic_CRM.Services.PaymentServices
             if (payment.Status == PAYMENT_STATUS.REJECTED)
                 throw new KeyNotFoundException("Payment request has already been rejected.");
 
-            if (payment.Status != PAYMENT_STATUS.CHECKED || payment.Status != PAYMENT_STATUS.REQUESTED)
+            if (payment.Status != PAYMENT_STATUS.CHECKED && payment.Status != PAYMENT_STATUS.REQUESTED)
                 throw new KeyNotFoundException("Payment should be either on checked or requested status to reject.");
 
             payment.Status = PAYMENT_STATUS.REJECTED;

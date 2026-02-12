@@ -7,7 +7,7 @@
         public string Description { get; set; } = string.Empty;
         public int DurationInMinutes { get; set; } = 0;
         public string ServicePicture { get; set; } = string.Empty;
-        public ICollection<int>? MedicalProfessionalsId { get; set; }
-        public ICollection<int>? Branches { get; set; }
+        public ICollection<int>? MedicalProfessionalsId { get; set; } = new List<int>();
+        public ICollection<int>? Branches { get; set; } = new List<int>();
     }
 }

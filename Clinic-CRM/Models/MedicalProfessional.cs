@@ -23,10 +23,11 @@ namespace Clinic_CRM.Models
         public int YearsOfExperience { get; set; } = 0;
         public string Status { get; set; } = MEDICAL_PROFESSIONS_STATUS.ACTIVE;
         public string ProfilePicture { get; set; } = string.Empty;
-        public List<BranchSetting> Branches {  get; set; }
+        //public List<BranchSetting> Branches {  get; set; }
         public bool RequiresUserAccount { get; set; }
         public ICollection<DoctorSchedule>? DoctorSchedules { get; set; }
-        public ICollection<MedicalService>? MedicalServices { get; set; }
+        //public ICollection<MedicalService>? MedicalServices { get; set; }
+        public ICollection<DocService>? DocServices { get; set; }
         public User? User { get; set; }
         public int? UserId { get; set; }
 

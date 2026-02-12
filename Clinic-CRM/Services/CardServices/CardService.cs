@@ -137,7 +137,7 @@ namespace Clinic_CRM.Services.CardServices
         }
         public async Task<Card> GetCardByReference(string Ref)
         {
-            var card = await _context.Cards.Where(x => x.CardNumber == Ref).FirstOrDefaultAsync();
+            var card = await _context.Cards.Include(x => x.RequestedBy).Include(x => x.ActivatedBy).Where(x => x.CardNumber == Ref).FirstOrDefaultAsync();
 
             if (card == null)
                 throw new KeyNotFoundException("Card Not Found.");
@@ -146,7 +146,7 @@ namespace Clinic_CRM.Services.CardServices
         }
         public async Task<Card> GetCardById(int Id)
         {
-            var card = await _context.Cards.FindAsync(Id);
+            var card = await _context.Cards.Include(x => x.RequestedBy).Include(x => x.ActivatedBy).Where(x => x.Id == Id).FirstOrDefaultAsync();
             
             if (card == null)
                 throw new KeyNotFoundException("Card Not Found.");
@@ -155,7 +155,7 @@ namespace Clinic_CRM.Services.CardServices
         }
        public async Task<List<Card>> GetAllCards()
        {
-            return await _context.Cards.ToListAsync();
+            return await _context.Cards.Include(x => x.RequestedBy).Include(x => x.ActivatedBy).ToListAsync();
        }
 
        public async Task<Card> ReActivateCard(int Id)
@@ -271,7 +271,7 @@ namespace Clinic_CRM.Services.CardServices
             if (patient == null)
                 throw new KeyNotFoundException("User does not have a patient record.");
            
-            var card = await _context.Cards.Where(x => x.PatientId == patient.Id).FirstOrDefaultAsync();
+            var card = await _context.Cards.Include(x => x.RequestedBy).Include(x => x.ActivatedBy).Where(x => x.PatientId == patient.Id).FirstOrDefaultAsync();
             
             if (card == null)
                 throw new KeyNotFoundException("Card Not Found.");

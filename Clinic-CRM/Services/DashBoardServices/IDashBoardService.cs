@@ -4,7 +4,7 @@ namespace Clinic_CRM.Services.DashBoardServices
 {
     public interface IDashBoardService
     {
-        Task<DashboardDTO> GetAppointmentReport(DateTime? fromDate, DateTime? ToDate);
+        Task<DashboardDTO> GetAppointmentReport(DateOnly? fromDate, DateOnly? ToDate);
         Task<MostBookedServicesDTO> GetMostBookedServices();
     }
 }

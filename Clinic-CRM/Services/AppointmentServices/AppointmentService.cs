@@ -105,7 +105,17 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .Where(cs => cs.CardTypeId == card.CardTypeId)
                 .FirstOrDefaultAsync();
 
-            if(cardSettings == null)
+            var worksAtBranch = await _context.DocServices
+              .AnyAsync(x => x.MedicalProfessionalId == dto.MedicalProfessionalId
+                          && x.BranchSettingId == dto.BranchId);
+
+            if (!worksAtBranch)
+                throw new InvalidOperationException(
+                    "The chosen medical professional does not work at this branch."
+                );
+
+
+            if (cardSettings == null)
                 throw new KeyNotFoundException("Card settings not found for patient's card type.");
 
             var expiryDate = DateOnly.FromDateTime(card.ActivatedAt.AddDays(cardSettings.ExpirationDuration));
@@ -147,12 +157,39 @@ namespace Clinic_CRM.Services.AppointmentServices
                 .ToListAsync();
 
             if (overlapping != null && overlapping.Any(x =>
-            {
-                var start = x.ReservationTime;
-                var end = start.AddMinutes(x.DurationInMinutes);
-                return appStart < end && appEnd > start;
-            }))
-                throw new KeyNotFoundException("Time slot already booked.");
+                        {
+                            var start = x.ReservationTime;
+                            var end = start.AddMinutes(x.DurationInMinutes);
+                            return appStart < end && appEnd > start;
+                        }))
+                            throw new KeyNotFoundException("Time slot already booked.");
+
+            // 🔁 Appointment Limit Check 
+
+            // Daily count
+            var dailyAppointmentsCount = await _context.Appointments
+                .Where(x => x.PatientId == app.PatientId &&
+                            x.Day == dto.Day &&
+                            x.Status == APPOINTMENT_STATUS.SCHEDULED)
+                .CountAsync();
+
+            if (dailyAppointmentsCount >= 1)
+                throw new InvalidOperationException("You cannot have more than 1 appointment in a single day.");
+
+            // Weekly count (next 7 days including today)
+            var startOfWeek = dto.Day.AddDays(6);
+            var endOfWeek = dto.Day;
+
+            var weeklyAppointmentsCount = await _context.Appointments
+                .Where(x => x.PatientId == app.PatientId &&
+                            x.Day >= startOfWeek &&
+                            x.Day <= endOfWeek &&
+                            x.Status == APPOINTMENT_STATUS.SCHEDULED)
+                .CountAsync();
+
+            if (weeklyAppointmentsCount >= 3)
+                throw new InvalidOperationException("You cannot have more than 3 appointments in a single week.");
+
 
             // 🏷 Generate reference prefix
             var prefix = await _context.CompanySetting
@@ -281,7 +318,6 @@ namespace Clinic_CRM.Services.AppointmentServices
             }
 
             // 🔔 --- SAFE NOTIFICATIONS END ---
-
 
 
             return app;
@@ -621,7 +657,8 @@ namespace Clinic_CRM.Services.AppointmentServices
         {
             var daySchedule = await _context.DoctorSchedules
                 .Where(x => x.MedicalProfessionalId == docId &&
-                        x.WeekDay.ToLower() == day.DayOfWeek.ToString().ToLower())
+                        x.WeekDay.ToLower() == day.DayOfWeek.ToString().ToLower()
+                        && x.BranchSettingId == branchId)
                 .FirstOrDefaultAsync();
 
             if (daySchedule == null)
@@ -653,7 +690,7 @@ namespace Clinic_CRM.Services.AppointmentServices
             DateOnly today = DateOnly.FromDateTime(now);
 
             var freeSlots = new List<TimeOnly>();
-            var slotDuration = 30; // standard appointment slot
+            var slotDuration = 20; // standard appointment slot
             var tempTime = daySchedule.StartTime;
 
             while (tempTime <= daySchedule.EndTime)

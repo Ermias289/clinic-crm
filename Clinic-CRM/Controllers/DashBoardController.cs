@@ -18,7 +18,7 @@ namespace Clinic_CRM.Controllers
 
 
         [HttpGet("AppointmentReport")]
-        public async Task<ActionResult> GetAppointmentReport(DateTime? fromDate, DateTime? toDate)
+        public async Task<ActionResult> GetAppointmentReport(DateOnly? fromDate, DateOnly? toDate)
         {
             try
             {

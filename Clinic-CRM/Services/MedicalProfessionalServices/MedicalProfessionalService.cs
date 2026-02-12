@@ -29,19 +29,19 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
             var role = await _context.UserRoles.Where(x => x.Name == USER_ROLES.ADMIN).FirstOrDefaultAsync();
 
-            if (dto.MedicalServicesId.Any())
-            {
-                doc.MedicalServices = await _context.MedicalServices
-                    .Where(ms => dto.MedicalServicesId.Contains(ms.Id))
-                    .ToListAsync();
-            }
+            //if (dto.MedicalServicesId.Any())
+            //{
+            //    doc.MedicalServices = await _context.MedicalServices
+            //        .Where(ms => dto.MedicalServicesId.Contains(ms.Id))
+            //        .ToListAsync();
+            //}
 
-            if (dto.Branches.Any())
-            {
-                doc.Branches = await _context.BranchSettings
-                    .Where(ms => dto.Branches.Contains(ms.Id))
-                    .ToListAsync();
-            }
+            //if (dto.Branches.Any())
+            //{
+            //    doc.Branches = await _context.BranchSettings
+            //        .Where(ms => dto.Branches.Contains(ms.Id))
+            //        .ToListAsync();
+            //}
 
 
             if (doc.RequiresUserAccount)
@@ -71,37 +71,72 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
         }
         public async Task<MedicalProfessional> UpdateMedicalProfessional(UpdateMedicalProfessionalDTO dto)
         {
-            var doc = await _context.MedicalProfessionals.FindAsync(dto.Id);
+            var doc = await _context.MedicalProfessionals
+                .Include(x => x.DocServices)
+                .FirstOrDefaultAsync(d => d.Id == dto.Id);
 
             if (doc == null)
                 throw new KeyNotFoundException("Medical Professional Not Found");
 
             _mapper.Map(dto, doc);
 
+            //// ================= MEDICAL SERVICES =================
+            //if (dto.MedicalServicesId != null)
+            //{
+            //    var newServiceIds = dto.MedicalServicesId.Distinct().ToList();
+            //    var existingServiceIds = doc.MedicalServices.Select(s => s.Id).ToList();
 
+            //    // Remove unchecked
+            //    var servicesToRemove = doc.MedicalServices
+            //        .Where(s => !newServiceIds.Contains(s.Id))
+            //        .ToList();
 
-            if (dto.MedicalServicesId.Any())
-            {
-                doc.MedicalServices = await _context.MedicalServices
-                    .Where(ms => dto.MedicalServicesId.Contains(ms.Id))
-                    .ToListAsync();
-            }
+            //    foreach (var service in servicesToRemove)
+            //        doc.MedicalServices.Remove(service);
 
-            if (dto.Branches.Any())
-            {
-                doc.Branches = await _context.BranchSettings
-                    .Where(ms => dto.Branches.Contains(ms.Id))
-                    .ToListAsync();
-            }
+            //    // Add new
+            //    var servicesToAddIds = newServiceIds.Except(existingServiceIds).ToList();
 
+            //    var servicesToAdd = await _context.MedicalServices
+            //        .Where(s => servicesToAddIds.Contains(s.Id))
+            //        .ToListAsync();
 
-            var role = await _context.UserRoles.Where(x => x.Name == USER_ROLES.ADMIN).FirstOrDefaultAsync();
+            //    foreach (var service in servicesToAdd)
+            //        doc.MedicalServices.Add(service);
+            //}
 
+            //// ================= BRANCHES =================
+            //if (dto.Branches != null)
+            //{
+            //    var newBranchIds = dto.Branches.Distinct().ToList();
+            //    var existingBranchIds = doc.Branches.Select(b => b.Id).ToList();
+
+            //    var branchesToRemove = doc.Branches
+            //        .Where(b => !newBranchIds.Contains(b.Id))
+            //        .ToList();
+
+            //    foreach (var branch in branchesToRemove)
+            //        doc.Branches.Remove(branch);
+
+            //    var branchesToAddIds = newBranchIds.Except(existingBranchIds).ToList();
+
+            //    var branchesToAdd = await _context.BranchSettings
+            //        .Where(b => branchesToAddIds.Contains(b.Id))
+            //        .ToListAsync();
+
+            //    foreach (var branch in branchesToAdd)
+            //        doc.Branches.Add(branch);
+            //}
+
+            // ================= USER ACCOUNT =================
+            var role = await _context.UserRoles
+                .FirstOrDefaultAsync(x => x.Name == USER_ROLES.ADMIN);
 
             if (doc.RequiresUserAccount)
             {
                 if (role == null)
                     throw new KeyNotFoundException("User Role Not Found");
+
                 var user = new CreateUserAccountDTO
                 {
                     FName = doc.FName,
@@ -118,16 +153,17 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
             doc.UpdatedAt = DateTime.UtcNow;
 
-            _context.MedicalProfessionals.Update(doc);
             await _context.SaveChangesAsync();
 
             return doc;
         }
 
+
         public async Task<MedicalProfessional> GetMedicalProfessionalById(int Id)
         {
             var doc = await _context.MedicalProfessionals
                 .AsNoTracking()
+                .Include(x => x.DocServices)
                 .Select(x => new MedicalProfessional
                 {
                     Id = x.Id,
@@ -147,30 +183,6 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
                     YearsOfExperience = x.YearsOfExperience,
                     LicenseNumber = x.LicenseNumber,
                     UserId = x.UserId,
-
-                    Branches = x.Branches.Select(x => new BranchSetting
-                    {
-                        Id = x.Id,
-                        Name = x.Name,
-                        Address = x.Address,
-                        SubCity = x.SubCity,
-                        City = x.City,
-                        Location = x.Location,
-                        PhoneNumber = x.PhoneNumber,
-                    }).ToList(),
-
-                    MedicalServices = x.MedicalServices.Select(x => new MedicalService
-                    {
-                        Id = x.Id,
-                        Name = x.Name,
-                        DurationInMinutes = x.DurationInMinutes,
-                        CreatedAt = x.CreatedAt,
-                        ServicePicture = x.ServicePicture,
-                        Description = x.Description,
-                        UpdatedAt = x.UpdatedAt,
-                        ServiceReference = x.ServiceReference,
-                    }).ToList()
-
                 })
                 .FirstOrDefaultAsync(x => x.Id == Id);
 
@@ -194,7 +206,7 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
 
         public async Task<List<MedicalProfessional>> GetAllMedicalProfessionals()
         {
-            return await _context.MedicalProfessionals.AsNoTracking()
+            return await _context.MedicalProfessionals.Include(x => x.DocServices).AsNoTracking()
                  .Select(x => new MedicalProfessional
                  {
                      Id = x.Id,
@@ -215,28 +227,28 @@ namespace Clinic_CRM.Services.MedicalProfessionalServices
                      LicenseNumber = x.LicenseNumber,
                      UserId = x.UserId,
 
-                     Branches = x.Branches.Select(x => new BranchSetting
-                     {
-                         Id = x.Id,
-                         Name = x.Name,
-                         Address = x.Address,
-                         SubCity = x.SubCity,
-                         City = x.City,
-                         Location = x.Location,
-                         PhoneNumber = x.PhoneNumber,
-                     }).ToList(),
+                     //Branches = x.Branches.Select(x => new BranchSetting
+                     //{
+                     //    Id = x.Id,
+                     //    Name = x.Name,
+                     //    Address = x.Address,
+                     //    SubCity = x.SubCity,
+                     //    City = x.City,
+                     //    Location = x.Location,
+                     //    PhoneNumber = x.PhoneNumber,
+                     //}).ToList(),
 
-                     MedicalServices = x.MedicalServices.Select(x => new MedicalService
-                     {
-                         Id = x.Id,
-                         Name = x.Name,
-                         DurationInMinutes = x.DurationInMinutes,
-                         CreatedAt = x.CreatedAt,
-                         ServicePicture = x.ServicePicture,
-                         Description = x.Description,
-                         UpdatedAt = x.UpdatedAt,
-                         ServiceReference = x.ServiceReference,
-                     }).ToList()
+                     //MedicalServices = x.MedicalServices.Select(x => new MedicalService
+                     //{
+                     //    Id = x.Id,
+                     //    Name = x.Name,
+                     //    DurationInMinutes = x.DurationInMinutes,
+                     //    CreatedAt = x.CreatedAt,
+                     //    ServicePicture = x.ServicePicture,
+                     //    Description = x.Description,
+                     //    UpdatedAt = x.UpdatedAt,
+                     //    ServiceReference = x.ServiceReference,
+                     //}).ToList()
 
                  })
                 .ToListAsync();

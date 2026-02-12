@@ -29,6 +29,7 @@ namespace Clinic_CRM.Helpers
             await SeedCompanySetting();
             await SeedRoles();
             await SeedUser();
+            await SeedPaymentType();
             //await SeedCardType();
             //await SeedPatients();
 
@@ -298,5 +299,22 @@ namespace Clinic_CRM.Helpers
         //}
 
 
+        async Task SeedPaymentType()
+        {
+            var existingPaymentTypes = await _context.PaymentTypes.ToListAsync();
+            var paymentTypes = new PaymentType[]
+            {
+                new PaymentType { Name = "Bank-Transfer", Description = " " },
+                new PaymentType { Name = "Insurance", Description = " " }
+            };
+            foreach (var paymentType in paymentTypes)
+            {
+                if (!existingPaymentTypes.Any(pt => pt.Name.ToLower() == paymentType.Name.ToLower()))
+                {
+                    _context.PaymentTypes.Add(paymentType);
+                }
+            }
+            await _context.SaveChangesAsync();
+        }
     }
 }

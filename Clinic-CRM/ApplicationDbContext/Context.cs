@@ -33,6 +33,7 @@ namespace Clinic_CRM.ApplicationDbContext
         public DbSet<UserNotification> UserNotifications { get; set; }
         public DbSet<Banner> Banners { get; set; }
         public DbSet<PaymentType> PaymentTypes { get; set; }
+        public DbSet<DocService> DocServices { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Patient>()

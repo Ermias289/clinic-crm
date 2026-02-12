@@ -117,8 +117,6 @@ namespace Clinic_CRM.Models
         public bool CanEditPaymentType { get; set; } = false;
         public bool CanViewPaymentType { get; set; } = false;
 
-
-
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

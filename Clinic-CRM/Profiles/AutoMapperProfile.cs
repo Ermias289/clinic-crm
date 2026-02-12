@@ -7,6 +7,7 @@ using Clinic_CRM.DTOs.CardDTOs;
 using Clinic_CRM.DTOs.CardSettingDTOs;
 using Clinic_CRM.DTOs.CardTypeDTOs;
 using Clinic_CRM.DTOs.CompanySettingDTOs;
+using Clinic_CRM.DTOs.DocServiceDTOs;
 using Clinic_CRM.DTOs.DoctorScheduleDTOs;
 using Clinic_CRM.DTOs.MedicalProfessionalDTOs;
 using Clinic_CRM.DTOs.MedicalServiceDTOs;
@@ -118,10 +119,12 @@ namespace Clinic_CRM.Profiles
 
             //Medical Professional
             CreateMap<MedicalProfessional, AddMedicalProfessionalDTO>();
-            CreateMap<AddMedicalProfessionalDTO, MedicalProfessional>()
-                .ForMember(dest => dest.Branches, opt => opt.Ignore())
-                .ForMember(dest => dest.MedicalServices, opt => opt.Ignore());
+            CreateMap<AddMedicalProfessionalDTO, MedicalProfessional>();
+                //.ForMember(dest => dest.Branches, opt => opt.Ignore())
+                //.ForMember(dest => dest.MedicalServices, opt => opt.Ignore());
             CreateMap<UpdateMedicalProfessionalDTO, MedicalProfessional>();
+              //.ForMember(dest => dest.Branches, opt => opt.Ignore())
+              //  .ForMember(dest => dest.MedicalServices, opt => opt.Ignore());
             CreateMap<MedicalProfessional, UpdateMedicalProfessionalDTO>();
 
             //Medical Service
@@ -129,8 +132,15 @@ namespace Clinic_CRM.Profiles
             CreateMap<AddMedicalServiceDTO, MedicalService>()
                 .ForMember(dest => dest.Branches, opt => opt.Ignore())
                 .ForMember(dest => dest.MedicalProfessionals, opt => opt.Ignore());
-            CreateMap<UpdateMedicalServiceDTO, MedicalService>();
-            CreateMap<MedicalService, UpdateMedicalServiceDTO>();
+            CreateMap<UpdateMedicalServiceDTO, MedicalService>()
+                .ForMember(dest => dest.Branches, opt => opt.Ignore())
+                .ForMember(dest => dest.MedicalProfessionals, opt => opt.Ignore());
+            //CreateMap<MedicalService, UpdateMedicalServiceDTO>();
+            CreateMap<MedicalService, UpdateMedicalServiceDTO>()
+                .ForMember(dest => dest.Branches,
+                    opt => opt.MapFrom(src => src.Branches.Select(b => b.Id)))
+                .ForMember(dest => dest.MedicalProfessionalsId,
+                    opt => opt.MapFrom(src => src.MedicalProfessionals.Select(mp => mp.Id)));
 
 
             //Bank
@@ -151,6 +161,12 @@ namespace Clinic_CRM.Profiles
             CreateMap<PaymentType, AddPaymentTypeDTO>();
             CreateMap<UpdatePaymentTypeDTO, PaymentType>();
             CreateMap<PaymentType, UpdatePaymentTypeDTO>();
+
+            //Doc Service
+            CreateMap<DocService, AddDocServiceDTO>();
+            CreateMap<AddDocServiceDTO, DocService>();
+            CreateMap<UpdateDocServiceDTO, DocService>();
+            CreateMap<DocService, UpdateDocServiceDTO>();
 
         }
     }
