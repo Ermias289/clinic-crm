@@ -14,9 +14,7 @@ class RegisterView extends GetView<RegisterController> {
 
   // Method to launch Terms and Conditions URL
   Future<void> _launchTermsAndConditions() async {
-    final Uri url = Uri.parse(
-      'https://termsandconditions.nexabusinessgroup.com/',
-    );
+    final Uri url = Uri.parse('https://truecareterms.nexabusinessgroup.com/');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       Get.snackbar(
         'Error',

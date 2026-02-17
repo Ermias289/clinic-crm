@@ -2,7 +2,7 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api.truecaredentalclinic.com</domain>
-        <domain includeSubdomains="true">termsandconditions.nexabusinessgroup.com</domain>
+        <domain includeSubdomains="true">truecareterms.nexabusinessgroup.com</domain>
         <domain includeSubdomains="true">nexabusinessgroup.com</domain>
     </domain-config>
 </network-security-config>  

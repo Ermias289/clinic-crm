@@ -43,3 +43,8 @@
 
 # Cloudinary
 -keep class com.cloudinary.** { *; }
+
+# Google Play Core (for Flutter deferred components)
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
+-keep interface com.google.android.play.core.** { *; }
