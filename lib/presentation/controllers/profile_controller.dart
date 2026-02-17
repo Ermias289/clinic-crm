@@ -99,7 +99,7 @@ class ProfileController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to load profile: ${e.toString()}',
+        'Failed to load profile. Please check your connection.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade100,
         colorText: Colors.red.shade900,
@@ -151,7 +151,7 @@ class ProfileController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to update profile: ${e.toString()}',
+        'Failed to update profile. Please check your connection.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade100,
         colorText: Colors.red.shade900,
@@ -211,7 +211,7 @@ class ProfileController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to change password: ${e.toString()}',
+        'Failed to change password. Please check your connection.',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red.shade100,
         colorText: Colors.red.shade900,

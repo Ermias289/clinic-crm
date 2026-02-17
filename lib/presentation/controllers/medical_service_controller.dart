@@ -98,7 +98,8 @@ class MedicalServiceController extends GetxController {
             DateTime.now().millisecondsSinceEpoch,
           );
         } catch (retryError) {
-          // Retry failed, but we'll let the UI handle the empty state
+          // Final retry failed, we'll let the UI handle the empty state
+          // and log a sanitized error internally if needed.
         }
       }
     } finally {

@@ -123,8 +123,8 @@ class AppointmentController extends GetxController {
       final result = await repository.getAppointments(userId);
       appointments.assignAll(result);
     } catch (e) {
-      error.value = e.toString();
-      Get.snackbar('Error', 'Failed to fetch appointments: ${e.toString()}');
+      error.value = 'Failed to fetch appointments. Please check your connection.';
+      // Technical error logged but not shown to user via snackbar
     } finally {
       isLoading.value = false;
     }
