@@ -58,10 +58,8 @@ class DoctorSchedulePickerController extends GetxController {
     _serviceId = serviceId;
 
     // Prioritize service-specific data if available
-    if (medicalService != null &&
-        medicalService.branches.isNotEmpty &&
-        medicalService.medicalProfessionals.isNotEmpty) {
-      // Use service-specific branches and doctors
+    if (medicalService != null) {
+      // Use service-specific branches and doctors (even if empty)
       branches.assignAll(medicalService.branches);
       _allDoctors.clear();
       _allDoctors.addAll(

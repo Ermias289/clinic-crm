@@ -55,17 +55,10 @@ class ServiceDetailController extends GetxController {
       isLoadingDoctors.value = true;
       errorMessage.value = null;
 
-      // If service has specific doctors, use them
       final serviceDoctors = service.medicalProfessionals;
-      if (serviceDoctors.isNotEmpty) {
-        doctors.value = serviceDoctors
-            .where((doctor) => doctor.isActive)
-            .toList();
-      } else {
-        // Fallback to loading all doctors
-        final allDoctors = await _doctorRepository.getDoctors();
-        doctors.value = allDoctors.where((doctor) => doctor.isActive).toList();
-      }
+      doctors.value = serviceDoctors
+          .where((doctor) => doctor.isActive)
+          .toList();
     } catch (e) {
       errorMessage.value = 'Failed to load doctors: ${e.toString()}';
     } finally {

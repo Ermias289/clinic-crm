@@ -6,6 +6,8 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
 import '../controllers/service_detail_controller.dart';
 import '../widgets/custom_button.dart';
+import '../../domain/models/medical_professional_model.dart';
+import '../../data/models/branch_setting_model.dart';
 
 class ServiceDetailView extends StatelessWidget {
   const ServiceDetailView({super.key});
@@ -351,7 +353,7 @@ class ServiceDetailView extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           child: GestureDetector(
-            onTap: () => controller.onBranchSelected(branch),
+          onTap: () => _showBranchDetailPopup(branch),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -545,7 +547,7 @@ class ServiceDetailView extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           child: GestureDetector(
-            onTap: () => controller.onDoctorSelected(doctor),
+          onTap: () => _showDoctorDetailPopup(doctor),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -720,6 +722,236 @@ class ServiceDetailView extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+
+  void _showDoctorDetailPopup(MedicalProfessional doctor) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              Row(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.backgroundLight,
+                    ),
+                    child: ClipOval(
+                      child: doctor.profilePictureUrl?.isNotEmpty == true
+                          ? Image.network(
+                              ImageUtils.buildImageUrl(doctor.profilePictureUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : _buildDoctorAvatar(),
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          doctor.fullName,
+                          style: AppTextStyles.h2.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        if (doctor.jobTitle?.isNotEmpty == true)
+                          Text(
+                            doctor.jobTitle!,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+              const Divider(),
+              const SizedBox(height: 24),
+
+              if (doctor.specialization?.isNotEmpty == true) ...[
+                _buildPopupDetailRow(
+                  Icons.star_outline,
+                  'Specialization',
+                  doctor.specialization!,
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              if (doctor.yearsOfExperience != null &&
+                  doctor.yearsOfExperience! > 0) ...[
+                _buildPopupDetailRow(
+                  Icons.work_outline,
+                  'Experience',
+                  '${doctor.yearsOfExperience} years of experience',
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              if (doctor.educationalBackground?.isNotEmpty == true) ...[
+                _buildPopupDetailRow(
+                  Icons.school_outlined,
+                  'Education',
+                  doctor.educationalBackground!,
+                ),
+              ],
+
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  void _showBranchDetailPopup(BranchSettingModel branch) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Icon(
+                    Icons.location_city,
+                    color: AppColors.primaryBlue,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Text(
+                    branch.name ?? 'Unknown Branch',
+                    style: AppTextStyles.h2.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+
+            if (branch.address?.isNotEmpty == true) ...[
+              _buildPopupDetailRow(
+                Icons.location_on_outlined,
+                'Address',
+                branch.address!,
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            if (branch.city?.isNotEmpty == true ||
+                branch.subCity?.isNotEmpty == true) ...[
+              _buildPopupDetailRow(
+                Icons.map_outlined,
+                'Location',
+                [
+                  branch.subCity,
+                  branch.city,
+                ].whereType<String>().where((s) => s.isNotEmpty).join(', '),
+              ),
+            ],
+
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPopupDetailRow(IconData icon, String title, String content) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColors.primaryBlue, size: 24),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textHint,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                content,
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textPrimary,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
