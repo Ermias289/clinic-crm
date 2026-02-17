@@ -27,6 +27,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   // Selected values must come from the doctor schedule picker (not free pickers)
   String? selectedDoctorName;
   int? selectedDoctorId;
+  String? selectedBranchName;
+  int? selectedBranchId;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   DateTime? selectedDateTime;
@@ -83,7 +85,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         setState(() {
           userCard = CardModel.fromJson(response.body as Map<String, dynamic>);
         });
-      } else {;
+      } else {
         setState(() {
           userCard = null;
         });
@@ -110,9 +112,16 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       setState(() {
         selectedDoctorId = result['doctorId'] as int?;
         selectedDoctorName = result['doctorName'] as String?;
+        selectedBranchId = result['branchId'] as int?;
+        selectedBranchName = result['branchName'] as String?;
         selectedDate = result['date'] as DateTime?;
-        selectedTime = result['time'] as TimeOfDay?;
         selectedDateTime = result['dateTime'] as DateTime?;
+        if (selectedDateTime != null) {
+          selectedTime = TimeOfDay(
+            hour: selectedDateTime!.hour,
+            minute: selectedDateTime!.minute,
+          );
+        }
       });
     }
   }
@@ -120,6 +129,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
   Future<void> _submitBooking() async {
     if (_formKey.currentState!.validate() &&
         selectedDoctorId != null &&
+        selectedBranchId != null &&
         selectedDate != null &&
         selectedTime != null &&
         selectedDateTime != null) {
@@ -195,6 +205,12 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                       Icons.person,
                       'Doctor',
                       selectedDoctorName ?? 'N/A',
+                    ),
+                    const Divider(height: 24),
+                    _buildDetailRow(
+                      Icons.location_on,
+                      'Branch',
+                      selectedBranchName ?? 'Unknown Branch',
                     ),
                     const Divider(height: 24),
                     _buildDetailRow(
@@ -313,7 +329,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       final response = await apiClient.post('/Appointment', {
         'dentistryId': service.id,
         'medicalProfessionalId': selectedDoctorId,
-        'patientId': patientId, // Added missing patient ID
+        'patientId': patientId,
+        'branchId': selectedBranchId,
         'day': dateOnly,
         'reservationTime': timeOnly,
       });
@@ -504,7 +521,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                                 (selectedDoctorName == null ||
                                     selectedDateTime == null)
                                 ? 'Choose Doctor, Date & Time'
-                                : '${selectedDoctorName!} • ${DateFormat('EEE, d MMM').format(selectedDateTime!)} • ${DateFormat.jm().format(selectedDateTime!)}',
+                                : '${selectedDoctorName!} • ${selectedBranchName ?? 'Clinic'} • ${DateFormat('EEE, d MMM').format(selectedDateTime!)} • ${DateFormat.jm().format(selectedDateTime!)}',
                             icon: Icons.event_available_rounded,
                             onTap: _openDoctorSchedulePicker,
                             isSelected:

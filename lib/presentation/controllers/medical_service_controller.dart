@@ -18,6 +18,8 @@ class MedicalServiceController extends GetxController {
   );
 
   final services = <MedicalService>[].obs;
+  final filteredServices = <MedicalService>[].obs;
+  final searchQuery = ''.obs;
   final isLoading = false.obs;
   bool _hasLoadedOnce = false;
 
@@ -26,6 +28,19 @@ class MedicalServiceController extends GetxController {
     super.onInit();
     // Always check if we should load services on init
     checkAndLoadServices();
+  }
+
+  void searchServices(String query) {
+    searchQuery.value = query;
+    if (query.isEmpty) {
+      filteredServices.clear();
+    } else {
+      filteredServices.value = services
+          .where((s) =>
+              s.name.toLowerCase().contains(query.toLowerCase()) ||
+              (s.description.toLowerCase().contains(query.toLowerCase())))
+          .toList();
+    }
   }
 
   // Method to check if services should be loaded and load them if needed

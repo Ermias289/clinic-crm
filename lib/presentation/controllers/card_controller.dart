@@ -40,6 +40,7 @@ class CardController extends GetxController {
   final RxBool isCheckingCard = false.obs;
   final Rx<CardModel?> existingCard = Rx<CardModel?>(null);
   final RxBool hasPatientId = false.obs;
+  final RxBool isInsuranceCovered = false.obs;
 
   // Request Flow State
   final Rx<CardSettingModel?> selectedCard = Rx<CardSettingModel?>(null);
@@ -300,7 +301,7 @@ class CardController extends GetxController {
         id: autoPreparedPayment.value!.id,
         requestedAmount: autoPreparedPayment.value!.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false,
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);
@@ -425,6 +426,7 @@ class CardController extends GetxController {
     dobController.clear();
     requestRemarkController.clear();
     selectedPaymentProof.value = null;
+    isInsuranceCovered.value = false;
     createdPatient.value = null;
     createdCardData.value = null;
     cardPayments.clear();
@@ -577,7 +579,7 @@ class CardController extends GetxController {
         id: autoPrepared.id,
         requestedAmount: autoPrepared.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false, // Default to false, can be made configurable
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);

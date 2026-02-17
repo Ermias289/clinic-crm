@@ -26,4 +26,19 @@ class AppointmentRepositoryImpl implements AppointmentRepository {
   Future<bool> cancelAppointment(int id, String reason) async {
     return await remoteDataSource.cancelAppointment(id, reason);
   }
+
+  @override
+  Future<List<String>> getFreeSlots(
+    int doctorId,
+    String date,
+    int branchId,
+    int medicalServiceId,
+  ) async {
+    return await remoteDataSource.getFreeSlots(
+      doctorId,
+      date,
+      branchId,
+      medicalServiceId,
+    );
+  }
 }

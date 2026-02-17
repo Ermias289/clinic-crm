@@ -53,6 +53,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     // Set status bar to be visible
     SystemChrome.setSystemUIOverlayStyle(
@@ -125,7 +126,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryBlue.withOpacity(0.3),
+                            color: AppColors.primaryBlue.withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -142,7 +143,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                               height: 120,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                               ),
                             ),
                           ),
@@ -154,7 +155,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                               height: 100,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.05),
+                                color: Colors.white.withValues(alpha: 0.05),
                               ),
                             ),
                           ),
@@ -179,7 +180,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                           'Patient Card',
                                           style: AppTextStyles.bodySmall
                                               .copyWith(
-                                                color: Colors.white.withOpacity(
+                                                color: Colors.white.withValues(alpha: 
                                                   0.9,
                                                 ),
                                                 letterSpacing: 1.0,
@@ -221,7 +222,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         userCard.cardNumber,
                                         style: AppTextStyles.bodyMedium
                                             .copyWith(
-                                              color: Colors.white.withOpacity(
+                                              color: Colors.white.withValues(alpha: 
                                                 0.9,
                                               ),
                                               letterSpacing: 3,
@@ -262,7 +263,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                             style: AppTextStyles.bodySmall
                                                 .copyWith(
                                                   color: Colors.white
-                                                      .withOpacity(0.8),
+                                                      .withValues(alpha: 0.8),
                                                 ),
                                           ),
                                         ),
@@ -276,8 +277,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         ),
                                         decoration: BoxDecoration(
                                           color: isActive
-                                              ? Colors.white.withOpacity(0.2)
-                                              : Colors.orange.withOpacity(0.8),
+                                              ? Colors.white.withValues(alpha: 0.2)
+                                              : Colors.orange.withValues(alpha: 0.8),
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),
@@ -320,7 +321,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                           vertical: 6,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
+                                          color: Colors.white.withValues(alpha: 0.2),
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),
@@ -418,7 +419,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
+                                    color: Colors.black.withValues(alpha: 0.05),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -431,100 +432,102 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Flexible(
-                                                child: Builder(
-                                                  builder: (context) {
-                                                    final serviceName =
-                                                        appointment
-                                                            .dentistryService
-                                                            ?.name ??
-                                                        'Service';
-                                                    return Text(
-                                                      serviceName,
-                                                      style: AppTextStyles
-                                                          .bodyLarge
-                                                          .copyWith(
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    );
-                                                  },
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Flexible(
+                                                  child: Builder(
+                                                    builder: (context) {
+                                                      final serviceName =
+                                                          appointment
+                                                              .dentistryService
+                                                              ?.name ??
+                                                          'Service';
+                                                      return Text(
+                                                        serviceName,
+                                                        style: AppTextStyles
+                                                            .bodyLarge
+                                                            .copyWith(
+                                                              fontWeight:
+                                                                  FontWeight.bold,
+                                                            ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      );
+                                                    },
+                                                  ),
                                                 ),
-                                              ),
-                                              if (appointment.reference !=
-                                                  null) ...[
-                                                const SizedBox(width: 8),
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 4,
+                                                if (appointment.reference !=
+                                                    null) ...[
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 4,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          AppColors.backgroundLight,
+                                                      borderRadius:
+                                                          BorderRadius.circular(8),
+                                                      border: Border.all(
+                                                        color: AppColors.textHint
+                                                            .withValues(alpha: 0.3),
                                                       ),
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        AppColors.backgroundLight,
-                                                    borderRadius:
-                                                        BorderRadius.circular(8),
-                                                    border: Border.all(
-                                                      color: AppColors.textHint
-                                                          .withValues(alpha: 0.3),
+                                                    ),
+                                                    child: Text(
+                                                      appointment.reference!,
+                                                      style: AppTextStyles.bodySmall
+                                                          .copyWith(
+                                                            color: AppColors
+                                                                .textSecondary,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            fontSize: 10,
+                                                          ),
                                                     ),
                                                   ),
-                                                  child: Text(
-                                                    appointment.reference!,
-                                                    style: AppTextStyles.bodySmall
-                                                        .copyWith(
-                                                          color: AppColors
-                                                              .textSecondary,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 10,
-                                                        ),
-                                                  ),
-                                                ),
+                                                ],
                                               ],
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-                                          if (appointment.medicalProfessional !=
-                                              null) ...[
-                                            Text(
-                                              '${appointment.medicalProfessional!.prefix.isNotEmpty ? '${appointment.medicalProfessional!.prefix} ' : ''}${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
-                                              style: AppTextStyles.bodyMedium
-                                                  .copyWith(
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            if (appointment
-                                                .medicalProfessional!
-                                                .specialty
-                                                .isNotEmpty)
+                                            const SizedBox(height: 4),
+                                            if (appointment.medicalProfessional !=
+                                                null) ...[
                                               Text(
-                                                appointment
-                                                    .medicalProfessional!
-                                                    .specialty,
-                                                style: AppTextStyles.bodySmall
+                                                '${appointment.medicalProfessional!.prefix.isNotEmpty ? '${appointment.medicalProfessional!.prefix} ' : ''}${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
+                                                style: AppTextStyles.bodyMedium
                                                     .copyWith(
-                                                      color: AppColors.textHint,
+                                                      color:
+                                                          AppColors.textSecondary,
+                                                      fontWeight: FontWeight.w600,
                                                     ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
+                                              if (appointment
+                                                  .medicalProfessional!
+                                                  .specialty
+                                                  .isNotEmpty)
+                                                Text(
+                                                  appointment
+                                                      .medicalProfessional!
+                                                      .specialty,
+                                                  style: AppTextStyles.bodySmall
+                                                      .copyWith(
+                                                        color: AppColors.textHint,
+                                                      ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
                                       ),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
@@ -536,8 +539,8 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                               (appointment.status ?? '')
                                                       .toLowerCase() ==
                                                   'completed'
-                                              ? Colors.green.withOpacity(0.1)
-                                              : AppColors.primaryBlue.withOpacity(
+                                              ? Colors.green.withValues(alpha: 0.1)
+                                              : AppColors.primaryBlue.withValues(alpha: 
                                                   0.1,
                                                 ),
                                           borderRadius: BorderRadius.circular(20),

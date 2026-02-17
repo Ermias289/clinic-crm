@@ -7,6 +7,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
 import '../../domain/models/medical_service_model.dart';
 import '../controllers/doctor_schedule_picker_controller.dart';
+import '../../core/utils/error_handler.dart';
 
 /// Flow: Service (already chosen) -> Doctor -> Date -> Time (from schedule only)
 ///
@@ -18,7 +19,7 @@ import '../controllers/doctor_schedule_picker_controller.dart';
 /// Result payload:
 /// {
 ///   "service": MedicalService,
-///   "doctorId": int,
+///   "doctorId": int ,
 ///   "doctorName": String,
 ///   "date": DateTime (date-only),
 ///   "time": TimeOfDay,
@@ -46,7 +47,9 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     _controller = Get.find<DoctorSchedulePickerController>();
     // Ensure fresh state each time this page is opened
     _controller.resetAll();
-    _controller.init(serviceDurationInMinutes: _service.durationInMinutes);
+    _controller.init(
+      service: _service,
+    );
   }
 
   @override
@@ -58,14 +61,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
   void _continue() {
     if (!_controller.canContinue) {
-      Get.snackbar(
-        'Required',
-        'Please select branch, doctor, date, and time',
-        backgroundColor: AppColors.warningOrange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-        margin: const EdgeInsets.all(16),
-      );
+      ErrorHandler.showError('Please select branch, doctor, date, and time', title: 'Required');
       return;
     }
 
@@ -167,12 +163,12 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                           backgroundColor: AppColors.primaryBlue,
                           foregroundColor: Colors.white,
                           disabledBackgroundColor: AppColors.primaryBlue
-                              .withOpacity(0.4),
-                          disabledForegroundColor: Colors.white.withOpacity(
+                              .withValues(alpha: 0.4),
+                          disabledForegroundColor: Colors.white.withValues(alpha: 
                             0.9,
                           ),
                           elevation: 8,
-                          shadowColor: AppColors.primaryBlue.withOpacity(0.4),
+                          shadowColor: AppColors.primaryBlue.withValues(alpha: 0.4),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -274,7 +270,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                 width: 42,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: AppColors.textHint.withOpacity(0.4),
+                  color: AppColors.textHint.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -303,7 +299,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                   return ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: list.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final branch = list[index];
                       final selected =
@@ -318,13 +314,13 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: selected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
+                                ? AppColors.primaryBlue.withValues(alpha: 0.08)
                                 : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: selected
                                   ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
+                                  : AppColors.textHint.withValues(alpha: 0.15),
                               width: 1.5,
                             ),
                             boxShadow: AppColors.softShadow,
@@ -337,7 +333,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
                                     color: selected
-                                        ? AppColors.primaryBlue.withOpacity(0.1)
+                                        ? AppColors.primaryBlue.withValues(alpha: 0.1)
                                         : AppColors.backgroundLight,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -420,7 +416,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                 width: 42,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: AppColors.textHint.withOpacity(0.4),
+                  color: AppColors.textHint.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -470,13 +466,13 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: selected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
+                                ? AppColors.primaryBlue.withValues(alpha: 0.08)
                                 : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: selected
                                   ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
+                                  : AppColors.textHint.withValues(alpha: 0.15),
                               width: 1.5,
                             ),
                             boxShadow: AppColors.softShadow,
@@ -496,7 +492,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                       border: Border.all(
                                         color: selected
                                             ? AppColors.primaryBlue
-                                            : AppColors.textHint.withOpacity(
+                                            : AppColors.textHint.withValues(alpha: 
                                                 0.2,
                                               ),
                                         width: 2,
@@ -515,10 +511,10 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                               width: 70,
                                               height: 70,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) =>
+                                              errorBuilder: (_, _, _) =>
                                                   Container(
                                                     color: AppColors.primaryBlue
-                                                        .withOpacity(0.1),
+                                                        .withValues(alpha: 0.1),
                                                     child: Icon(
                                                       Icons.person_rounded,
                                                       color:
@@ -529,7 +525,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                             )
                                           : Container(
                                               color: AppColors.primaryBlue
-                                                  .withOpacity(0.1),
+                                                  .withValues(alpha: 0.1),
                                               child: Icon(
                                                 Icons.person_rounded,
                                                 color: AppColors.primaryBlue,
@@ -606,7 +602,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: selected
-                                      ? AppColors.primaryBlue.withOpacity(0.1)
+                                      ? AppColors.primaryBlue.withValues(alpha: 0.1)
                                       : Colors.transparent,
                                   borderRadius: const BorderRadius.only(
                                     bottomLeft: Radius.circular(16),
@@ -699,7 +695,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                 width: 42,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: AppColors.textHint.withOpacity(0.4),
+                  color: AppColors.textHint.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -718,77 +714,44 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                 ),
               ),
               const Divider(height: 1),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+              Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: const ColorScheme.light(
+                    primary: AppColors.primaryBlue,
+                    onPrimary: Colors.white,
+                    onSurface: AppColors.textPrimary,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                    ),
+                  ),
                 ),
                 child: Obx(() {
-                  final dates = _controller.availableDates;
                   final selected = _controller.selectedDate.value;
+                  final dates = _controller.availableDates;
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: dates.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final d = dates[index];
-                      final isSelected =
-                          selected != null && _isSameDate(d, selected);
+                  if (dates.isEmpty) {
+                    return Container(
+                      height: 200,
+                      alignment: Alignment.center,
+                      child: Text(
+                        'No available dates',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                    );
+                  }
 
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectDate(d);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
-                            ),
-                            boxShadow: AppColors.softShadow,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  DateFormat('EEEE, d MMM yyyy').format(d),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                  return CalendarDatePicker(
+                    initialDate: selected ?? (dates.any((d) => _isSameDate(d, DateTime.now())) ? dates.firstWhere((d) => _isSameDate(d, DateTime.now())) : dates.first),
+                    firstDate: dates.first,
+                    lastDate: dates.last,
+                    onDateChanged: (DateTime date) {
+                      _controller.selectDate(date);
+                      Get.back();
+                    },
+                    selectableDayPredicate: (DateTime date) {
+                      return dates.any((d) => _isSameDate(d, date));
                     },
                   );
                 }),
@@ -823,7 +786,8 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
       }
 
       if (_controller.isLoadingSchedules.value ||
-          _controller.isLoadingAppointments.value) {
+          _controller.isLoadingAppointments.value ||
+          _controller.isLoadingFreeSlots.value) {
         return _LoadingCard(label: 'Loading available times...');
       }
 
@@ -842,9 +806,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
       final selected = _controller.selectedTime.value;
 
-      final label = selected != null
-          ? _formatTime(context, selected)
-          : 'Choose Time';
+      final label = selected != null ? _formatTimeString(selected) : 'Choose Time';
 
       return _SelectionCard(
         title: 'Select Time',
@@ -873,7 +835,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                 width: 42,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: AppColors.textHint.withOpacity(0.4),
+                  color: AppColors.textHint.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -900,68 +862,63 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                   final times = _controller.availableTimes;
                   final selected = _controller.selectedTime.value;
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: times.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final t = times[index];
-                      final isSelected =
-                          selected != null && _isSameTime(t, selected);
+                  final morningSlots = times.where((t) {
+                    final parsed = _controller.parseTimeOfDay(t);
+                    if (parsed == null) return false;
+                    final minutes = parsed.hour * 60 + parsed.minute;
+                    return minutes >= 120 && minutes <= 750; // 2:00 AM to 12:30 PM
+                  }).toList();
+                  final afternoonSlots = times.where((t) {
+                    final parsed = _controller.parseTimeOfDay(t);
+                    if (parsed == null) return true;
+                    final minutes = parsed.hour * 60 + parsed.minute;
+                    return minutes < 120 || minutes > 750;
+                  }).toList();
 
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectTime(t);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (morningSlots.isNotEmpty) ...[
+                          Text('Morning Slots', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                          const SizedBox(height: 12),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 2.2,
                             ),
-                            boxShadow: AppColors.softShadow,
+                            itemCount: morningSlots.length,
+                            itemBuilder: (context, index) {
+                              return _buildTimeSlotItem(morningSlots[index], selected);
+                            },
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time_rounded,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _formatTime(context, t),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
+                          const SizedBox(height: 24),
+                        ],
+                        if (afternoonSlots.isNotEmpty) ...[
+                          Text('Afternoon Slots', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                          const SizedBox(height: 12),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                              childAspectRatio: 2.2,
+                            ),
+                            itemCount: afternoonSlots.length,
+                            itemBuilder: (context, index) {
+                              return _buildTimeSlotItem(afternoonSlots[index], selected);
+                            },
                           ),
-                        ),
-                      );
-                    },
+                        ],
+                      ],
+                    ),
                   );
                 }),
               ),
@@ -974,14 +931,44 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     );
   }
 
+  Widget _buildTimeSlotItem(String t, String? selected) {
+    final isSelected = selected == t;
+    return InkWell(
+      onTap: () {
+        _controller.selectTime(t);
+        Get.back();
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryBlue : AppColors.textHint.withValues(alpha: 0.15),
+            width: 1.2,
+          ),
+          boxShadow: AppColors.softShadow,
+        ),
+        child: Text(
+          _formatTimeString(t),
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+
   bool _isSameDate(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  bool _isSameTime(TimeOfDay a, TimeOfDay b) =>
-      a.hour == b.hour && a.minute == b.minute;
-
-  String _formatTime(BuildContext context, TimeOfDay t) {
-    final dt = DateTime(2025, 1, 1, t.hour, t.minute);
+  String _formatTimeString(String timeStr) {
+    final time = _controller.parseTimeOfDay(timeStr);
+    if (time == null) return timeStr;
+    final dt = DateTime(2025, 1, 1, time.hour, time.minute);
     return DateFormat.jm().format(dt);
   }
 }
@@ -1004,7 +991,7 @@ class _Header extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(0.3),
+            color: AppColors.primaryBlue.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -1018,7 +1005,7 @@ class _Header extends StatelessWidget {
               top: -20,
               child: CircleAvatar(
                 radius: 60,
-                backgroundColor: Colors.white.withOpacity(0.1),
+                backgroundColor: Colors.white.withValues(alpha: 0.1),
               ),
             ),
             Padding(
@@ -1118,7 +1105,7 @@ class _SelectionCard extends StatelessWidget {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primaryBlue.withOpacity(0.1)
+                        ? AppColors.primaryBlue.withValues(alpha: 0.1)
                         : AppColors.backgroundLight,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1185,7 +1172,7 @@ class _DisabledHintCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppColors.softShadow,
-        border: Border.all(color: AppColors.textHint.withOpacity(0.15)),
+        border: Border.all(color: AppColors.textHint.withValues(alpha: 0.15)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1235,7 +1222,7 @@ class _LoadingCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppColors.softShadow,
-        border: Border.all(color: AppColors.textHint.withOpacity(0.15)),
+        border: Border.all(color: AppColors.textHint.withValues(alpha: 0.15)),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -1276,7 +1263,7 @@ class _EmptyStateCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppColors.softShadow,
-        border: Border.all(color: AppColors.textHint.withOpacity(0.15)),
+        border: Border.all(color: AppColors.textHint.withValues(alpha: 0.15)),
       ),
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -1284,7 +1271,7 @@ class _EmptyStateCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppColors.warningOrange.withOpacity(0.12),
+              color: AppColors.warningOrange.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: AppColors.warningOrange),
@@ -1342,9 +1329,9 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.warningOrange.withOpacity(0.12),
+        color: AppColors.warningOrange.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.warningOrange.withOpacity(0.35)),
+        border: Border.all(color: AppColors.warningOrange.withValues(alpha: 0.35)),
       ),
       padding: const EdgeInsets.all(14),
       child: Row(
