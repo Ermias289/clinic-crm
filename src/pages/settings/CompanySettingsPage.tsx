@@ -174,7 +174,6 @@ const CompanySettingsPage = () => {
         description: "Logo has been uploaded successfully",
       });
     } catch (error) {
-      console.error("Failed to upload logo:", error);
       toast({
         title: "Upload Failed",
         description: "Failed to upload logo. Please try again.",

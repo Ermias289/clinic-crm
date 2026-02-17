@@ -6,12 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Clock, Save } from "lucide-react";
-import { mockWorkingDays } from "@/data/mockData";
 import { WorkingDay } from "@/types/clinic";
 import { toast } from "@/hooks/use-toast";
 
 const WorkingDaysPage = () => {
-  const [workingDays, setWorkingDays] = useState<WorkingDay[]>(mockWorkingDays);
+  const [workingDays, setWorkingDays] = useState<WorkingDay[]>([
+    { dayOfWeek: 0, dayName: "Sunday", isOpen: false, openTime: "09:00", closeTime: "17:00" },
+    { dayOfWeek: 1, dayName: "Monday", isOpen: true, openTime: "08:00", closeTime: "18:00" },
+    { dayOfWeek: 2, dayName: "Tuesday", isOpen: true, openTime: "08:00", closeTime: "18:00" },
+    { dayOfWeek: 3, dayName: "Wednesday", isOpen: true, openTime: "08:00", closeTime: "18:00" },
+    { dayOfWeek: 4, dayName: "Thursday", isOpen: true, openTime: "08:00", closeTime: "18:00" },
+    { dayOfWeek: 5, dayName: "Friday", isOpen: true, openTime: "08:00", closeTime: "16:00" },
+    { dayOfWeek: 6, dayName: "Saturday", isOpen: false, openTime: "08:00", closeTime: "14:00" },
+  ]);
 
   const handleToggleDay = (dayOfWeek: number) => {
     setWorkingDays(prev => prev.map(d => 

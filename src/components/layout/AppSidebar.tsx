@@ -106,7 +106,6 @@ export function AppSidebar() {
           localStorage.setItem('companyData', JSON.stringify(data));
           localStorage.setItem('companyDataTimestamp', now.toString());
         } catch (error) {
-          console.error("Failed to fetch company data:", error);
           setLogoError(true);
         } finally {
           setLoading(false);

@@ -1,6 +1,6 @@
 import apiClient from './client';
 
-const API_BASE_URL = 'https://crmgate.nexabusinessgroup.com';
+const API_BASE_URL = 'https://truecaregate.nexabusinessgroup.com';
 
 interface FileUploadResponse {
   fileName: string; // Changed from FileName to fileName (lowercase)

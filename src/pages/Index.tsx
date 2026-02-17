@@ -159,7 +159,7 @@ const Index = () => {
     try {
       
       // Build URL with parameters (empty strings are okay for this API)
-      const url = `https://crmgate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate || ''}&toDate=${toDate || ''}`;
+      const url = `https://truecaregate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate || ''}&toDate=${toDate || ''}`;
       
       const response = await fetch(url);
       
@@ -231,7 +231,7 @@ const Index = () => {
     try {
       
       const response = await fetch(
-        "https://crmgate.nexabusinessgroup.com/api/DashBoard/MostBookedServices"
+        "https://truecaregate.nexabusinessgroup.com/api/DashBoard/MostBookedServices"
       );
       
       if (!response.ok) {

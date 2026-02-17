@@ -19,7 +19,7 @@ export interface DashboardReportResponse {
 export const dashboardService = {
   getAppointmentReport: async (fromDate: string, toDate: string): Promise<AppointmentReportItem[]> => {
     const response = await fetch(
-      `https://crmgate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate}&toDate=${toDate}`,
+      `https://truecaregate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate}&toDate=${toDate}`,
       {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add auth if needed
@@ -37,7 +37,7 @@ export const dashboardService = {
 
   getMostBookedServices: async (): Promise<{ topServices: MostBookedService[] }> => {
     const response = await fetch(
-      'https://crmgate.nexabusinessgroup.com/api/DashBoard/MostBookedServices',
+      'https://truecaregate.nexabusinessgroup.com/api/DashBoard/MostBookedServices',
       {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`, // Add auth if needed

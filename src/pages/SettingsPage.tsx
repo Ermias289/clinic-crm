@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Building, CreditCard, Users, Building2, Settings as SettingsIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { mockCompany } from "@/data/mockData";
+
 
 const settingsCards = [
   { title: "Company Settings", description: "Configure company information", icon: Building, href: "/settings/company" },
@@ -43,9 +43,9 @@ const SettingsPage = () => {
             <CardTitle className="flex items-center gap-2"><Building className="w-5 h-5" /> Company Info</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-2"><Label>Company Name</Label><Input defaultValue={mockCompany.name} /></div>
-            <div className="grid gap-2"><Label>Email</Label><Input defaultValue={mockCompany.email} /></div>
-            <div className="grid gap-2"><Label>Phone</Label><Input defaultValue={mockCompany.phone} /></div>
+            <div className="grid gap-2"><Label>Company Name</Label><Input defaultValue="Lucid Dental Clinic"/></div>
+            <div className="grid gap-2"><Label>Email</Label><Input defaultValue='info@brightsmile.com'/></div>
+            <div className="grid gap-2"><Label>Phone</Label><Input defaultValue='+1 (555) 123-4567'/></div>
             <Button variant="dental">Save Changes</Button>
           </CardContent>
         </Card>
