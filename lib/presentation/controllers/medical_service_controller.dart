@@ -96,14 +96,38 @@ class MedicalServiceController extends GetxController {
     Get.toNamed(Routes.serviceDetail, arguments: service);
   }
 
+  // Search and Filter State
+  final searchQuery = ''.obs;
+  final filteredServices = <MedicalService>[].obs;
+
+  void searchServices(String query) {
+    searchQuery.value = query;
+    if (query.isEmpty) {
+      filteredServices.clear();
+      return;
+    }
+
+    final lowerQuery = query.toLowerCase();
+    filteredServices.assignAll(
+      services.where((service) {
+        return service.name.toLowerCase().contains(lowerQuery) ||
+            service.description.toLowerCase().contains(lowerQuery);
+      }).toList(),
+    );
+  }
+
   // Method to force refresh (for pull-to-refresh)
   Future<void> refreshServices() async {
+    searchQuery.value = '';
+    filteredServices.clear();
     await fetchServices();
   }
 
-  // Method to reset state (for logout)
+  // Method to resetState
   void resetState() {
     services.clear();
+    filteredServices.clear();
+    searchQuery.value = '';
     _hasLoadedOnce = false;
     isLoading.value = false;
   }

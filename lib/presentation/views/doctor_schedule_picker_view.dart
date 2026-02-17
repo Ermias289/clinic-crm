@@ -35,6 +35,9 @@ class DoctorSchedulePickerView extends StatefulWidget {
 class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
   late final MedicalService _service;
   late final DoctorSchedulePickerController _controller;
+  
+  // Track the currently displayed month in calendar
+  DateTime _displayedMonth = DateTime.now();
 
   @override
   void initState() {
@@ -46,7 +49,10 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     _controller = Get.find<DoctorSchedulePickerController>();
     // Ensure fresh state each time this page is opened
     _controller.resetAll();
-    _controller.init(serviceDurationInMinutes: _service.durationInMinutes);
+    _controller.init(
+      serviceDurationInMinutes: _service.durationInMinutes,
+      medicalService: _service,
+    );
   }
 
   @override
@@ -683,122 +689,237 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
   }
 
   void _openDateBottomSheet() {
+    // Reset to current month when opening
+    _displayedMonth = DateTime.now();
+    
     Get.bottomSheet(
-      Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 42,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: AppColors.textHint.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text('Choose Date', style: AppTextStyles.h3),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Get.back(),
-                      icon: const Icon(Icons.close_rounded),
+      StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 12),
+                  Container(
+                    width: 42,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: AppColors.textHint.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
-                ),
-                child: Obx(() {
-                  final dates = _controller.availableDates;
-                  final selected = _controller.selectedDate.value;
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Text('Choose Date', style: AppTextStyles.h3),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Get.back(),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.65,
+                    ),
+                    child: Obx(() {
+                      final availableDates = _controller.availableDates;
+                      final selected = _controller.selectedDate.value;
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: dates.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final d = dates[index];
-                      final isSelected =
-                          selected != null && _isSameDate(d, selected);
+                      if (availableDates.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Text('No available dates'),
+                        );
+                      }
 
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectDate(d);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
-                            ),
-                            boxShadow: AppColors.softShadow,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  DateFormat('EEEE, d MMM yyyy').format(d),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
+                      final firstDayOfMonth = DateTime(_displayedMonth.year, _displayedMonth.month, 1);
+                      final lastDayOfMonth = DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0);
+                      
+                      // Calculate calendar grid
+                      final startWeekday = firstDayOfMonth.weekday % 7; // 0 = Sunday
+                      final daysInMonth = lastDayOfMonth.day;
+
+                      return SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            // Month/Year header with navigation
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                IconButton(
+                                  onPressed: () {
+                                    setModalState(() {
+                                      _displayedMonth = DateTime(
+                                        _displayedMonth.year,
+                                        _displayedMonth.month - 1,
+                                      );
+                                    });
+                                  },
+                                  icon: const Icon(Icons.chevron_left),
+                                  color: AppColors.primaryBlue,
+                                ),
+                                Text(
+                                  DateFormat('MMMM yyyy').format(_displayedMonth),
+                                  style: AppTextStyles.h3.copyWith(
+                                    color: AppColors.primaryBlue,
                                   ),
                                 ),
+                                IconButton(
+                                  onPressed: () {
+                                    setModalState(() {
+                                      _displayedMonth = DateTime(
+                                        _displayedMonth.year,
+                                        _displayedMonth.month + 1,
+                                      );
+                                    });
+                                  },
+                                  icon: const Icon(Icons.chevron_right),
+                                  color: AppColors.primaryBlue,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Weekday headers
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+                                  .map((day) => SizedBox(
+                                        width: 40,
+                                        child: Center(
+                                          child: Text(
+                                            day,
+                                            style: AppTextStyles.caption.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          ),
+                                        ),
+                                      ))
+                                  .toList(),
+                            ),
+                            const SizedBox(height: 8),
+                            // Calendar grid
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 7,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
                               ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
-                          ),
+                              itemCount: startWeekday + daysInMonth,
+                              itemBuilder: (context, index) {
+                                // Empty cells before month starts
+                                if (index < startWeekday) {
+                                  return const SizedBox();
+                                }
+
+                                final day = index - startWeekday + 1;
+                                final date = DateTime(_displayedMonth.year, _displayedMonth.month, day);
+                                final isAvailable = availableDates.any((d) => _isSameDate(d, date));
+                                final isSelected = selected != null && _isSameDate(date, selected);
+                                final isToday = _isSameDate(date, DateTime.now());
+
+                                return InkWell(
+                                  onTap: isAvailable
+                                      ? () {
+                                          _controller.selectDate(date);
+                                          Get.back();
+                                        }
+                                      : null,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: isSelected
+                                          ? AppColors.primaryBlue
+                                          : isToday
+                                              ? AppColors.primaryBlue.withOpacity(0.1)
+                                              : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: isToday && !isSelected
+                                          ? Border.all(
+                                              color: AppColors.primaryBlue,
+                                              width: 1,
+                                            )
+                                          : null,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '$day',
+                                        style: AppTextStyles.bodyMedium.copyWith(
+                                          color: isSelected
+                                              ? Colors.white
+                                              : !isAvailable
+                                                  ? AppColors.textHint.withOpacity(0.3)
+                                                  : AppColors.textPrimary,
+                                          fontWeight: isAvailable
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            // Legend
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildLegendItem('Available', AppColors.textPrimary, isBold: true),
+                                const SizedBox(width: 16),
+                                _buildLegendItem('Unavailable', AppColors.textHint.withOpacity(0.3)),
+                              ],
+                            ),
+                          ],
                         ),
                       );
-                    },
-                  );
-                }),
+                    }),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
       isScrollControlled: true,
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color, {bool isBold = false}) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+      ],
     );
   }
 
@@ -894,74 +1015,67 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
               const Divider(height: 1),
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
                 ),
                 child: Obx(() {
                   final times = _controller.availableTimes;
                   final selected = _controller.selectedTime.value;
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: times.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final t = times[index];
-                      final isSelected =
-                          selected != null && _isSameTime(t, selected);
+                  if (times.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Text('No available time slots'),
+                    );
+                  }
 
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectTime(t);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
+                  // Categorize times into Morning, Afternoon, Evening
+                  final morningSlots = <TimeOfDay>[];
+                  final afternoonSlots = <TimeOfDay>[];
+                  final eveningSlots = <TimeOfDay>[];
+
+                  for (final time in times) {
+                    if (time.hour < 12) {
+                      morningSlots.add(time);
+                    } else if (time.hour < 17) {
+                      afternoonSlots.add(time);
+                    } else {
+                      eveningSlots.add(time);
+                    }
+                  }
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Morning Section
+                        if (morningSlots.isNotEmpty) ...[
+                          _buildTimeSlotsSection(
+                            '🌅 Morning',
+                            morningSlots,
+                            selected,
                           ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
-                            ),
-                            boxShadow: AppColors.softShadow,
+                          const SizedBox(height: 20),
+                        ],
+                        // Afternoon Section
+                        if (afternoonSlots.isNotEmpty) ...[
+                          _buildTimeSlotsSection(
+                            '☀️ Afternoon',
+                            afternoonSlots,
+                            selected,
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time_rounded,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _formatTime(context, t),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
+                          const SizedBox(height: 20),
+                        ],
+                        // Evening Section
+                        if (eveningSlots.isNotEmpty) ...[
+                          _buildTimeSlotsSection(
+                            '🌙 Evening',
+                            eveningSlots,
+                            selected,
                           ),
-                        ),
-                      );
-                    },
+                        ],
+                      ],
+                    ),
                   );
                 }),
               ),
@@ -971,6 +1085,74 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
         ),
       ),
       isScrollControlled: true,
+    );
+  }
+
+  Widget _buildTimeSlotsSection(String title, List<TimeOfDay> slots, TimeOfDay? selected) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTextStyles.h3.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: slots.map((time) {
+            final isSelected = selected != null && _isSameTime(time, selected);
+            return InkWell(
+              onTap: () {
+                _controller.selectTime(time);
+                Get.back();
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: (MediaQuery.of(context).size.width - 48) / 3,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.primaryBlue
+                        : AppColors.textHint.withOpacity(0.2),
+                    width: 1.5,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primaryBlue.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : AppColors.softShadow,
+                ),
+                child: Center(
+                  child: Text(
+                    _formatTime(context, time),
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 

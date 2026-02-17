@@ -12,6 +12,10 @@ class AppColors {
   static const Color accentGreenLight = Color(0xFF8BC34A); // Lighter Mint
   static const Color accentGreenDark = Color(0xFF689F38); // Darker Mint
 
+  // Accent Colors - Blue
+  static const Color accentBlue = Color(0xFF42A5F5); // Blue
+
+
   // Additional Colors
   static const Color successGreen = Color(0xFF43A047); // Success green
   static const Color warningOrange = Color(0xFFF9A825); // Warning orange

@@ -7,6 +7,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../controllers/card_controller.dart';
 import '../../domain/models/medical_service_model.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 class RequestCardPaymentView extends StatefulWidget {
   const RequestCardPaymentView({super.key});
@@ -514,6 +515,50 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                           }),
                         ),
 
+                        const SizedBox(height: 16),
+
+                        // Insurance Covered Selection
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.primaryBlue.withOpacity(0.1),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.verified_user_outlined,
+                                color: AppColors.primaryBlue,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Insurance Covered',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Obx(
+                                () => Switch(
+                                  value: controller.isInsuranceCovered.value,
+                                  onChanged: (value) =>
+                                      controller.isInsuranceCovered.value =
+                                          value,
+                                  activeColor: AppColors.primaryBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
                         const SizedBox(height: 24),
 
                         // Available Payment Methods Section
@@ -598,46 +643,93 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                     ],
                                   ),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                child: Stack(
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              bank?.name ?? 'Bank',
+                                              style: AppTextStyles.bodySmall
+                                                  .copyWith(
+                                                      color: Colors.white70),
+                                            ),
+                                            const Icon(
+                                              Icons.account_balance,
+                                              color: Colors.white70,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 16),
                                         Text(
-                                          bank?.name ?? 'Bank',
+                                          bankAccount.accountNumber,
+                                          style: AppTextStyles.h3.copyWith(
+                                            color: Colors.white,
+                                            letterSpacing: 2,
+                                            fontFamily: 'Courier',
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Account Name',
                                           style: AppTextStyles.bodySmall
                                               .copyWith(color: Colors.white70),
                                         ),
-                                        const Icon(
-                                          Icons.account_balance,
-                                          color: Colors.white70,
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          bankAccount.name,
+                                          style: AppTextStyles.bodyMedium
+                                              .copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      bankAccount.accountNumber,
-                                      style: AppTextStyles.h3.copyWith(
-                                        color: Colors.white,
-                                        letterSpacing: 2,
-                                        fontFamily: 'Courier',
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Account Name',
-                                      style: AppTextStyles.bodySmall.copyWith(
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      bankAccount.name,
-                                      style: AppTextStyles.bodyMedium.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Clipboard.setData(
+                                            ClipboardData(
+                                              text: bankAccount.accountNumber,
+                                            ),
+                                          );
+                                          Get.snackbar(
+                                            'Copied',
+                                            'Account number copied to clipboard',
+                                            snackPosition: SnackPosition.BOTTOM,
+                                            backgroundColor:
+                                                AppColors.primaryBlue,
+                                            colorText: Colors.white,
+                                            duration:
+                                                const Duration(seconds: 1),
+                                          );
+                                        },
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(
+                                              Icons.copy_rounded,
+                                              color: Colors.white70,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'copy',
+                                              style: AppTextStyles.caption
+                                                  .copyWith(
+                                                      color: Colors.white70,
+                                                      fontSize: 10),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ],

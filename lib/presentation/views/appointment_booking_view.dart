@@ -26,7 +26,9 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
 
   // Selected values must come from the doctor schedule picker (not free pickers)
   String? selectedDoctorName;
+  String? selectedBranchName;
   int? selectedDoctorId;
+  int? selectedBranchId;
   DateTime? selectedDate;
   TimeOfDay? selectedTime;
   DateTime? selectedDateTime;
@@ -111,6 +113,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       setState(() {
         selectedDoctorId = result['doctorId'] as int?;
         selectedDoctorName = result['doctorName'] as String?;
+        selectedBranchId = result['branchId'] as int?;
+        selectedBranchName = result['branchName'] as String?;
         selectedDate = result['date'] as DateTime?;
         selectedTime = result['time'] as TimeOfDay?;
         selectedDateTime = result['dateTime'] as DateTime?;
@@ -196,6 +200,12 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                       Icons.person,
                       'Doctor',
                       selectedDoctorName ?? 'N/A',
+                    ),
+                    const Divider(height: 24),
+                    _buildDetailRow(
+                      Icons.location_on,
+                      'Branch',
+                      selectedBranchName ?? 'N/A',
                     ),
                     const Divider(height: 24),
                     _buildDetailRow(
@@ -315,7 +325,8 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       final response = await apiClient.post('/Appointment', {
         'dentistryId': service.id,
         'medicalProfessionalId': selectedDoctorId,
-        'patientId': patientId, // Added missing patient ID
+        'patientId': patientId,
+        'branchId': selectedBranchId, // Required for backend validation
         'day': dateOnly,
         'reservationTime': timeOnly,
       });

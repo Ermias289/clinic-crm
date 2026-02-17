@@ -18,6 +18,9 @@ abstract class DoctorRemoteDataSource {
 
   /// Convenience helper: fetch schedules and filter by doctor id.
   Future<List<DoctorSchedule>> getSchedulesForDoctor(int medicalProfessionalId);
+
+  /// Fetch free slots for a doctor at a branch on a specific date.
+  Future<List<String>> getFreeSlots(int doctorId, int branchId, String date);
 }
 
 class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
@@ -167,6 +170,34 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       throw Exception('Unexpected response format for doctor schedules');
     } catch (e) {
       throw Exception('Error fetching doctor schedules for doctor: $e');
+    }
+  }
+
+  @override
+  Future<List<String>> getFreeSlots(int doctorId, int branchId, String date) async {
+    try {
+      // Backend expects: docId, branchId, day (not medicalProfessionalId, branchSettingId, date)
+      final response = await apiClient.get(
+        '/Appointment/getFreeSlots?docId=$doctorId&branchId=$branchId&day=$date',
+      );
+
+      if (response.hasError) {
+        throw Exception(response.statusText ?? 'Failed to fetch free slots');
+      }
+
+      final body = response.body;
+      if (body is List) {
+        return body.map((e) => e.toString()).toList();
+      }
+      
+      // Fallback for wrapped response
+      if (body is Map && body['data'] is List) {
+        return (body['data'] as List).map((e) => e.toString()).toList();
+      }
+
+      throw Exception('Unexpected response format for free slots');
+    } catch (e) {
+      throw Exception('Error fetching free slots: $e');
     }
   }
 }

@@ -51,7 +51,6 @@ class DoctorSchedulePickerBinding extends Bindings {
       () => DoctorSchedulePickerController(
         Get.find<DoctorRepository>(),
         Get.find<BranchSettingRepository>(),
-        Get.find<AppointmentRepository>(),
       ),
     );
   }

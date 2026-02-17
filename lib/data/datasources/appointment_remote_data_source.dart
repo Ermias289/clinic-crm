@@ -38,31 +38,8 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       final response = await apiClient.get(url);
 
       if (response.hasError) {
-        // Strategy 2: Try standard query parameter pattern
-        final url2 = '/Appointment?patientId=$id';
-        final response2 = await apiClient.get(url2);
-
-        if (!response2.hasError) {
-          final List<dynamic> body = response2.body;
-          return body.map((e) => AppointmentModel.fromJson(e)).toList();
-        }
-
-        // Strategy 3: Try getting ALL appointments and filtering client-side
-        // This is a robust fallback if the specific filter endpoints are broken
-        final url3 = '/Appointment';
-        final response3 = await apiClient.get(url3);
-
-        if (!response3.hasError) {
-          final List<dynamic> body = response3.body;
-          final all = body.map((e) => AppointmentModel.fromJson(e)).toList();
-          final filtered = all.where((a) => a.patientId == id).toList();
-          
-          return filtered;
-        }
-
-        throw Exception(
-          'Failed to fetch appointments: ${response.statusText} (${response.statusCode}) - Server returned Id validation error on all endpoints.',
-        );
+        // Return empty list on error (common for new users with no appointments)
+        return [];
       }
 
       final List<dynamic> body = response.body;
@@ -79,7 +56,8 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       final response = await apiClient.get(url);
 
       if (response.hasError) {
-        throw Exception('Failed to fetch appointments: ${response.statusText}');
+        // Return empty list on error (common for new users with no appointments)
+        return [];
       }
 
       final List<dynamic> body = response.body;

@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
-import '../../domain/models/medical_professional_model.dart';
 import '../controllers/service_detail_controller.dart';
 import '../widgets/custom_button.dart';
 
@@ -80,6 +79,11 @@ class ServiceDetailView extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
+                    // Branches Section
+                    _buildBranchesSection(controller),
+
+                    const SizedBox(height: 24),
+
                     // Doctors Section
                     _buildDoctorsSection(controller),
 
@@ -106,7 +110,7 @@ class ServiceDetailView extends StatelessWidget {
           colors: [
             AppColors.primaryBlue,
             AppColors.primaryBlueLight,
-            AppColors.accentGreen,
+            AppColors.accentBlue,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -193,7 +197,7 @@ class ServiceDetailView extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryBlue.withValues(alpha: 0.1),
-            AppColors.accentGreen.withValues(alpha: 0.1),
+            AppColors.accentBlue.withValues(alpha: 0.1),
           ],
         ),
       ),
@@ -251,7 +255,7 @@ class ServiceDetailView extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time, color: AppColors.accentGreen, size: 20),
+                Icon(Icons.access_time, color: AppColors.accentBlue, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Duration: ${controller.service.durationInMinutes} minutes',
@@ -265,6 +269,161 @@ class ServiceDetailView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBranchesSection(ServiceDetailController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.location_on_outlined,
+              color: AppColors.primaryBlue,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Available Branches',
+              style: AppTextStyles.h3.copyWith(color: AppColors.primaryBlue),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        Obx(() {
+          if (controller.isLoadingBranches.value) {
+            return _buildBranchesLoading();
+          }
+
+          if (controller.branches.isEmpty) {
+            return _buildNoBranches();
+          }
+
+          return _buildBranchesList(controller);
+        }),
+      ],
+    );
+  }
+
+  Widget _buildBranchesLoading() {
+    return SizedBox(
+      height: 120,
+      child: const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryBlue),
+      ),
+    );
+  }
+
+  Widget _buildNoBranches() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.location_off_outlined,
+            color: AppColors.textHint,
+            size: 48,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No branches available for this service at the moment.',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBranchesList(ServiceDetailController controller) {
+    return Column(
+      children: controller.branches.map((branch) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: GestureDetector(
+            onTap: () => controller.onBranchSelected(branch),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppColors.cardShadow,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.location_city,
+                      color: AppColors.primaryBlue,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          branch.name ?? 'Unknown Branch',
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        if (branch.address?.isNotEmpty == true) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            branch.address!,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        if (branch.city?.isNotEmpty == true ||
+                            branch.subCity?.isNotEmpty == true) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            [
+                              branch.subCity,
+                              branch.city,
+                            ].where((s) => s?.isNotEmpty == true).join(', '),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textHint,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppColors.textHint,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -381,163 +540,186 @@ class ServiceDetailView extends StatelessWidget {
   }
 
   Widget _buildDoctorsList(ServiceDetailController controller) {
-    return SizedBox(
-      height: 220, // Increased height to accommodate enhanced doctor cards
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: controller.doctors.length,
-        itemBuilder: (context, index) {
-          final doctor = controller.doctors[index];
-          return _buildDoctorCard(doctor, controller);
-        },
-      ),
-    );
-  }
-
-  Widget _buildDoctorCard(
-    MedicalProfessional doctor,
-    ServiceDetailController controller,
-  ) {
-    return Container(
-      width: 120,
-      constraints: const BoxConstraints(
-        minHeight: 160,
-        maxHeight: 220, // Prevent overflow by setting max height
-      ),
-      margin: const EdgeInsets.only(right: 16),
-      child: GestureDetector(
-        onTap: () => controller.onDoctorSelected(doctor),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: AppColors.cardShadow,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min, // Prevent overflow
-            children: [
-              // Doctor Avatar
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.backgroundLight,
-                ),
-                child: ClipOval(
-                  child: doctor.profilePictureUrl?.isNotEmpty == true
-                      ? Image.network(
-                          ImageUtils.buildImageUrl(doctor.profilePictureUrl!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildDoctorAvatar(),
-                        )
-                      : _buildDoctorAvatar(),
-                ),
+    return Column(
+      children: controller.doctors.map((doctor) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: GestureDetector(
+            onTap: () => controller.onDoctorSelected(doctor),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: AppColors.cardShadow,
               ),
-
-              const SizedBox(height: 8),
-
-              // Doctor Name
-              Text(
-                doctor.fullName,
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              const SizedBox(height: 4),
-
-              // Job Title
-              if (doctor.jobTitle?.isNotEmpty == true)
-                Text(
-                  doctor.jobTitle!,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-              // Specialization
-              if (doctor.specialization?.isNotEmpty == true) ...[
-                const SizedBox(height: 2),
-                Text(
-                  doctor.specialization!,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-
-              // Educational Background
-              if (doctor.educationalBackground?.isNotEmpty == true) ...[
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentGreen.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    doctor.educationalBackground!,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.accentGreen,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+              child: Row(
+                children: [
+                  // Doctor Avatar
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.backgroundLight,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-
-              // Years of Experience
-              if (doctor.yearsOfExperience != null &&
-                  doctor.yearsOfExperience! > 0) ...[
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.work_outline,
-                      size: 12,
-                      color: AppColors.textSecondary,
+                    child: ClipOval(
+                      child: doctor.profilePictureUrl?.isNotEmpty == true
+                          ? Image.network(
+                              ImageUtils.buildImageUrl(
+                                doctor.profilePictureUrl!,
+                              ),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  _buildDoctorAvatar(),
+                            )
+                          : _buildDoctorAvatar(),
                     ),
-                    const SizedBox(width: 2),
-                    Flexible(
-                      child: Text(
-                        '${doctor.yearsOfExperience} yrs exp',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 10,
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  // Doctor Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Doctor Name
+                        Text(
+                          doctor.fullName,
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+
+                        const SizedBox(height: 4),
+
+                        // Job Title
+                        if (doctor.jobTitle?.isNotEmpty == true)
+                          Text(
+                            doctor.jobTitle!,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                        // Specialization
+                        if (doctor.specialization?.isNotEmpty == true) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            doctor.specialization!,
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+
+                        const SizedBox(height: 8),
+
+                        // Experience and Education Row
+                        Row(
+                          children: [
+                            // Years of Experience
+                            if (doctor.yearsOfExperience != null &&
+                                doctor.yearsOfExperience! > 0) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentBlue.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.work_outline,
+                                      size: 14,
+                                      color: AppColors.accentBlue,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${doctor.yearsOfExperience} yrs',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.accentBlue,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+
+                            // Educational Background
+                            if (doctor.educationalBackground?.isNotEmpty ==
+                                true)
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryBlue.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.school_outlined,
+                                        size: 14,
+                                        color: AppColors.primaryBlue,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          doctor.educationalBackground!,
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.primaryBlue,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
-            ],
+                  ),
+
+                  // Arrow Icon
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppColors.textHint,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      }).toList(),
     );
   }
 
@@ -547,7 +729,7 @@ class ServiceDetailView extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryBlue.withValues(alpha: 0.1),
-            AppColors.accentGreen.withValues(alpha: 0.1),
+            AppColors.accentBlue.withValues(alpha: 0.1),
           ],
         ),
       ),

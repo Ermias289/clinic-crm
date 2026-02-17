@@ -17,7 +17,14 @@ class PatientRepositoryImpl implements PatientRepository {
 
   @override
   Future<PatientModel> createPatient(CreatePatientRequest request) async {
-    return await remoteDataSource.createPatient(request);
+    try {
+      return await remoteDataSource.createPatient(request);
+    } catch (e) {
+      if (e.toString().contains('registered as patient')) {
+        return await remoteDataSource.getPatientByUserId(request.userId);
+      }
+      rethrow;
+    }
   }
 
   @override

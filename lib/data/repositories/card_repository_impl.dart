@@ -26,7 +26,15 @@ class CardRepositoryImpl implements CardRepository {
 
   @override
   Future<Map<String, dynamic>> requestCard(RequestCardModel request) async {
-    return await remoteDataSource.requestCard(request);
+    try {
+      return await remoteDataSource.requestCard(request);
+    } catch (e) {
+      if (e.toString().contains('already have a card')) {
+        final existing = await remoteDataSource.getMyCard();
+        if (existing != null) return existing;
+      }
+      rethrow;
+    }
   }
 
   @override

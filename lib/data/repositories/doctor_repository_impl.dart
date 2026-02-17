@@ -7,6 +7,8 @@ abstract class DoctorRepository {
   Future<List<DoctorSchedule>> getDoctorSchedules();
 
   Future<List<DoctorSchedule>> getSchedulesForDoctor(int medicalProfessionalId);
+
+  Future<List<String>> getFreeSlots(int doctorId, int branchId, String date);
 }
 
 class DoctorRepositoryImpl implements DoctorRepository {
@@ -27,5 +29,10 @@ class DoctorRepositoryImpl implements DoctorRepository {
   @override
   Future<List<DoctorSchedule>> getSchedulesForDoctor(int medicalProfessionalId) async {
     return await remoteDataSource.getSchedulesForDoctor(medicalProfessionalId);
+  }
+
+  @override
+  Future<List<String>> getFreeSlots(int doctorId, int branchId, String date) async {
+    return await remoteDataSource.getFreeSlots(doctorId, branchId, date);
   }
 }

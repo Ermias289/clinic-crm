@@ -40,6 +40,7 @@ class CardController extends GetxController {
   final RxBool isCheckingCard = false.obs;
   final Rx<CardModel?> existingCard = Rx<CardModel?>(null);
   final RxBool hasPatientId = false.obs;
+  final RxBool isInsuranceCovered = false.obs;
 
   // Request Flow State
   final Rx<CardSettingModel?> selectedCard = Rx<CardSettingModel?>(null);
@@ -226,9 +227,7 @@ class CardController extends GetxController {
           .firstOrNull;
 
       if (foundAutoPreparedPayment == null) {
-        throw Exception(
-          'No auto-prepared payment found for this expired card. Please contact support.',
-        );
+        throw Exception('Auto-prepared payment not found');
       }
 
       // Step 3: Set up reactivation state with existing card and auto-prepared payment
@@ -300,7 +299,7 @@ class CardController extends GetxController {
         id: autoPreparedPayment.value!.id,
         requestedAmount: autoPreparedPayment.value!.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false,
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);
@@ -429,6 +428,7 @@ class CardController extends GetxController {
     createdCardData.value = null;
     cardPayments.clear();
     autoPreparedPayment.value = null;
+    isInsuranceCovered.value = false;
   }
 
   Future<void> _preFillFromProfile() async {
@@ -487,12 +487,6 @@ class CardController extends GetxController {
 
     try {
       isLoading.value = true;
-      final currentUserId = _box.read('userId') ?? 0;
-
-      if (currentUserId == 0) {
-        throw Exception('User not logged in');
-      }
-
       // Step 1: Create Patient using POST /api/Patient
       final patientRequest = CreatePatientRequest(
         fName: fNameController.text.trim(),
@@ -511,7 +505,7 @@ class CardController extends GetxController {
         city: cityController.text.trim(),
         dateOfBirth: dobController.text
             .trim(), // Should be in YYYY-MM-DD format
-        userId: currentUserId,
+        userId: _box.read('userId') ?? 0, // Assuming userId is still needed and read from box
         requiresUserAccount: false,
       );
 
@@ -577,7 +571,7 @@ class CardController extends GetxController {
         id: autoPrepared.id,
         requestedAmount: autoPrepared.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false, // Default to false, can be made configurable
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);

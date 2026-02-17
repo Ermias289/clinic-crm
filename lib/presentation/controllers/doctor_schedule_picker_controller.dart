@@ -5,49 +5,32 @@ import '../../data/repositories/doctor_repository_impl.dart';
 import '../../domain/models/medical_professional_model.dart';
 import '../../data/models/branch_setting_model.dart';
 import '../../domain/repositories/branch_setting_repository.dart';
-import '../../domain/repositories/appointment_repository.dart';
-import '../../data/models/appointment_model.dart';
+import '../../domain/models/medical_service_model.dart';
 
 /// Controls a "pick doctor -> pick date -> pick time" flow.
-///
-/// Key behavior:
-/// - Loads doctors from `/api/MedicalProfessional`
-/// - Loads schedules from `/api/DoctorSchedule` and filters by selected doctor
-/// - Builds a list of available dates & times based on schedule rules
-/// - Forces user to pick only from available schedule-derived options
-///
-/// Notes:
-/// - The backend schedule schema can vary. This controller is defensive:
-///   it uses `DoctorSchedule.dayOfWeek`, `startTime`, `endTime`,
-///   and (optionally) `startDate`/`endDate` when present.
-/// - If `slotDurationInMinutes` is missing on schedule, the controller will
-///   fall back to `serviceDurationInMinutes` if provided, otherwise 30 minutes.
 class DoctorSchedulePickerController extends GetxController {
   DoctorSchedulePickerController(
     this._doctorRepository,
     this._branchSettingRepository,
-    this._appointmentRepository,
   );
 
   final DoctorRepository _doctorRepository;
   final BranchSettingRepository _branchSettingRepository;
-  final AppointmentRepository _appointmentRepository;
 
   // Loading states
   final isLoadingDoctors = false.obs;
   final isLoadingSchedules = false.obs;
   final isLoadingBranches = false.obs;
   final isLoadingAppointments = false.obs;
+  final isLoadingFreeSlots = false.obs;
 
   // Data
   final doctors = <MedicalProfessional>[].obs;
   // Private store for all doctors (before filtering)
   final _allDoctors = <MedicalProfessional>[];
   final schedulesForSelectedDoctor = <DoctorSchedule>[].obs;
-  final existingAppointments = <AppointmentModel>[].obs;
   final branches = <BranchSettingModel>[].obs;
 
-  // Selection
   // Selection
   final selectedBranch = Rxn<BranchSettingModel>();
   final selectedDoctor = Rxn<MedicalProfessional>();
@@ -60,22 +43,46 @@ class DoctorSchedulePickerController extends GetxController {
 
   // Optional constraints
   int? _serviceDurationInMinutes;
+  int? _serviceId;
 
   // User-friendly error
   final errorMessage = RxnString();
 
-  /// Initialize controller by loading doctors.
-  Future<void> init({int? serviceDurationInMinutes}) async {
+  /// Initialize controller
+  Future<void> init({
+    int? serviceDurationInMinutes,
+    int? serviceId,
+    MedicalService? medicalService,
+  }) async {
     _serviceDurationInMinutes = serviceDurationInMinutes;
-    // Load branches and doctors sequentially
-    await loadBranches();
-    await loadDoctors();
+    _serviceId = serviceId;
 
-    // Auto-select branch AFTER both are loaded
-    if (branches.length == 1 &&
-        selectedBranch.value == null &&
-        _allDoctors.isNotEmpty) {
-      selectBranch(branches.first);
+    // Prioritize service-specific data if available
+    if (medicalService != null &&
+        medicalService.branches.isNotEmpty &&
+        medicalService.medicalProfessionals.isNotEmpty) {
+      // Use service-specific branches and doctors
+      branches.assignAll(medicalService.branches);
+      _allDoctors.clear();
+      _allDoctors.addAll(
+        medicalService.medicalProfessionals.where((d) => d.isActive),
+      );
+
+      // Auto-select if only one branch
+      if (branches.length == 1) {
+        selectBranch(branches.first);
+      }
+    } else {
+      // Fallback to global loading
+      await loadBranches();
+      await loadDoctors();
+
+      // Auto-select branch AFTER both are loaded
+      if (branches.length == 1 &&
+          selectedBranch.value == null &&
+          _allDoctors.isNotEmpty) {
+        selectBranch(branches.first);
+      }
     }
   }
 
@@ -84,10 +91,8 @@ class DoctorSchedulePickerController extends GetxController {
     try {
       final list = await _branchSettingRepository.getBranchSettings();
       branches.assignAll(list);
-
-      // Don't auto-select here - let loadDoctors handle it after doctors are loaded
     } catch (e) {
-      // Error loading branches
+      errorMessage.value = 'Failed to load branches';
     } finally {
       isLoadingBranches.value = false;
     }
@@ -111,22 +116,11 @@ class DoctorSchedulePickerController extends GetxController {
         selectedBranch.value = null;
         selectBranch(currentBranch);
       } else {
-        // If no branch selected yet, doctors list remains empty
-        // Requirement: "choose branch first then fetch doctors".
-        doctors.clear();
+        doctors.assignAll(_allDoctors);
       }
-
-      /*
-      // If only one doctor, auto-select it to reduce friction.
-      if (doctors.length == 1) {
-        await selectDoctor(doctors.first);
-      }
-      */
     } catch (e) {
       errorMessage.value = 'Failed to load doctors.';
-      // Keep a dev-friendly log.
-      // ignore: avoid_print
-      print('loadDoctors error: $e');
+      debugPrint('loadDoctors error: $e');
     } finally {
       isLoadingDoctors.value = false;
     }
@@ -146,6 +140,8 @@ class DoctorSchedulePickerController extends GetxController {
       final doctor = _allDoctors[i];
 
       if (doctor.branches == null || doctor.branches!.isEmpty) {
+        // If doctor has no specific branches, assume available everywhere (or handle differently based on biz logic)
+        // For safety, let's say they are available.
         filtered.add(doctor);
       } else {
         final hasMatchingBranch = doctor.branches!.any(
@@ -185,23 +181,66 @@ class DoctorSchedulePickerController extends GetxController {
     availableDates.clear();
     availableTimes.clear();
     schedulesForSelectedDoctor.clear();
-    existingAppointments.clear();
 
-    // Load both schedules and existing appointments
-    await Future.wait([
-      _loadSchedulesForDoctor(doctor.id),
-      _loadExistingAppointments(doctor.id),
-    ]);
+    // Load schedules to determine available dates
+    await _loadSchedulesForDoctor(doctor.id);
 
     _recomputeAvailableDates();
   }
 
-  void selectDate(DateTime date) {
+  void _recomputeAvailableDates() {
+    availableDates.clear();
+    availableTimes.clear();
+    selectedDate.value = null;
+    selectedTime.value = null;
+
+    final schedules = schedulesForSelectedDoctor;
+    if (schedules.isEmpty) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final start = _dateOnly(now);
+    final end = _dateOnly(now.add(const Duration(days: 365)));
+
+    final dates = <DateTime>{};
+
+    for (final schedule in schedules) {
+      final scheduleStart = _dateOnly(schedule.startDate ?? start);
+      final scheduleEnd = _dateOnly(schedule.endDate ?? end);
+
+      final clampedStart = scheduleStart.isAfter(start) ? scheduleStart : start;
+      final clampedEnd = scheduleEnd.isBefore(end) ? scheduleEnd : end;
+
+      if (clampedStart.isAfter(clampedEnd)) continue;
+
+      final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
+
+      for (
+        var day = clampedStart;
+        !day.isAfter(clampedEnd);
+        day = day.add(const Duration(days: 1))
+      ) {
+        if (targetDow != null && day.weekday != targetDow) continue;
+        dates.add(day);
+      }
+    }
+
+    final sorted = dates.toList()..sort((a, b) => a.compareTo(b));
+    availableDates.assignAll(sorted);
+
+    // Auto-select first available date for convenience.
+    if (availableDates.isNotEmpty) {
+      selectDate(availableDates.first);
+    }
+  }
+
+  Future<void> selectDate(DateTime date) async {
     final normalized = _dateOnly(date);
     selectedDate.value = normalized;
     selectedTime.value = null;
 
-    _recomputeAvailableTimesForDate(normalized);
+    await _fetchFreeSlotsForDate(normalized);
   }
 
   void selectTime(TimeOfDay time) {
@@ -230,12 +269,14 @@ class DoctorSchedulePickerController extends GetxController {
     selectedDate.value = null;
     selectedTime.value = null;
     schedulesForSelectedDoctor.clear();
-    existingAppointments.clear();
     availableDates.clear();
     availableTimes.clear();
-    doctors.clear();
-    _allDoctors.clear();
-    branches.clear();
+    // Do not clear doctors/_allDoctors/branches if they were loaded once,
+    // unless we want to force reload. But typical flow is to keep them.
+    // However, if we want to ensure fresh start:
+    // doctors.clear();
+    // _allDoctors.clear();
+    // branches.clear();
     errorMessage.value = null;
   }
 
@@ -269,238 +310,56 @@ class DoctorSchedulePickerController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = 'Failed to load schedule for this doctor.';
-      // ignore: avoid_print
-      print('_loadSchedulesForDoctor error: $e');
+      debugPrint('_loadSchedulesForDoctor error: $e');
     } finally {
       isLoadingSchedules.value = false;
     }
   }
 
-  Future<void> _loadExistingAppointments(int doctorId) async {
-    isLoadingAppointments.value = true;
+  Future<void> _fetchFreeSlotsForDate(DateTime date) async {
+    availableTimes.clear();
+    selectedTime.value = null;
+
+    final doctor = selectedDoctor.value;
+    final branch = selectedBranch.value;
+
+    if (doctor == null || branch == null) return;
+
+    isLoadingFreeSlots.value = true;
+    errorMessage.value = null;
 
     try {
-      final appointments = await _appointmentRepository
-          .getAppointmentsByDoctorId(doctorId);
-
-      // Filter to only future appointments (past appointments don't block slots)
-      final now = DateTime.now();
-      final futureAppointments = appointments.where((appointment) {
-        try {
-          // Parse the appointment date/time
-          DateTime? appointmentDateTime;
-
-          // Try to parse from reservationTime field
-          if (appointment.reservationTime.isNotEmpty) {
-            appointmentDateTime = DateTime.tryParse(
-              appointment.reservationTime,
-            );
-          }
-
-          // If that fails, try to construct from day field
-          if (appointmentDateTime == null && appointment.day.isNotEmpty) {
-            appointmentDateTime = DateTime.tryParse(appointment.day);
-          }
-
-          if (appointmentDateTime != null) {
-            return appointmentDateTime.isAfter(now);
-          }
-
-          return false; // Skip appointments we can't parse
-        } catch (e) {
-          return false;
-        }
-      }).toList();
-
-      existingAppointments.assignAll(futureAppointments);
-    } catch (e) {
-      // Don't show error to user - just continue with empty appointments list
-      existingAppointments.clear();
-    } finally {
-      isLoadingAppointments.value = false;
-    }
-  }
-
-  void _recomputeAvailableDates() {
-    availableDates.clear();
-    availableTimes.clear();
-    selectedDate.value = null;
-    selectedTime.value = null;
-
-    final schedules = schedulesForSelectedDoctor;
-    if (schedules.isEmpty) {
-      return;
-    }
-
-    final now = DateTime.now();
-    final start = _dateOnly(now);
-    final end = _dateOnly(now.add(const Duration(days: 365)));
-
-    final dates = <DateTime>{};
-
-    // Strategy:
-    // - If schedule provides date range -> add dates within that range
-    // - Else use dayOfWeek rule (if any) within default window (next 365 days)
-    //
-    // IMPORTANT: We only expose dates that have at least one valid time slot.
-    for (final schedule in schedules) {
-      final scheduleStart = _dateOnly(schedule.startDate ?? start);
-      final scheduleEnd = _dateOnly(schedule.endDate ?? end);
-
-      final clampedStart = scheduleStart.isAfter(start) ? scheduleStart : start;
-      final clampedEnd = scheduleEnd.isBefore(end) ? scheduleEnd : end;
-
-      if (clampedStart.isAfter(clampedEnd)) continue;
-
-      // If dayOfWeek is provided, only include matching days.
-      final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
-
-      for (
-        var day = clampedStart;
-        !day.isAfter(clampedEnd);
-        day = day.add(const Duration(days: 1))
-      ) {
-        if (targetDow != null && day.weekday != targetDow) continue;
-
-        // Only add the date if it has at least one available slot.
-        final slots = _buildTimeSlotsForScheduleOnDate(schedule, day);
-        if (slots.isNotEmpty) {
-          dates.add(day);
-        }
-      }
-    }
-
-    final sorted = dates.toList()..sort((a, b) => a.compareTo(b));
-    availableDates.assignAll(sorted);
-
-    // Auto-select first available date for convenience.
-    if (availableDates.isNotEmpty) {
-      selectDate(availableDates.first);
-    }
-  }
-
-  void _recomputeAvailableTimesForDate(DateTime date) {
-    availableTimes.clear();
-    selectedTime.value = null;
-
-    final schedules = schedulesForSelectedDoctor;
-    if (schedules.isEmpty) return;
-
-    final slots = <TimeOfDay>{};
-
-    for (final schedule in schedules) {
-      // If dayOfWeek constraint exists, respect it.
-      final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
-      if (targetDow != null && date.weekday != targetDow) continue;
-
-      // If schedule has date bounds, respect them.
-      final start = _dateOnly(schedule.startDate ?? date);
-      final end = _dateOnly(schedule.endDate ?? date);
-      if (date.isBefore(start) || date.isAfter(end)) continue;
-
-      final scheduleSlots = _buildTimeSlotsForScheduleOnDate(schedule, date);
-      slots.addAll(scheduleSlots);
-    }
-
-    final list = slots.toList()
-      ..sort((a, b) => _timeToMinutes(a).compareTo(_timeToMinutes(b)));
-
-    // Remove slots that are in the past (if user chose today).
-    final now = DateTime.now();
-    if (_isSameDate(date, now)) {
-      list.removeWhere((t) {
-        final dt = DateTime(date.year, date.month, date.day, t.hour, t.minute);
-        // require at least a small lead time
-        return dt.isBefore(now.add(const Duration(minutes: 5)));
-      });
-    }
-
-    // NEW: Remove slots that are already booked by existing appointments
-    final availableSlots = _filterOutBookedSlots(list, date);
-
-    availableTimes.assignAll(availableSlots);
-
-    // Auto-select first available time.
-    if (availableTimes.isNotEmpty) {
-      selectedTime.value = availableTimes.first;
-    }
-  }
-
-  /// Filters out time slots that are already booked by existing appointments
-  List<TimeOfDay> _filterOutBookedSlots(
-    List<TimeOfDay> allSlots,
-    DateTime date,
-  ) {
-    final bookedSlots = <TimeOfDay>{};
-
-    // Find all booked slots for this specific date
-    for (final appointment in existingAppointments) {
-      try {
-        DateTime? appointmentDateTime;
-
-        // Try to parse from reservationTime field
-        if (appointment.reservationTime.isNotEmpty) {
-          appointmentDateTime = DateTime.tryParse(appointment.reservationTime);
-        }
-
-        // If that fails, try to construct from day field
-        if (appointmentDateTime == null && appointment.day.isNotEmpty) {
-          appointmentDateTime = DateTime.tryParse(appointment.day);
-        }
-
-        if (appointmentDateTime != null &&
-            _isSameDate(appointmentDateTime, date)) {
-          final bookedTime = TimeOfDay(
-            hour: appointmentDateTime.hour,
-            minute: appointmentDateTime.minute,
-          );
-          bookedSlots.add(bookedTime);
-        }
-      } catch (e) {
-        // Error parsing appointment time
-      }
-    }
-
-    // Filter out booked slots
-    final availableSlots = allSlots.where((slot) {
-      return !bookedSlots.any(
-        (booked) => booked.hour == slot.hour && booked.minute == slot.minute,
+      final dateStr = date.toIso8601String().split('T').first; // yyyy-MM-dd
+      final slots = await _doctorRepository.getFreeSlots(
+        doctor.id,
+        branch.id,
+        dateStr,
       );
-    }).toList();
 
-    return availableSlots;
-  }
+      final parsedSlots = <TimeOfDay>[];
+      for (final slot in slots) {
+        final t = parseTimeOfDay(slot);
+        if (t != null) {
+          parsedSlots.add(t);
+        }
+      }
 
-  List<TimeOfDay> _buildTimeSlotsForScheduleOnDate(
-    DoctorSchedule schedule,
-    DateTime date,
-  ) {
-    final from = _parseTimeOfDay(schedule.startTime);
-    final to = _parseTimeOfDay(schedule.endTime);
+      parsedSlots.sort(
+        (a, b) => _timeToMinutes(a).compareTo(_timeToMinutes(b)),
+      );
 
-    if (from == null || to == null) {
-      return const [];
+      availableTimes.assignAll(parsedSlots);
+
+      // Auto-select first available time
+      if (availableTimes.isNotEmpty) {
+        selectedTime.value = availableTimes.first;
+      }
+    } catch (e) {
+      errorMessage.value = 'Failed to load time slots.';
+      debugPrint('_fetchFreeSlotsForDate error: $e');
+    } finally {
+      isLoadingFreeSlots.value = false;
     }
-
-    final fromMin = _timeToMinutes(from);
-    final toMin = _timeToMinutes(to);
-
-    // If end is not after start, treat as invalid.
-    if (toMin <= fromMin) {
-      return const [];
-    }
-
-    // Use 90 minutes (1:30) as requested
-    final slotMinutes = 90;
-
-    // Build slots [start, end) with step = slotMinutes.
-    final slots = <TimeOfDay>[];
-    for (var m = fromMin; m + slotMinutes <= toMin; m += slotMinutes) {
-      final slot = _minutesToTime(m);
-      slots.add(slot);
-    }
-
-    return slots;
   }
 
   // -------------------------
@@ -509,20 +368,9 @@ class DoctorSchedulePickerController extends GetxController {
 
   DateTime _dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  bool _isSameDate(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
   int _timeToMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
 
-  TimeOfDay _minutesToTime(int minutes) {
-    final h = (minutes ~/ 60) % 24;
-    final m = minutes % 60;
-    return TimeOfDay(hour: h, minute: m);
-  }
-
   /// Parses dayOfWeek from various possible backend values:
-  /// - "Monday", "mon", "MONDAY"
-  /// - "1".."7" (ISO weekday: Monday=1..Sunday=7)
   int? _parseDayOfWeek(String? value) {
     if (value == null) return null;
     final v = value.trim();
@@ -532,7 +380,6 @@ class DoctorSchedulePickerController extends GetxController {
     if (asInt != null && asInt >= 1 && asInt <= 7) return asInt;
 
     final lower = v.toLowerCase();
-
     if (lower.startsWith('mon')) return DateTime.monday;
     if (lower.startsWith('tue')) return DateTime.tuesday;
     if (lower.startsWith('wed')) return DateTime.wednesday;
@@ -544,12 +391,8 @@ class DoctorSchedulePickerController extends GetxController {
     return null;
   }
 
-  /// Parses time from common backend formats:
-  /// - "2:00" -> 2:00 AM
-  /// - "14:00" -> 2:00 PM
-  /// - "09:00:00" -> 9:00 AM
-  /// - "2025-01-01T09:00:00" -> 9:00 AM
-  TimeOfDay? _parseTimeOfDay(String? value) {
+  /// Public helper to parse TimeOfDay
+  TimeOfDay? parseTimeOfDay(String? value) {
     if (value == null) return null;
     final v = value.trim();
     if (v.isEmpty) return null;
@@ -570,21 +413,5 @@ class DoctorSchedulePickerController extends GetxController {
     if (h < 0 || h > 23 || m < 0 || m > 59) return null;
 
     return TimeOfDay(hour: h, minute: m);
-  }
-
-  /// Optional convenience: returns formatted state for debugging/logging.
-  Map<String, dynamic> debugState() {
-    return {
-      'selectedDoctorId': selectedDoctor.value?.id,
-      'selectedDoctorName': selectedDoctor.value?.fullName,
-      'selectedDate': selectedDate.value?.toIso8601String(),
-      'selectedTime': selectedTime.value == null
-          ? null
-          : '${selectedTime.value!.hour.toString().padLeft(2, '0')}:${selectedTime.value!.minute.toString().padLeft(2, '0')}',
-      'availableDatesCount': availableDates.length,
-      'availableTimesCount': availableTimes.length,
-      'schedulesCount': schedulesForSelectedDoctor.length,
-      'serviceDurationInMinutes': _serviceDurationInMinutes,
-    };
   }
 }
