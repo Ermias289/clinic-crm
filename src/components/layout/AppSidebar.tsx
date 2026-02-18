@@ -26,6 +26,7 @@ import { fileUploadService } from '@/lib/api/fileUpload';
 import avatar from '../../assets/avatar.png';
 import { NotificationsButton } from "@/components/NotificationsButton";
 
+
 interface NavItem {
   title: string;
   href: string;
@@ -49,7 +50,7 @@ const navItems: NavItem[] = [
       { title: "Company", href: "/settings/company", icon: Building },
       { title: "Branches", href: "/settings/branches", icon: Building2 },
       { title: "Card Types", href: "/settings/card-types", icon: CreditCard },
-      { title: "Payment Types", href: "/settings/payment-types", icon: CreditCard },
+      { title: "Payment Types", href: "/settings/payment-types", icon: CardIcon },
       { title: "Bank Account", href: "/settings/bank-account", icon: CreditCard },
       { title: "Banner", href: "/settings/onboarding", icon: UserCog },
       { title: "Users", href: "/settings/users", icon: UserCircle },
@@ -84,8 +85,13 @@ export function AppSidebar() {
   });
   const [loading, setLoading] = useState(!companyData); // Only load if no cache
   const [logoError, setLogoError] = useState(false);
+  const [logoLoading, setLogoLoading] = useState(false);
 
   const user = authService.getCurrentUser();
+
+  // Log user and company data for debugging
+  console.log('Current user:', user);
+  console.log('Company data from cache:', companyData);
 
   // Fetch company data only if not cached or cache is old
   useEffect(() => {
@@ -98,7 +104,9 @@ export function AppSidebar() {
       if (!companyData || !cacheTimestamp || (now - parseInt(cacheTimestamp)) > oneHour) {
         try {
           setLoading(true);
+          console.log('Fetching company data from API...');
           const data = await companySettingService.get();
+          console.log('Company data from API:', data);
           setCompanyData(data);
           setLogoError(false);
           
@@ -106,6 +114,7 @@ export function AppSidebar() {
           localStorage.setItem('companyData', JSON.stringify(data));
           localStorage.setItem('companyDataTimestamp', now.toString());
         } catch (error) {
+          console.error('Error fetching company data:', error);
           setLogoError(true);
         } finally {
           setLoading(false);
@@ -118,8 +127,13 @@ export function AppSidebar() {
 
   // Memoize the logo URL to prevent unnecessary re-renders
   const logoUrl = useMemo(() => {
-    if (!companyData?.logo) return '';
+    if (!companyData?.logo) {
+      console.log('No logo in company data');
+      return '';
+    }
+    console.log('Company logo filename:', companyData.logo);
     const url = fileUploadService.getFileUrl(companyData.logo);
+    console.log('Generated logo URL:', url);
     return url;
   }, [companyData?.logo]);
 
@@ -145,29 +159,43 @@ export function AppSidebar() {
     navigate("/login");
   };
 
+  // Handle image load error
+  const handleImageError = () => {
+    console.log('Logo failed to load');
+    setLogoError(true);
+    setLogoLoading(false);
+  };
+
+  // Handle image load success
+  const handleImageLoad = () => {
+    console.log('Logo loaded successfully');
+    setLogoLoading(false);
+  };
+
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Logo and Notifications */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-sidebar-border">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-primary overflow-hidden mt-0.5">
+          <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-primary overflow-hidden mt-0.5 relative">
             {loading ? (
               <Loader2 className="w-6 h-6 text-sidebar-primary-foreground animate-spin" />
             ) : companyData?.logo && !logoError ? (
-              <img
-                src={logoUrl}
-                alt={`${companyData.name || 'Company'} Logo`}
-                className="w-full h-full object-cover"
-                onError={() => setLogoError(true)}
-                key={`logo-${companyData.logo}`} // Key helps React identify image changes
-              />
+              <>
+                {logoLoading && (
+                  <Loader2 className="w-6 h-6 text-sidebar-primary-foreground animate-spin absolute" />
+                )}
+                <img
+                  src={logoUrl}
+                  alt={`${companyData.name || 'Company'} Logo`}
+                  className={`w-full h-full object-cover ${logoLoading ? 'opacity-0' : 'opacity-100'}`}
+                  onError={handleImageError}
+                  onLoad={handleImageLoad}
+                  key={`logo-${companyData.logo}`}
+                />
+              </>
             ) : (
               <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
-            )}
-            {logoError && companyData?.logo && (
-              <div className="absolute inset-0 flex items-center justify-center bg-sidebar-primary">
-                <ToothIcon className="w-6 h-6 text-sidebar-primary-foreground" />
-              </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -199,8 +227,8 @@ export function AppSidebar() {
                   <button
                     onClick={() => toggleExpand(item.href)}
                     className={cn(
-                      "nav-item w-full justify-between",
-                      isActive(item.href) && "active"
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent w-full justify-between",
+                      isActive(item.href) && "bg-sidebar-accent text-sidebar-accent-foreground"
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -221,8 +249,8 @@ export function AppSidebar() {
                           <NavLink
                             to={child.href}
                             className={({ isActive }) => cn(
-                              "nav-item text-sm py-2",
-                              isActive && "active"
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent text-sm",
+                              isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
                             )}
                           >
                             <child.icon className="w-4 h-4" />
@@ -238,8 +266,8 @@ export function AppSidebar() {
                   to={item.href}
                   end={item.href === '/'}
                   className={({ isActive }) => cn(
-                    "nav-item",
-                    isActive && "active"
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent",
+                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
                   )}
                 >
                   <item.icon className="w-5 h-5" />

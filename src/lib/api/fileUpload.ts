@@ -1,7 +1,5 @@
 import apiClient from './client';
 
-const API_BASE_URL = 'https://truecaregate.nexabusinessgroup.com';
-
 interface FileUploadResponse {
   fileName: string; // Changed from FileName to fileName (lowercase)
 }
@@ -46,7 +44,9 @@ export const fileUploadService = {
    */
   getFileUrl: (fileName: string): string => {
     if (!fileName) return '';
-    return `${API_BASE_URL}/api/FileUpload/${fileName}`;
+    // Use the base URL from apiClient's default configuratione
+    const baseURL = apiClient.defaults.baseURL;
+    return `${baseURL}/api/FileUpload/${fileName}`;
   },
 
   /**

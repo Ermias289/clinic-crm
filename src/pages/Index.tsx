@@ -36,6 +36,7 @@ import {
   Payment, 
   MedicalService 
 } from "@/lib/api";
+import apiClient from "@/lib/api/client";
 
 // Interfaces
 interface DayAppointmentData {
@@ -69,7 +70,7 @@ interface ServiceChartData {
   name: string;
   value: number;
   color: string;
-  fullName: string; // For display in the list
+  fullName: string;
 }
 
 const Index = () => {
@@ -82,7 +83,6 @@ const Index = () => {
   const [chartData, setChartData] = useState<ChartDataItem[]>([]);
   const [serviceData, setServiceData] = useState<ServiceChartData[]>([]);
   
-  // Start with empty dates
   const [dateRange, setDateRange] = useState<{ fromDate: string; toDate: string }>({
     fromDate: '',
     toDate: ''
@@ -95,7 +95,7 @@ const Index = () => {
 
   function getLast7Days(): string {
     const date = new Date();
-    date.setDate(date.getDate() - 6); // -6 to get 7 days total (including today)
+    date.setDate(date.getDate() - 6);
     return formatDate(date);
   }
 
@@ -103,12 +103,10 @@ const Index = () => {
     return date.toISOString().split('T')[0];
   }
 
-  // Get day name from date
   function getDayName(date: Date): string {
     return date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
   }
 
-  // Format date for display
   function formatDateDisplay(date: Date): string {
     return date.toLocaleDateString('en-US', { 
       weekday: 'long', 
@@ -118,34 +116,28 @@ const Index = () => {
     });
   }
 
-  // Truncate long service names for pie chart labels
   function truncateServiceName(name: string, maxLength: number = 15): string {
     if (name.length <= maxLength) return name;
     return name.substring(0, maxLength - 3) + '...';
   }
 
-  // Get dates for each day of week within the range
   function getDatesForDaysOfWeek(fromDate: string, toDate: string): Map<string, string> {
     const dateMap = new Map<string, string>();
     
-    // If no dates provided, return empty map
     if (!fromDate || !toDate) {
       return dateMap;
     }
     
     let [start, end] = [new Date(fromDate), new Date(toDate)];
     
-    // Ensure start date is before end date
     if (start > end) {
       [start, end] = [end, start];
     }
     
-    // For each day in the range, map the day name to the first occurrence
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dayName = getDayName(d);
       const dateStr = formatDate(d);
       
-      // Only set if not already set (we want the first occurrence of each day)
       if (!dateMap.has(dayName)) {
         dateMap.set(dayName, dateStr);
       }
@@ -154,25 +146,19 @@ const Index = () => {
     return dateMap;
   }
 
-  // Fetch appointment report from backend - API accepts empty dates
+  // Fetch appointment report from backend using apiClient
   const fetchAppointmentReport = async (fromDate: string, toDate: string) => {
     try {
+      const response = await apiClient.get('/api/DashBoard/AppointmentReport', {
+        params: {
+          fromDate: fromDate || '',
+          toDate: toDate || ''
+        }
+      });
       
-      // Build URL with parameters (empty strings are okay for this API)
-      const url = `https://truecaregate.nexabusinessgroup.com/api/DashBoard/AppointmentReport?fromDate=${fromDate || ''}&toDate=${toDate || ''}`;
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data: AppointmentReportResponse = await response.json();
-      
+      const data: AppointmentReportResponse = response.data;
       setAppointmentReport(data);
       
-      // Transform the API data for the chart
-      // Use default dates for display if none provided
       const displayFromDate = fromDate || getLast7Days();
       const displayToDate = toDate || getTodayDate();
       transformAppointmentDataForChart(data, displayFromDate, displayToDate);
@@ -181,18 +167,13 @@ const Index = () => {
     }
   };
 
-  // Transform API data for the chart with actual dates
+  // Transform API data for the chart
   const transformAppointmentDataForChart = (data: AppointmentReportResponse, fromDate: string, toDate: string) => {
     try {
       const chartData: ChartDataItem[] = [];
-      
-      // Get actual dates for each day of week
       const dateMap = getDatesForDaysOfWeek(fromDate, toDate);
-      
-      // Define the order of days
       const dayOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       
-      // Process each day in order
       dayOrder.forEach(dayKey => {
         if (data[dayKey]) {
           const dayData = data[dayKey];
@@ -203,16 +184,15 @@ const Index = () => {
             actualDate = dateMap.get(dayKey)!;
             dateObj = new Date(actualDate);
           } else {
-            // If no specific date in range, use today as fallback
             dateObj = new Date();
             actualDate = formatDate(dateObj);
           }
           
           chartData.push({
-            name: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), // Show date on X-axis
+            name: dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
             day: dayKey,
-            dayName: dayKey.charAt(0).toUpperCase() + dayKey.slice(1), // "Monday", "Tuesday", etc.
-            actualDate: formatDateDisplay(dateObj), // Full date for tooltip
+            dayName: dayKey.charAt(0).toUpperCase() + dayKey.slice(1),
+            actualDate: formatDateDisplay(dateObj),
             Scheduled: dayData.scheduledAppointmentsCount || 0,
             Completed: dayData.completedAppointmentsCount || 0,
             Canceled: dayData.canceledAppointmentsCount || 0
@@ -222,23 +202,16 @@ const Index = () => {
       
       setChartData(chartData);
     } catch (error) {
+      console.error('Error transforming chart data:', error);
       setChartData([]);
     }
   };
 
-  // Fetch most booked services from backend
+  // Fetch most booked services from backend using apiClient
   const fetchMostBookedServices = async () => {
     try {
-      
-      const response = await fetch(
-        "https://truecaregate.nexabusinessgroup.com/api/DashBoard/MostBookedServices"
-      );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data: any = await response.json();
+      const response = await apiClient.get('/api/DashBoard/MostBookedServices');
+      const data: any = response.data;
       
       let servicesData: MostBookedService[] = [];
       
@@ -275,8 +248,6 @@ const Index = () => {
       }));
 
       setMostBookedServices(servicesWithColors);
-      
-      // Transform for pie chart
       transformServiceDataForChart(servicesWithColors);
     } catch (err) {
       calculateMostBookedServicesFromLocal();
@@ -287,14 +258,15 @@ const Index = () => {
   const transformServiceDataForChart = (services: MostBookedService[]) => {
     try {
       const chartData: ServiceChartData[] = services.map((service, index) => ({
-        name: truncateServiceName(service.serviceName), // Truncated name for pie chart labels
+        name: truncateServiceName(service.serviceName),
         value: service.bookingCount || 0,
         color: service.color || '#8884d8',
-        fullName: service.serviceName // Full name for the list below
+        fullName: service.serviceName
       })).filter(item => item.value > 0);
       
       setServiceData(chartData);
     } catch (error) {
+      console.error('Error transforming service data:', error);
       setServiceData([]);
     }
   };
@@ -308,7 +280,6 @@ const Index = () => {
         [start, end] = [end, start];
       }
       
-      // Generate mock data for fallback
       const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
       const fallbackData: AppointmentReportResponse = {};
       
@@ -323,6 +294,7 @@ const Index = () => {
       setAppointmentReport(fallbackData);
       transformAppointmentDataForChart(fallbackData, fromDate, toDate);
     } catch (error) {
+      console.error('Error generating fallback data:', error);
       setAppointmentReport(null);
       setChartData([]);
     }
@@ -360,12 +332,13 @@ const Index = () => {
       setMostBookedServices(servicesData);
       transformServiceDataForChart(servicesData);
     } catch (error) {
+      console.error('Error calculating local services:', error);
       setMostBookedServices([]);
       setServiceData([]);
     }
   };
 
-  // Handle date change - automatically adjust to maintain 7-day range and fetch new data
+  // Handle date change
   const handleDateChange = (type: 'from' | 'to', value: string) => {
     let newDateRange = { ...dateRange };
     
@@ -373,7 +346,6 @@ const Index = () => {
       const newDate = new Date(value);
       
       if (type === 'from') {
-        // If From date changed, set To date to From + 6 days (total 7 days)
         const toDate = new Date(newDate);
         toDate.setDate(toDate.getDate() + 6);
         newDateRange = {
@@ -381,7 +353,6 @@ const Index = () => {
           toDate: formatDate(toDate)
         };
       } else {
-        // If To date changed, set From date to To - 6 days (total 7 days)
         const fromDate = new Date(newDate);
         fromDate.setDate(fromDate.getDate() - 6);
         newDateRange = {
@@ -390,7 +361,6 @@ const Index = () => {
         };
       }
     } else {
-      // If clearing a date, just update that field (allow empty)
       newDateRange = {
         ...dateRange,
         [type === 'from' ? 'fromDate' : 'toDate']: value
@@ -398,12 +368,10 @@ const Index = () => {
     }
     
     setDateRange(newDateRange);
-    
-    // Always fetch data when dates change (API accepts empty dates)
     fetchAppointmentReport(newDateRange.fromDate, newDateRange.toDate);
   };
 
-  // Format date for display in header
+  // Format date for display
   const formatDisplayDate = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -425,25 +393,23 @@ const Index = () => {
           medicalServicesService.getAll()
         ]);
 
-
         setAppointments(allAppointments);
         setPayments(allPayments);
         setServices(allServices);
 
-        // Always fetch both APIs (AppointmentReport works with empty dates)
         await Promise.all([
           fetchAppointmentReport(dateRange.fromDate, dateRange.toDate),
           fetchMostBookedServices()
         ]);
       } catch (err) {
-        //nth
+        console.error('Error fetching initial data:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []); // Only run once on mount
+  }, []);
 
   if (loading) {
     return (
@@ -527,7 +493,7 @@ const Index = () => {
               </p>
             </div>
             
-            {/* Date Range Selector - No Apply button needed */}
+            {/* Date Range Selector */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <label htmlFor="fromDate" className="text-sm font-medium text-muted-foreground">
@@ -556,7 +522,7 @@ const Index = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {/* Chart Legend - positioned above the chart */}
+            {/* Chart Legend */}
             <div className="flex items-center gap-4 text-sm mb-4 justify-center">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-blue-500" />
@@ -599,7 +565,7 @@ const Index = () => {
                     }}
                     labelFormatter={(label, payload) => {
                       if (payload && payload[0]?.payload?.actualDate) {
-                        return payload[0].payload.actualDate; // Show full date like "Sunday, Feb 1, 2026"
+                        return payload[0].payload.actualDate;
                       }
                       return label;
                     }}
