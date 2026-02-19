@@ -125,17 +125,46 @@ export function AppSidebar() {
     fetchIfNeeded();
   }, []); // Empty dependency array - only run once on mount
 
+  // Listen for company update events (logo/name changed)
+  useEffect(() => {
+    const refreshCompany = async () => {
+      try {
+        console.log("Company update detected — refreshing sidebar...");
+        const data = await companySettingService.get();
+
+        setCompanyData(data);
+
+        localStorage.setItem('companyData', JSON.stringify(data));
+        localStorage.setItem('companyDataTimestamp', Date.now().toString());
+
+        setLogoError(false);
+      } catch (err) {
+        console.error("Failed to refresh company data", err);
+      }
+    };
+
+    window.addEventListener("company-updated", refreshCompany);
+
+    return () => {
+      window.removeEventListener("company-updated", refreshCompany);
+    };
+  }, []);
+
+
   // Memoize the logo URL to prevent unnecessary re-renders
-  const logoUrl = useMemo(() => {
-    if (!companyData?.logo) {
-      console.log('No logo in company data');
-      return '';
-    }
-    console.log('Company logo filename:', companyData.logo);
-    const url = fileUploadService.getFileUrl(companyData.logo);
-    console.log('Generated logo URL:', url);
-    return url;
-  }, [companyData?.logo]);
+    const logoUrl = useMemo(() => {
+      if (!companyData?.logo) {
+        console.log('No logo in company data');
+        return '';
+      }
+
+      // FORCE browser to reload image every time logo changes
+      const url = `${fileUploadService.getFileUrl(companyData.logo)}?v=${Date.now()}`;
+
+      console.log('Generated logo URL (cache busted):', url);
+      return url;
+    }, [companyData?.logo]);
+
 
   const toggleExpand = (href: string) => {
     setExpandedItems(prev => 

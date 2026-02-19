@@ -230,7 +230,17 @@ const CompanySettingsPage = () => {
 
       await Promise.all(promises);
 
-      // Reload to get new IDs
+      // 🔥 fetch fresh company data from backend
+      const freshCompany = await companySettingService.get();
+
+      // 🔥 update sidebar cache
+      localStorage.setItem('companyData', JSON.stringify(freshCompany));
+      localStorage.setItem('companyDataTimestamp', Date.now().toString());
+
+      // 🔥 notify whole app that company changed
+      window.dispatchEvent(new Event("company-updated"));
+
+      // reload current page form
       loadCompanySettings();
 
       toast({
