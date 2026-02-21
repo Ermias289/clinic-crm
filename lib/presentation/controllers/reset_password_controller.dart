@@ -80,11 +80,7 @@ class ResetPasswordController extends GetxController {
       });
 
       if (response.status.hasError) {
-        final msg =
-            _extractMessage(response.body) ??
-            response.bodyString ??
-            'Failed to reset password';
-        errorMessage.value = msg;
+        errorMessage.value = 'Unable to reset password';
         return;
       }
 

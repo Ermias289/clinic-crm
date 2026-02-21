@@ -7,7 +7,12 @@ abstract class AppointmentRemoteDataSource {
   Future<List<AppointmentModel>> getAppointmentsByUserId(int userId);
   Future<List<AppointmentModel>> getAppointmentsByDoctorId(int doctorId);
   Future<bool> cancelAppointment(int id, String reason);
-  Future<List<String>> getFreeSlots(int docId, String date, int branchId, int serviceId);
+  Future<List<String>> getFreeSlots(
+    int docId,
+    String date,
+    int branchId,
+    int serviceId,
+  );
 }
 
 class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
@@ -19,7 +24,7 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
   Future<AppointmentModel> bookAppointment(AppointmentModel appointment) async {
     final response = await apiClient.post('/Appointment', appointment.toJson());
     if (response.hasError) {
-      throw Exception(response.statusText ?? 'Failed to book appointment');
+      throw Exception('Unable to book appointment');
     }
     return AppointmentModel(
       dentistryId: response.body['dentistryId'],
@@ -57,13 +62,11 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
           final List<dynamic> body = response3.body;
           final all = body.map((e) => AppointmentModel.fromJson(e)).toList();
           final filtered = all.where((a) => a.patientId == id).toList();
-          
+
           return filtered;
         }
 
-        throw Exception(
-          'Failed to fetch appointments: ${response.statusText} (${response.statusCode}) - Server returned Id validation error on all endpoints.',
-        );
+        throw Exception('Unable to load appointments');
       }
 
       final List<dynamic> body = response.body;
@@ -80,7 +83,7 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       final response = await apiClient.get(url);
 
       if (response.hasError) {
-        throw Exception('Failed to fetch appointments: ${response.statusText}');
+        throw Exception('Unable to load appointments');
       }
 
       final List<dynamic> body = response.body;
@@ -124,9 +127,7 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
           return filtered;
         }
 
-        throw Exception(
-          'Failed to fetch appointments for doctor: ${response.statusText}',
-        );
+        throw Exception('Unable to load appointments for doctor');
       }
 
       final List<dynamic> body = response.body;
@@ -144,7 +145,7 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       final response = await apiClient.put(url, {});
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to cancel appointment');
+        throw Exception('Unable to cancel appointment');
       }
 
       return true;
@@ -169,7 +170,7 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       final response = await apiClient.get(url);
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch free slots');
+        throw Exception('Unable to load available time slots');
       }
 
       final body = response.body;

@@ -53,8 +53,7 @@ class NotificationController extends GetxController {
       notifications.assignAll(result);
       _updateUnreadCount();
     } catch (e) {
-      error.value = e.toString();
-      ErrorHandler.handleError(e, customTitle: 'Fetch Failed');
+      ErrorHandler.handleError(e, customTitle: 'Unable to Load Notifications');
     } finally {
       isLoading.value = false;
     }

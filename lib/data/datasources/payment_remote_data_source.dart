@@ -18,14 +18,13 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       final response = await apiClient.get(url);
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch payments');
+        throw Exception('Unable to load payment history');
       }
-
 
       final List<dynamic> paymentsJson = response.body;
       return paymentsJson.map((json) => PaymentModel.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Failed to fetch payment history: $e');
+      rethrow;
     }
   }
 }

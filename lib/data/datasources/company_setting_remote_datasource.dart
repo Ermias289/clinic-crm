@@ -17,14 +17,12 @@ class CompanySettingRemoteDataSourceImpl
       final response = await apiClient.get('/CompanySetting');
 
       if (response.hasError) {
-        throw Exception(
-          response.statusText ?? 'Failed to fetch company settings',
-        );
+        throw Exception('Unable to load company settings');
       }
 
       return CompanySettingModel.fromJson(response.body);
     } catch (e) {
-      throw Exception('Error fetching company settings: $e');
+      rethrow;
     }
   }
 }

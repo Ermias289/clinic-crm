@@ -413,16 +413,16 @@ class DoctorSchedulePickerController extends GetxController {
       // If dayOfWeek is provided, only include matching days.
       final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
 
-        for (
-          var day = clampedStart;
-          !day.isAfter(clampedEnd);
-          day = day.add(const Duration(days: 1))
-        ) {
-          if (targetDow != null && day.weekday != targetDow) continue;
+      for (
+        var day = clampedStart;
+        !day.isAfter(clampedEnd);
+        day = day.add(const Duration(days: 1))
+      ) {
+        if (targetDow != null && day.weekday != targetDow) continue;
 
-          // If the schedule applies to this day, it's potentially available.
-          dates.add(day);
-        }
+        // If the schedule applies to this day, it's potentially available.
+        dates.add(day);
+      }
     }
 
     final sorted = dates.toList()..sort((a, b) => a.compareTo(b));

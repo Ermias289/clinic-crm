@@ -9,19 +9,17 @@ class UserRemoteDataSource {
     final response = await client.get('/User');
 
     if (response.hasError) {
-      throw Exception(response.statusText);
+      throw Exception('Unable to load users');
     }
 
-    return (response.body as List)
-        .map((e) => UserModel.fromJson(e))
-        .toList();
+    return (response.body as List).map((e) => UserModel.fromJson(e)).toList();
   }
 
   Future<UserModel> getUserById(int id) async {
     final response = await client.get('/User/$id');
 
     if (response.hasError) {
-      throw Exception(response.statusText);
+      throw Exception('Unable to load user information');
     }
 
     return UserModel.fromJson(response.body);
@@ -29,16 +27,19 @@ class UserRemoteDataSource {
 
   Future<UserModel> updateUser(int id, Map<String, dynamic> data) async {
     final response = await client.put('/User/$id', data);
-    
-    
+
     if (response.hasError) {
-      throw Exception(response.statusText ?? 'Update failed');
+      throw Exception('Unable to update user information');
     }
 
     return UserModel.fromJson(response.body);
   }
 
-  Future<void> changePassword(String phoneOrEmail, String oldPassword, String newPassword) async {
+  Future<void> changePassword(
+    String phoneOrEmail,
+    String oldPassword,
+    String newPassword,
+  ) async {
     final response = await client.post('/Auth/changePassword', {
       'phoneOrEmail': phoneOrEmail,
       'password': oldPassword,
@@ -47,7 +48,7 @@ class UserRemoteDataSource {
     });
 
     if (response.hasError) {
-      throw Exception(response.statusText);
+      throw Exception('Unable to change password');
     }
   }
 }

@@ -17,12 +17,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<LoginResponseModel> login(LoginRequestModel request) async {
-
     try {
       final response = await apiClient.post('/Auth/login', request.toJson());
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Login failed');
+        throw Exception('Invalid credentials');
       }
 
       return LoginResponseModel.fromJson(response.body);
@@ -39,16 +38,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (response.hasError) {
         String errorMsg = 'Registration failed';
         if (response.body != null && response.body is Map) {
-          errorMsg =
-              response.body['message'] ?? response.statusText ?? errorMsg;
-        } else {
-          errorMsg = response.statusText ?? errorMsg;
+          errorMsg = response.body['message'] ?? errorMsg;
         }
         throw Exception(errorMsg);
       }
       return RegisterResponseModel.fromJson(response.body);
     } catch (e) {
-      throw Exception('Registration error: ${e.toString()}');
+      rethrow;
     }
   }
 
@@ -59,7 +55,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         '/UserRole/getRoleByName?Name=Patient',
       );
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch Patient role');
+        throw Exception('Unable to load role information');
       }
       return response.body['id'];
     } catch (e) {

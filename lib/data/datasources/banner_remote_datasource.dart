@@ -24,10 +24,10 @@ class BannerRemoteDataSourceImpl implements BannerRemoteDataSource {
 
         return banners;
       } else {
-        throw Exception('Failed to fetch banners: ${response.statusCode}');
+        throw Exception('Unable to load banners');
       }
     } catch (e) {
-      throw Exception('Failed to fetch banners: $e');
+      rethrow;
     }
   }
 }

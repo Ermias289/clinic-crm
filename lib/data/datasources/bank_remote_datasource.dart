@@ -19,13 +19,13 @@ class BankRemoteDataSourceImpl implements BankRemoteDataSource {
       final response = await apiClient.get('/bank');
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch banks');
+        throw Exception('Unable to load banks');
       }
 
       final List<dynamic> banksJson = response.body;
       return banksJson.map((json) => Bank.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Failed to fetch banks: $e');
+      rethrow;
     }
   }
 
@@ -39,13 +39,13 @@ class BankRemoteDataSourceImpl implements BankRemoteDataSource {
       final response = await apiClient.get(endpoint);
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch bank accounts');
+        throw Exception('Unable to load bank accounts');
       }
 
       final List<dynamic> accountsJson = response.body;
       return accountsJson.map((json) => BankAccount.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Failed to fetch bank accounts: $e');
+      rethrow;
     }
   }
 
@@ -55,7 +55,7 @@ class BankRemoteDataSourceImpl implements BankRemoteDataSource {
       final response = await apiClient.get('/bank/$id');
       return Bank.fromJson(response.body);
     } catch (e) {
-      throw Exception('Failed to fetch bank: $e');
+      rethrow;
     }
   }
 
@@ -65,7 +65,7 @@ class BankRemoteDataSourceImpl implements BankRemoteDataSource {
       final response = await apiClient.get('/bankaccount/$id');
       return BankAccount.fromJson(response.body);
     } catch (e) {
-      throw Exception('Failed to fetch bank account: $e');
+      rethrow;
     }
   }
 }

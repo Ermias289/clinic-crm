@@ -5,7 +5,8 @@ abstract class BranchSettingRemoteDataSource {
   Future<List<BranchSettingModel>> getBranchSettings();
 }
 
-class BranchSettingRemoteDataSourceImpl implements BranchSettingRemoteDataSource {
+class BranchSettingRemoteDataSourceImpl
+    implements BranchSettingRemoteDataSource {
   final ApiClient apiClient;
 
   BranchSettingRemoteDataSourceImpl({required this.apiClient});
@@ -16,9 +17,7 @@ class BranchSettingRemoteDataSourceImpl implements BranchSettingRemoteDataSource
       final response = await apiClient.get('/BranchSetting');
 
       if (response.hasError) {
-        throw Exception(
-          response.statusText ?? 'Failed to fetch branch settings',
-        );
+        throw Exception('Unable to load branch settings');
       }
 
       final body = response.body;
@@ -27,8 +26,9 @@ class BranchSettingRemoteDataSourceImpl implements BranchSettingRemoteDataSource
         return body
             .whereType<dynamic>()
             .map(
-              (e) =>
-                  BranchSettingModel.fromJson(Map<String, dynamic>.from(e as Map)),
+              (e) => BranchSettingModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
             )
             .toList();
       }
@@ -38,15 +38,16 @@ class BranchSettingRemoteDataSourceImpl implements BranchSettingRemoteDataSource
         return data
             .whereType<dynamic>()
             .map(
-              (e) =>
-                  BranchSettingModel.fromJson(Map<String, dynamic>.from(e as Map)),
+              (e) => BranchSettingModel.fromJson(
+                Map<String, dynamic>.from(e as Map),
+              ),
             )
             .toList();
       }
 
-      throw Exception('Unexpected response format for branch settings');
+      throw Exception('Unable to load branch settings');
     } catch (e) {
-      throw Exception('Error fetching branch settings: $e');
+      rethrow;
     }
   }
 }

@@ -63,11 +63,7 @@ class OTPVerificationController extends GetxController {
       );
 
       if (response.status.hasError) {
-        final msg =
-            _extractMessage(response.body) ??
-            response.bodyString ??
-            'Failed to resend code';
-        ErrorHandler.showError(msg);
+        ErrorHandler.showError('Unable to resend code');
       } else {
         ErrorHandler.showSuccess('Code sent successfully');
       }
@@ -98,12 +94,7 @@ class OTPVerificationController extends GetxController {
       );
 
       if (response.status.hasError) {
-        // Try to parse error message from body if available
-        final msg =
-            _extractMessage(response.body) ??
-            response.bodyString ??
-            'Invalid Code';
-        ErrorHandler.showError('Verification failed: $msg');
+        ErrorHandler.showError('Invalid verification code');
       } else {
         ErrorHandler.showSuccess('Email verified successfully!');
         // Navigate to Login

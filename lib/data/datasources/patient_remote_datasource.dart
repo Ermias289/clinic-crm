@@ -21,14 +21,12 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.post('/Patient', request.toJson());
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to create patient'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to create patient profile');
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
     } catch (e) {
-      throw Exception('Error creating patient: $e');
+      rethrow;
     }
   }
 
@@ -38,14 +36,12 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient/$id');
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to get patient'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to load patient information');
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
     } catch (e) {
-      throw Exception('Error getting patient: $e');
+      rethrow;
     }
   }
 
@@ -55,14 +51,12 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient/byUserId/$userId');
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to get patient by user ID'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to load patient information');
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
     } catch (e) {
-      throw Exception('Error getting patient by user ID: $e');
+      rethrow;
     }
   }
 
@@ -72,15 +66,13 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.get('/Patient');
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to get patients'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to load patients');
       }
 
       final List<dynamic> data = response.body;
       return data.map((json) => PatientModel.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Error getting patients: $e');
+      rethrow;
     }
   }
 
@@ -93,14 +85,12 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.put('/Patient/$id', request.toJson());
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to update patient'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to update patient information');
       }
 
       return PatientModel.fromJson(response.body as Map<String, dynamic>);
     } catch (e) {
-      throw Exception('Error updating patient: $e');
+      rethrow;
     }
   }
 
@@ -110,14 +100,12 @@ class PatientRemoteDataSourceImpl implements PatientRemoteDataSource {
       final response = await apiClient.delete('/Patient/$id');
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to delete patient'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to delete patient');
       }
 
       return true;
     } catch (e) {
-      throw Exception('Error deleting patient: $e');
+      rethrow;
     }
   }
 }

@@ -76,8 +76,8 @@ class AppointmentController extends GetxController {
         try {
           userId = int.parse(userIdRaw);
         } catch (e) {
-           debugPrint('Error parsing user ID from string: $e');
-           return;
+          debugPrint('Error parsing user ID from string: $e');
+          return;
         }
       } else {
         return;
@@ -132,8 +132,7 @@ class AppointmentController extends GetxController {
       final result = await repository.getAppointmentsByUserId(userId);
       appointments.assignAll(result);
     } catch (e) {
-      error.value = e.toString();
-      ErrorHandler.handleError(e, customTitle: 'Fetch Appointments Failed');
+      ErrorHandler.handleError(e, customTitle: 'Unable to Load Appointments');
     } finally {
       isLoading.value = false;
     }

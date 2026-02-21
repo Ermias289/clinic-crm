@@ -13,7 +13,6 @@ import '../../data/repositories/card_repository_impl.dart';
 import '../../data/repositories/patient_repository_impl.dart';
 import '../../domain/usecases/get_bank_details_usecase.dart';
 import '../../config/app_routes.dart';
-import '../../core/theme/app_colors.dart';
 import 'package:get_storage/get_storage.dart';
 import 'profile_controller.dart';
 
@@ -229,9 +228,7 @@ class CardController extends GetxController {
           .firstOrNull;
 
       if (foundAutoPreparedPayment == null) {
-        throw Exception(
-          'No auto-prepared payment found for this expired card. Please contact support.',
-        );
+        throw Exception('Unable to find payment for reactivation');
       }
 
       // Step 3: Set up reactivation state with existing card and auto-prepared payment
@@ -246,15 +243,7 @@ class CardController extends GetxController {
         title: 'Payment Required',
       );
     } catch (e) {
-      String errorMessage = 'Failed to find payment for reactivation: $e';
-
-      // Handle specific error cases
-      if (e.toString().contains('No auto-prepared payment found')) {
-        errorMessage =
-            'No payment found for card reactivation. The auto-prepared payment may not have been created yet. Please contact support.';
-      }
-
-      ErrorHandler.showError(errorMessage);
+      ErrorHandler.handleError(e, customTitle: 'Reactivation Failed');
     } finally {
       isLoading.value = false;
     }
@@ -263,7 +252,10 @@ class CardController extends GetxController {
   /// Complete card reactivation payment (reactivates existing expired card)
   Future<void> submitReactivationPayment() async {
     if (selectedPaymentProof.value == null) {
-      ErrorHandler.showError('Please upload a payment receipt.', title: 'Required');
+      ErrorHandler.showError(
+        'Please upload a payment receipt.',
+        title: 'Required',
+      );
       return;
     }
 
@@ -435,7 +427,10 @@ class CardController extends GetxController {
   /// PM's Specified Flow Implementation
   Future<void> submitCardRequest() async {
     if (selectedPaymentProof.value == null) {
-      ErrorHandler.showError('Please upload a payment receipt.', title: 'Required');
+      ErrorHandler.showError(
+        'Please upload a payment receipt.',
+        title: 'Required',
+      );
       return;
     }
 
@@ -444,7 +439,7 @@ class CardController extends GetxController {
       final currentUserId = _box.read('userId') ?? 0;
 
       if (currentUserId == 0) {
-        throw Exception('User not logged in');
+        throw Exception('Please login to continue');
       }
 
       // Step 1: Create Patient using POST /api/Patient
@@ -505,7 +500,7 @@ class CardController extends GetxController {
       final cardId = cardResponse['id'] ?? 0;
 
       if (cardId == 0) {
-        throw Exception('Failed to retrieve Card ID from response');
+        throw Exception('Unable to process card request');
       }
 
       // Step 3: Get payments by card ID to find auto-prepared payment
@@ -516,7 +511,7 @@ class CardController extends GetxController {
       final autoPrepared = payments.where((p) => p.isAutoPrepared).firstOrNull;
 
       if (autoPrepared == null) {
-        throw Exception('Auto-prepared payment not found');
+        throw Exception('Unable to process payment');
       }
 
       autoPreparedPayment.value = autoPrepared;

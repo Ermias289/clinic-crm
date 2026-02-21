@@ -32,15 +32,13 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       final response = await apiClient.get('/CardSetting');
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to fetch card settings'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to load card settings');
       }
 
       final List<dynamic> data = response.body;
       return data.map((json) => CardSettingModel.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Error fetching card settings: $e');
+      rethrow;
     }
   }
 
@@ -50,15 +48,13 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       final response = await apiClient.post('/Card', request.toJson());
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to request card'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to request card');
       }
 
       return response.body
           as Map<String, dynamic>; // Return the created Card object
     } catch (e) {
-      throw Exception('Error requesting card: $e');
+      rethrow;
     }
   }
 
@@ -72,9 +68,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
         if (response.statusCode == 404) {
           return [];
         }
-        throw Exception(
-          '${response.statusText ?? 'Failed to fetch payments'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to load payments');
       }
 
       final List<dynamic> data = response.body;
@@ -84,7 +78,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       if (e.toString().contains('404') || e.toString().contains('Not Found')) {
         return [];
       }
-      throw Exception('Error fetching payments: $e');
+      rethrow;
     }
   }
 
@@ -99,14 +93,12 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       );
 
       if (response.hasError) {
-        throw Exception(
-          '${response.statusText ?? 'Failed to create payment request'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to create payment request');
       }
 
       return PaymentModel.fromJson(response.body as Map<String, dynamic>);
     } catch (e) {
-      throw Exception('Error creating payment request: $e');
+      rethrow;
     }
   }
 
@@ -131,16 +123,14 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       final uploadResponse = await apiClient.post('/FileUpload/upload', form);
 
       if (uploadResponse.hasError) {
-        throw Exception(
-          '${uploadResponse.statusText ?? 'Failed to upload payment proof'} - ${uploadResponse.bodyString}',
-        );
+        throw Exception('Unable to upload payment proof');
       }
 
       final String uploadedFileName = uploadResponse.body['fileName'];
 
       return uploadedFileName;
     } catch (e) {
-      throw Exception('Error uploading payment proof: $e');
+      rethrow;
     }
   }
 
@@ -152,7 +142,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       final currentUserId = _box.read('userId') ?? 0;
 
       if (currentUserId == 0) {
-        throw Exception('User not logged in');
+        throw Exception('Please login to continue');
       }
 
       final response = await apiClient.get('/Card/cardByUserId/$currentUserId');
@@ -163,9 +153,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
         }
         if (response.statusCode == 401) throw Exception("Unauthorized");
 
-        throw Exception(
-          '${response.statusText ?? 'Failed to get my card'} - ${response.bodyString}',
-        );
+        throw Exception('Unable to load card information');
       }
 
       return response.body as Map<String, dynamic>;
@@ -182,8 +170,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
 
       if (response.hasError) {
         // Extract error message from response body if available
-        String errorMessage =
-            response.statusText ?? 'Failed to reactivate card';
+        String errorMessage = 'Unable to reactivate card';
 
         if (response.body != null && response.body is Map) {
           final body = response.body as Map<String, dynamic>;
@@ -199,7 +186,7 @@ class CardRemoteDataSourceImpl implements CardRemoteDataSource {
       if (e is Exception) {
         rethrow;
       }
-      throw Exception('Error reactivating card: $e');
+      rethrow;
     }
   }
 }

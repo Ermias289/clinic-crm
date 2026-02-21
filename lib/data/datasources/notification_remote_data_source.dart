@@ -18,9 +18,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       final response = await apiClient.get('/Notification?userId=$userId');
 
       if (response.hasError) {
-        throw Exception(
-          'Failed to fetch notifications: ${response.statusText}',
-        );
+        throw Exception('Unable to load notifications');
       }
 
       final List<dynamic> body = response.body;
@@ -51,9 +49,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       );
 
       if (response.hasError) {
-        throw Exception(
-          'Failed to mark notification as read: ${response.statusText}',
-        );
+        throw Exception('Unable to mark notification as read');
       }
 
       return UserNotificationModel.fromJson(response.body);
@@ -71,9 +67,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       );
 
       if (response.hasError) {
-        throw Exception(
-          'Failed to mark all notifications as read: ${response.statusText}',
-        );
+        throw Exception('Unable to mark all notifications as read');
       }
 
       return response.body == true || response.body['success'] == true;

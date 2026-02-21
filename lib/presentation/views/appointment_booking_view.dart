@@ -136,7 +136,10 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         await _bookAppointment();
       }
     } else {
-      ErrorHandler.showError('Please select doctor, date and time', title: 'Required');
+      ErrorHandler.showError(
+        'Please select doctor, date and time',
+        title: 'Required',
+      );
     }
   }
 
@@ -330,8 +333,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
 
       if (response.hasError) {
         // Handle specific error messages
-        String errorMessage =
-            response.statusText ?? 'Failed to book appointment';
+        String errorMessage = 'Unable to book appointment';
 
         if (response.body is Map && response.body['message'] != null) {
           final backendMessage = response.body['message'] as String;

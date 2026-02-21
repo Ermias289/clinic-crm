@@ -31,7 +31,7 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       final response = await apiClient.get('/MedicalProfessional');
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch doctors');
+        throw Exception('Unable to load doctors');
       }
 
       final body = response.body;
@@ -78,9 +78,9 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
         return doctors;
       }
 
-      throw Exception('Unexpected response format for doctors');
+      throw Exception('Unable to load doctors');
     } catch (e) {
-      throw Exception('Error fetching doctors: $e');
+      rethrow;
     }
   }
 
@@ -90,9 +90,7 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       final response = await apiClient.get('/DoctorSchedule');
 
       if (response.hasError) {
-        throw Exception(
-          response.statusText ?? 'Failed to fetch doctor schedules',
-        );
+        throw Exception('Unable to load doctor schedules');
       }
 
       final body = response.body;
@@ -119,9 +117,9 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
             .toList();
       }
 
-      throw Exception('Unexpected response format for doctor schedules');
+      throw Exception('Unable to load doctor schedules');
     } catch (e) {
-      throw Exception('Error fetching doctor schedules: $e');
+      rethrow;
     }
   }
 
@@ -135,9 +133,7 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
       );
 
       if (response.hasError) {
-        throw Exception(
-          response.statusText ?? 'Failed to fetch doctor schedules',
-        );
+        throw Exception('Unable to load doctor schedules');
       }
 
       final body = response.body;
@@ -164,9 +160,9 @@ class DoctorRemoteDataSourceImpl implements DoctorRemoteDataSource {
             .toList();
       }
 
-      throw Exception('Unexpected response format for doctor schedules');
+      throw Exception('Unable to load doctor schedules');
     } catch (e) {
-      throw Exception('Error fetching doctor schedules for doctor: $e');
+      rethrow;
     }
   }
 }
