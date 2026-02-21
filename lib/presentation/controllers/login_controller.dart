@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../../data/models/login_request_model.dart';
 import '../../../domain/usecases/login_usecase.dart';
+import '../../../core/utils/error_handler.dart';
 
 class LoginController extends GetxController {
   final LoginUseCase loginUseCase;
@@ -47,7 +48,8 @@ class LoginController extends GetxController {
       // Redirect to dashboard and set services tab as active
       Get.offAllNamed('/dashboard', arguments: {'initialTab': 2});
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      final message = ErrorHandler.cleanExceptionMessage(e);
+      ErrorHandler.showError(message, title: 'Login Failed');
     } finally {
       isLoading.value = false;
     }

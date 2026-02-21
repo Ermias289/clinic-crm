@@ -1,4 +1,5 @@
 import '../../core/api_client.dart';
+import '../../core/utils/error_handler.dart';
 import '../models/user_notification_model.dart';
 
 abstract class NotificationRemoteDataSource {
@@ -18,16 +19,17 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       final response = await apiClient.get('/Notification?userId=$userId');
 
       if (response.hasError) {
-        throw Exception(
-          'Failed to fetch notifications: ${response.statusText}',
+        final errorMsg = ErrorHandler.extractErrorMessage(
+          response,
+          fallback: 'Failed to fetch notifications',
         );
+        throw Exception(errorMsg);
       }
 
       final List<dynamic> body = response.body;
 
       // Debug: Print each notification
-      for (int i = 0; i < body.length; i++) {
-      }
+      for (int i = 0; i < body.length; i++) {}
 
       final notifications = body
           .map((e) => UserNotificationModel.fromJson(e))
@@ -51,9 +53,11 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       );
 
       if (response.hasError) {
-        throw Exception(
-          'Failed to mark notification as read: ${response.statusText}',
+        final errorMsg = ErrorHandler.extractErrorMessage(
+          response,
+          fallback: 'Failed to mark notification as read',
         );
+        throw Exception(errorMsg);
       }
 
       return UserNotificationModel.fromJson(response.body);
@@ -71,9 +75,11 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       );
 
       if (response.hasError) {
-        throw Exception(
-          'Failed to mark all notifications as read: ${response.statusText}',
+        final errorMsg = ErrorHandler.extractErrorMessage(
+          response,
+          fallback: 'Failed to mark all notifications as read',
         );
+        throw Exception(errorMsg);
       }
 
       return response.body == true || response.body['success'] == true;

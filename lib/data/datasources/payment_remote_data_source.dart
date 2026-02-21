@@ -1,4 +1,5 @@
 import '../../core/api_client.dart';
+import '../../core/utils/error_handler.dart';
 import '../models/payment_model.dart';
 
 abstract class PaymentRemoteDataSource {
@@ -18,14 +19,17 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
       final response = await apiClient.get(url);
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Failed to fetch payments');
+        final errorMsg = ErrorHandler.extractErrorMessage(
+          response,
+          fallback: 'Failed to fetch payment history',
+        );
+        throw Exception(errorMsg);
       }
-
 
       final List<dynamic> paymentsJson = response.body;
       return paymentsJson.map((json) => PaymentModel.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Failed to fetch payment history: $e');
+      rethrow;
     }
   }
 }

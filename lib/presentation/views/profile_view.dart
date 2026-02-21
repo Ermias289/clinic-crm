@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../controllers/profile_controller.dart';
 import '../controllers/dashboard_controller.dart';
 import '../widgets/custom_text_field.dart';
@@ -10,6 +11,22 @@ import '../../core/theme/app_text_styles.dart';
 
 class ProfileView extends GetView<ProfileController> {
   const ProfileView({super.key});
+
+  // Method to launch Terms and Conditions URL
+  Future<void> _launchTermsAndConditions() async {
+    final Uri url = Uri.parse(
+      'https://senaittermsandconditions.nexabusinessgroup.com/',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      Get.snackbar(
+        'Error',
+        'Could not open Terms and Conditions',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -420,6 +437,22 @@ class ProfileView extends GetView<ProfileController> {
                                   ),
                                   label: Text(
                                     'Change Password',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextButton.icon(
+                                  onPressed: _launchTermsAndConditions,
+                                  icon: const Icon(
+                                    Icons.description_outlined,
+                                    size: 18,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  label: Text(
+                                    'Terms and Conditions',
                                     style: AppTextStyles.bodyMedium.copyWith(
                                       color: AppColors.textSecondary,
                                       fontWeight: FontWeight.w600,

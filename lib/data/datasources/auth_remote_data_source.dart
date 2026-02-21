@@ -1,4 +1,5 @@
 import '../../core/api_client.dart';
+import '../../core/utils/error_handler.dart';
 import '../models/login_request_model.dart';
 import '../models/login_response_model.dart';
 import '../models/register_request_model.dart';
@@ -17,12 +18,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<LoginResponseModel> login(LoginRequestModel request) async {
-
     try {
       final response = await apiClient.post('/Auth/login', request.toJson());
 
       if (response.hasError) {
-        throw Exception(response.statusText ?? 'Login failed');
+        final errorMsg = ErrorHandler.extractErrorMessage(
+          response,
+          fallback: 'Login failed. Please check your credentials.',
+        );
+        throw Exception(errorMsg);
       }
 
       return LoginResponseModel.fromJson(response.body);
@@ -37,18 +41,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await apiClient.post('/Auth/register', request.toJson());
 
       if (response.hasError) {
-        String errorMsg = 'Registration failed';
-        if (response.body != null && response.body is Map) {
-          errorMsg =
-              response.body['message'] ?? response.statusText ?? errorMsg;
-        } else {
-          errorMsg = response.statusText ?? errorMsg;
-        }
+        final errorMsg = ErrorHandler.extractErrorMessage(
+          response,
+          fallback: 'Registration failed. Please try again.',
+        );
         throw Exception(errorMsg);
       }
+
       return RegisterResponseModel.fromJson(response.body);
     } catch (e) {
-      throw Exception('Registration error: ${e.toString()}');
+      rethrow;
     }
   }
 

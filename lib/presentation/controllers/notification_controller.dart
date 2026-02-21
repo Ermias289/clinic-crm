@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../data/models/user_notification_model.dart';
 import '../../domain/repositories/notification_repository.dart';
+import '../../core/utils/error_handler.dart';
 
 class NotificationController extends GetxController {
   final NotificationRepository repository;
@@ -52,8 +53,9 @@ class NotificationController extends GetxController {
       notifications.assignAll(result);
       _updateUnreadCount();
     } catch (e) {
-      error.value = e.toString();
-      Get.snackbar('Error', 'Failed to fetch notifications: ${e.toString()}');
+      final message = ErrorHandler.cleanExceptionMessage(e);
+      error.value = message;
+      ErrorHandler.showError(message, title: 'Notification Error');
     } finally {
       isLoading.value = false;
     }

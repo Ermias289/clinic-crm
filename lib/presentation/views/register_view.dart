@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../controllers/register_controller.dart';
 import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -11,13 +11,25 @@ class RegisterView extends GetView<RegisterController> {
   RegisterView({super.key});
 
   final _formKey = GlobalKey<FormState>();
+  final RxBool _acceptedTerms = false.obs;
 
-  // Validation functions
-  String? _validateRequired(String? value) {
-    if (value == null || value.isEmpty) return 'This field is required';
-    return null;
+  // Method to launch Terms and Conditions URL
+  Future<void> _launchTermsAndConditions() async {
+    final Uri url = Uri.parse(
+      'https://senaittermsandconditions.nexabusinessgroup.com/',
+    );
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      Get.snackbar(
+        'Error',
+        'Could not open Terms and Conditions',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
+  // Validation functions
   String? _validateName(String? value) {
     if (value == null || value.isEmpty) return 'This field is required';
     if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value))
@@ -259,6 +271,50 @@ class RegisterView extends GetView<RegisterController> {
                       validator: _validateConfirmPassword,
                     ),
 
+                    const SizedBox(height: 12),
+
+                    // Terms and Conditions Checkbox
+                    Obx(
+                      () => Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Checkbox(
+                            value: _acceptedTerms.value,
+                            onChanged: (value) {
+                              _acceptedTerms.value = value ?? false;
+                            },
+                            activeColor: AppColors.primaryBlue,
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: GestureDetector(
+                                onTap: _launchTermsAndConditions,
+                                child: RichText(
+                                  text: TextSpan(
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                    children: [
+                                      const TextSpan(text: 'I agree to the '),
+                                      TextSpan(
+                                        text: 'Terms and Conditions',
+                                        style: TextStyle(
+                                          color: AppColors.primaryBlue,
+                                          fontWeight: FontWeight.bold,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                     const SizedBox(height: 24),
 
                     // Register Button
@@ -271,6 +327,16 @@ class RegisterView extends GetView<RegisterController> {
                               ? null
                               : () {
                                   if (_formKey.currentState!.validate()) {
+                                    if (!_acceptedTerms.value) {
+                                      Get.snackbar(
+                                        'Terms Required',
+                                        'Please accept the Terms and Conditions to continue',
+                                        snackPosition: SnackPosition.BOTTOM,
+                                        backgroundColor: Colors.orange,
+                                        colorText: Colors.white,
+                                      );
+                                      return;
+                                    }
                                     controller.register();
                                   }
                                 },

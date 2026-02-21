@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/register_request_model.dart';
 import '../../../domain/usecases/register_usecase.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../config/app_routes.dart';
 
 class RegisterController extends GetxController {
@@ -118,28 +119,20 @@ class RegisterController extends GetxController {
       final response = await registerUseCase(request);
 
       if (response.success) {
-        Get.snackbar(
-          'Success',
+        ErrorHandler.showSuccess(
           response.message,
-          snackPosition: SnackPosition.BOTTOM,
+          title: 'Registration Successful',
         );
         Get.offNamed(
           Routes.OTP_VERIFICATION,
           arguments: emailController.text.trim(),
         );
       } else {
-        Get.snackbar(
-          'Registration Failed',
-          response.message,
-          snackPosition: SnackPosition.BOTTOM,
-        );
+        ErrorHandler.showError(response.message, title: 'Registration Failed');
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString().replaceAll('Exception: ', ''),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      final message = ErrorHandler.cleanExceptionMessage(e);
+      ErrorHandler.showError(message, title: 'Registration Error');
     } finally {
       isLoading.value = false;
     }
