@@ -189,7 +189,7 @@ class RegisterView extends GetView<RegisterController> {
 
                     const SizedBox(height: 12),
 
-                    // Name Row
+                    // Name Row - First and Middle Name
                     Row(
                       children: [
                         Expanded(
@@ -208,16 +208,30 @@ class RegisterView extends GetView<RegisterController> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: CustomTextField(
-                            controller: controller.lNameController,
-                            labelText: 'Last Name',
+                            controller: controller.mNameController,
+                            labelText: 'Middle Name',
                             prefixIcon: Icons.badge_outlined,
-                            validator: _validateName,
+                            validator: null, // Optional field
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
                                 RegExp(r'[a-zA-Z\s]'),
                               ),
                             ],
                           ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Last Name
+                    CustomTextField(
+                      controller: controller.lNameController,
+                      labelText: 'Last Name',
+                      prefixIcon: Icons.badge_outlined,
+                      validator: _validateName,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[a-zA-Z\s]'),
                         ),
                       ],
                     ),

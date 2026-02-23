@@ -131,8 +131,23 @@ class AppointmentController extends GetxController {
 
       final result = await repository.getAppointmentsByUserId(userId);
       appointments.assignAll(result);
+
+      // Clear any previous errors if fetch was successful
+      error.value = '';
     } catch (e) {
-      ErrorHandler.handleError(e, customTitle: 'Unable to Load Appointments');
+      // Silently handle 404 errors (no appointments found) - don't show error to user
+      // Only show error for actual problems like network issues
+      final errorMessage = e.toString().toLowerCase();
+      if (!errorMessage.contains('404') &&
+          !errorMessage.contains('not found') &&
+          !errorMessage.contains('no appointments')) {
+        ErrorHandler.handleError(e, customTitle: 'Unable to Load Appointments');
+      } else {
+        // Just log it for debugging, don't show to user
+        debugPrint(
+          'No appointments found for user (this is normal for new users)',
+        );
+      }
     } finally {
       isLoading.value = false;
     }

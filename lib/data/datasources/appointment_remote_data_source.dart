@@ -83,6 +83,10 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       final response = await apiClient.get(url);
 
       if (response.hasError) {
+        // Handle 404 as empty list (no appointments found)
+        if (response.statusCode == 404) {
+          return [];
+        }
         throw Exception('Unable to load appointments');
       }
 
@@ -93,6 +97,10 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
 
       return appointments;
     } catch (e) {
+      // If it's a 404 error, return empty list instead of throwing
+      if (e.toString().contains('404') || e.toString().contains('Not Found')) {
+        return [];
+      }
       rethrow;
     }
   }

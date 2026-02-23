@@ -13,6 +13,7 @@ class RegisterController extends GetxController {
   final usernameController = TextEditingController();
   final fullnameController = TextEditingController();
   final fNameController = TextEditingController();
+  final mNameController = TextEditingController();
   final lNameController = TextEditingController();
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
@@ -68,7 +69,9 @@ class RegisterController extends GetxController {
     }
 
     if (!_isValidPhone(phoneController.text)) {
-      ErrorHandler.showError('Please enter a valid phone number (e.g., +1234567890)');
+      ErrorHandler.showError(
+        'Please enter a valid phone number (e.g., +1234567890)',
+      );
       return;
     }
 
@@ -99,13 +102,14 @@ class RegisterController extends GetxController {
         userRoleId = await registerUseCase.getPatientRoleId();
       }
 
-      final fullname = '${fNameController.text} ${lNameController.text}';
+      final fullname =
+          '${fNameController.text} ${mNameController.text.isNotEmpty ? '${mNameController.text} ' : ''}${lNameController.text}';
 
       final request = RegisterRequestModel(
         username: usernameController.text.trim(),
         fullname: fullname.trim(),
         fName: fNameController.text.trim(),
-        mName: "", // Empty for now as removed from UI
+        mName: mNameController.text.trim(),
         lName: lNameController.text.trim(),
         email: emailController.text.trim(),
         phoneNumber: phoneController.text.trim(),
