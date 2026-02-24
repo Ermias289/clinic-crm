@@ -81,13 +81,13 @@ class ServiceDetailView extends StatelessWidget {
 
                     const SizedBox(height: 24),
 
-                    // Doctors Section
-                    _buildDoctorsSection(controller),
+                    // Branches Section
+                    _buildBranchesSection(controller),
 
                     const SizedBox(height: 24),
 
-                    // Branches Section
-                    _buildBranchesSection(controller),
+                    // Doctors Section
+                    _buildDoctorsSection(controller),
 
                     const SizedBox(height: 100), // Space for floating button
                   ],
@@ -340,16 +340,15 @@ class ServiceDetailView extends StatelessWidget {
   }
 
   Widget _buildDoctorsList(ServiceDetailController controller) {
-    return SizedBox(
-      height: 220, // Increased height to accommodate enhanced doctor cards
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: controller.doctors.length,
-        itemBuilder: (context, index) {
-          final doctor = controller.doctors[index];
-          return _buildDoctorCard(doctor, controller);
-        },
-      ),
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: controller.doctors.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final doctor = controller.doctors[index];
+        return _buildDoctorCard(doctor, controller);
+      },
     );
   }
 
@@ -357,144 +356,75 @@ class ServiceDetailView extends StatelessWidget {
     MedicalProfessional doctor,
     ServiceDetailController controller,
   ) {
-    return Container(
-      width: 120,
-      constraints: const BoxConstraints(
-        minHeight: 160,
-        maxHeight: 220, // Prevent overflow by setting max height
-      ),
-      margin: const EdgeInsets.only(right: 16),
-      child: GestureDetector(
-        onTap: () => controller.onDoctorSelected(doctor),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: AppColors.cardShadow,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min, // Prevent overflow
-            children: [
-              // Doctor Avatar
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.backgroundLight,
-                ),
-                child: ClipOval(
-                  child: doctor.profilePicture?.isNotEmpty == true
-                      ? Image.network(
-                          ImageUtils.buildImageUrl(doctor.profilePicture!),
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildDoctorAvatar(),
-                        )
-                      : _buildDoctorAvatar(),
-                ),
+    return GestureDetector(
+      onTap: () => controller.onDoctorSelected(doctor),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: AppColors.cardShadow,
+        ),
+        child: Row(
+          children: [
+            // Doctor Avatar
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.backgroundLight,
               ),
-
-              const SizedBox(height: 8),
-
-              // Doctor Name
-              Text(
-                doctor.fullName,
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              child: ClipOval(
+                child: doctor.profilePicture?.isNotEmpty == true
+                    ? Image.network(
+                        ImageUtils.buildImageUrl(doctor.profilePicture!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildDoctorAvatar(),
+                      )
+                    : _buildDoctorAvatar(),
               ),
-
-              const SizedBox(height: 4),
-
-              // Job Title
-              if (doctor.jobTitle?.isNotEmpty == true)
-                Text(
-                  doctor.jobTitle!,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-              // Specialization
-              if (doctor.specialty?.isNotEmpty == true) ...[
-                const SizedBox(height: 2),
-                Text(
-                  doctor.specialty!,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-
-              // Educational Background
-              if (doctor.educationalBackground?.isNotEmpty == true) ...[
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.accentTeal.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    doctor.educationalBackground!,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.accentTeal,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    doctor.fullName,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
-
-              // Years of Experience
-              if (doctor.yearsOfExperience != null &&
-                  doctor.yearsOfExperience! > 0) ...[
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.work_outline,
-                      size: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 2),
-                    Flexible(
-                      child: Text(
-                        '${doctor.yearsOfExperience} yrs exp',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 10,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  if (doctor.jobTitle?.isNotEmpty == true) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      doctor.jobTitle!,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
-                ),
-              ],
-            ],
-          ),
+                  if (doctor.specialty?.isNotEmpty == true) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      doctor.specialty!,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.textHint,
+            ),
+          ],
         ),
       ),
     );

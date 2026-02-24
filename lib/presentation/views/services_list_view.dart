@@ -223,18 +223,14 @@ class _ServicesListView extends StatelessWidget {
                     // First 4 services
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                      sliver: SliverGrid(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 0.75,
-                            ),
+                      sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final service = controller.services[index];
-                            return _buildServiceCard(service);
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _buildServiceCard(service),
+                            );
                           },
                           childCount: controller.services.length > 4
                               ? 4
@@ -255,24 +251,19 @@ class _ServicesListView extends StatelessWidget {
                     // Remaining services (if more than 4)
                     if (controller.services.length > 4)
                       SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                        sliver: SliverGrid(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                                childAspectRatio: 0.75,
-                              ),
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
-                            final serviceIndex =
-                                index + 4; // Skip first 4 services
-                            final service = controller.services[serviceIndex];
-                            return _buildServiceCard(service);
-                          }, childCount: controller.services.length - 4),
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final serviceIndex = index + 4; // Skip first 4 services
+                              final service = controller.services[serviceIndex];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: _buildServiceCard(service),
+                              );
+                            },
+                            childCount: controller.services.length - 4,
+                          ),
                         ),
                       ),
 
@@ -290,29 +281,30 @@ class _ServicesListView extends StatelessWidget {
 
   Widget _buildServiceCard(dynamic service) {
     return Container(
+      height: 110, // Reduced fixed height for more compact list item
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: AppColors.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: () => controller.onServiceSelected(service),
-          borderRadius: BorderRadius.circular(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          borderRadius: BorderRadius.circular(16),
+          child: Row(
             children: [
               // Service Image
               ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
                 ),
                 child: service.servicePicture.isEmpty
                     ? Container(
-                        height: 120,
+                        width: 110, // Adjusted width to maintain square ratio
+                        height: double.infinity,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -327,17 +319,18 @@ class _ServicesListView extends StatelessWidget {
                           child: Icon(
                             Icons.local_hospital_rounded,
                             color: AppColors.primaryBlue,
-                            size: 48,
+                            size: 36, // Smaller icon
                           ),
                         ),
                       )
                     : Image.network(
                         ImageUtils.buildImageUrl(service.servicePicture),
-                        height: 120,
-                        width: double.infinity,
+                        width: 110, // Adjusted width
+                        height: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(
-                          height: 120,
+                          width: 110,
+                          height: double.infinity,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: [
@@ -352,7 +345,7 @@ class _ServicesListView extends StatelessWidget {
                             child: Icon(
                               Icons.local_hospital_rounded,
                               color: AppColors.primaryBlue,
-                              size: 48,
+                              size: 36,
                             ),
                           ),
                         ),
@@ -362,7 +355,7 @@ class _ServicesListView extends StatelessWidget {
               // Service Details
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(12.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -372,22 +365,22 @@ class _ServicesListView extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                         ),
-                        maxLines: 1,
+                        maxLines: 1, // Restrict to 1 line for compactness
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 4),
                       Expanded(
                         child: Text(
                           service.description,
-                          maxLines: 3,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.bodySmall.copyWith(
-                            fontSize: 12,
+                            fontSize: 12, // Slightly smaller text
                             height: 1.3,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Row(
                         children: [
                           const Icon(

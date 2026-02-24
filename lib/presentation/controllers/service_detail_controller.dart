@@ -56,8 +56,15 @@ class ServiceDetailController extends GetxController {
 
   Widget _buildDoctorDetailsDialog(MedicalProfessional doctor) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: Material(
+        color: Colors.transparent,
       child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
@@ -205,13 +212,21 @@ class ServiceDetailController extends GetxController {
           ),
         ),
       ),
+      ),
     );
   }
 
   Widget _buildBranchDetailsDialog(BranchSettingModel branch) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: Material(
+        color: Colors.transparent,
       child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
         constraints: const BoxConstraints(maxWidth: 400),
         padding: const EdgeInsets.all(24),
         child: SingleChildScrollView(
@@ -318,6 +333,7 @@ class ServiceDetailController extends GetxController {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -121,12 +121,23 @@ class DoctorSchedulePickerController extends GetxController {
     errorMessage.value = null;
     isLoadingDoctors.value = true;
     try {
-      // Use service-specific doctors if provided, otherwise fetch all
+      // Fetch all full doctor objects from repository
+      final allRepoDoctors = await _doctorRepository.getDoctors();
+
       List<MedicalProfessional> list;
-      if (_serviceDoctors != null && _serviceDoctors!.isNotEmpty) {
-        list = _serviceDoctors!;
+      if (_serviceDoctors != null) {
+        // Filter repo doctors to only those assigned to this service
+        final serviceDoctorIds = _serviceDoctors!.map((d) => d.id).toSet();
+        list = allRepoDoctors
+            .where((d) => serviceDoctorIds.contains(d.id))
+            .toList();
+
+        // If repo doctors don't match (e.g. data mismatch), use serviceDoctors as fallback
+        if (list.isEmpty && _serviceDoctors!.isNotEmpty) {
+          list = _serviceDoctors!;
+        }
       } else {
-        list = await _doctorRepository.getDoctors();
+        list = allRepoDoctors;
       }
 
       final activeDoctors = list.where((d) => d.isActive).toList();

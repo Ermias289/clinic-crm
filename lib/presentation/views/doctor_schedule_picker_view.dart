@@ -809,45 +809,6 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
       isScrollControlled: true,
     );
   }
-                                Icons.calendar_today_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  DateFormat('EEEE, d MMM yyyy').format(d),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-    );
-  }
 
   Widget _buildTimeSection() {
     return Obx(() {

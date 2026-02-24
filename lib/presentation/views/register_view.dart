@@ -222,10 +222,10 @@ class RegisterView extends GetView<RegisterController> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: CustomTextField(
-                            controller: controller.lNameController,
-                            labelText: 'Last Name',
+                            controller: controller.mNameController,
+                            labelText: 'Middle Name',
                             prefixIcon: Icons.badge_outlined,
-                            validator: _validateName,
+                            validator: _validateMiddleName,
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(
                                 RegExp(r'[a-zA-Z\s]'),
@@ -237,12 +237,12 @@ class RegisterView extends GetView<RegisterController> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Middle Name (Optional)
+                    // Last Name
                     CustomTextField(
-                      controller: controller.mNameController,
-                      labelText: 'Middle Name (Optional)',
+                      controller: controller.lNameController,
+                      labelText: 'Last Name',
                       prefixIcon: Icons.badge_outlined,
-                      validator: _validateMiddleName,
+                      validator: _validateName,
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(
                           RegExp(r'[a-zA-Z\s]'),
