@@ -428,7 +428,7 @@ class PaymentHistoryView extends GetView<PaymentController> {
         icon = Icons.block;
         break;
       default:
-        backgroundColor = AppColors.accentBlue;
+        backgroundColor = AppColors.accentTeal;
         textColor = Colors.white;
         icon = Icons.info;
     }

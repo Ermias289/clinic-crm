@@ -58,7 +58,7 @@ class ProfileView extends GetView<ProfileController> {
                           colors: [
                             AppColors.primaryBlue,
                             AppColors.primaryBlueLight,
-                            AppColors.accentBlue,
+                            AppColors.accentTeal,
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,

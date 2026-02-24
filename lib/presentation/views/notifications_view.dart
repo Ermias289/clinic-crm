@@ -331,7 +331,7 @@ class NotificationsView extends GetView<NotificationController> {
       case 'system':
         return AppColors.warningOrange;
       default:
-        return AppColors.accentBlue;
+        return AppColors.accentTeal;
     }
   }
 

@@ -110,7 +110,7 @@ class ServiceDetailView extends StatelessWidget {
           colors: [
             AppColors.primaryBlue,
             AppColors.primaryBlueLight,
-            AppColors.accentBlue,
+            AppColors.accentTeal,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -197,7 +197,7 @@ class ServiceDetailView extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryBlue.withValues(alpha: 0.1),
-            AppColors.accentBlue.withValues(alpha: 0.1),
+            AppColors.accentTeal.withValues(alpha: 0.1),
           ],
         ),
       ),
@@ -255,7 +255,7 @@ class ServiceDetailView extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time, color: AppColors.accentBlue, size: 20),
+                Icon(Icons.access_time, color: AppColors.accentTeal, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'Duration: ${controller.service.durationInMinutes} minutes',
@@ -636,7 +636,7 @@ class ServiceDetailView extends StatelessWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.accentBlue.withValues(
+                                  color: AppColors.accentTeal.withValues(
                                     alpha: 0.1,
                                   ),
                                   borderRadius: BorderRadius.circular(8),
@@ -647,13 +647,13 @@ class ServiceDetailView extends StatelessWidget {
                                     Icon(
                                       Icons.work_outline,
                                       size: 14,
-                                      color: AppColors.accentBlue,
+                                      color: AppColors.accentTeal,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       '${doctor.yearsOfExperience} yrs',
                                       style: AppTextStyles.caption.copyWith(
-                                        color: AppColors.accentBlue,
+                                        color: AppColors.accentTeal,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -729,7 +729,7 @@ class ServiceDetailView extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             AppColors.primaryBlue.withValues(alpha: 0.1),
-            AppColors.accentBlue.withValues(alpha: 0.1),
+            AppColors.accentTeal.withValues(alpha: 0.1),
           ],
         ),
       ),

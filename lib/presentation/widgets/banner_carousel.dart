@@ -71,7 +71,7 @@ class BannerCarousel extends StatelessWidget {
                             gradient: LinearGradient(
                               colors: [
                                 AppColors.primaryBlue.withValues(alpha: 0.8),
-                                AppColors.accentBlue.withValues(alpha: 0.8),
+                                AppColors.accentTeal.withValues(alpha: 0.8),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -98,7 +98,7 @@ class BannerCarousel extends StatelessWidget {
                                     AppColors.primaryBlue.withValues(
                                       alpha: 0.3,
                                     ),
-                                    AppColors.accentBlue.withValues(alpha: 0.3),
+                                    AppColors.accentTeal.withValues(alpha: 0.3),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -119,7 +119,7 @@ class BannerCarousel extends StatelessWidget {
                                     AppColors.primaryBlue.withValues(
                                       alpha: 0.8,
                                     ),
-                                    AppColors.accentBlue.withValues(alpha: 0.8),
+                                    AppColors.accentTeal.withValues(alpha: 0.8),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,

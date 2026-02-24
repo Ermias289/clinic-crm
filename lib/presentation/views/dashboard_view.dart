@@ -176,7 +176,7 @@ class DashboardView extends GetView<DashboardController> {
                             DashboardCard(
                               icon: Icons.calendar_today_outlined,
                               title: 'Appointments',
-                              iconColor: AppColors.accentBlue,
+                              iconColor: AppColors.accentTeal,
                               onTap: () {
                                   ErrorHandler.showError(
                                     'Appointment scheduling feature is under development',

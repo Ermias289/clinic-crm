@@ -38,7 +38,7 @@ class LoginView extends GetView<LoginController> {
                   colors: [
                     AppColors.primaryBlue,
                     AppColors.primaryBlueLight,
-                    AppColors.accentBlue,
+                    AppColors.accentTeal,
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -103,7 +103,7 @@ class LoginView extends GetView<LoginController> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "Lucid Dental Clinic",
+                            "Lib Dental Clinic",
                             style: AppTextStyles.h1.copyWith(
                               color: Colors.white,
                               fontSize: 32,
