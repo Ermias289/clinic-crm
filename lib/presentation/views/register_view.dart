@@ -37,6 +37,15 @@ class RegisterView extends GetView<RegisterController> {
     return null;
   }
 
+  String? _validateMiddleName(String? value) {
+    // Middle name is optional, but if provided, validate it
+    if (value == null || value.isEmpty) return null;
+    if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value))
+      return 'Only letters and spaces allowed';
+    if (value.length < 2) return 'At least 2 characters';
+    return null;
+  }
+
   String? _validateUsername(String? value) {
     if (value == null || value.isEmpty) return 'Username is required';
     if (value.length < 3) return 'Username must be at least 3 characters';
@@ -223,6 +232,20 @@ class RegisterView extends GetView<RegisterController> {
                               ),
                             ],
                           ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Middle Name (Optional)
+                    CustomTextField(
+                      controller: controller.mNameController,
+                      labelText: 'Middle Name (Optional)',
+                      prefixIcon: Icons.badge_outlined,
+                      validator: _validateMiddleName,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'[a-zA-Z\s]'),
                         ),
                       ],
                     ),

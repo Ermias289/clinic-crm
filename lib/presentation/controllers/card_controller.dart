@@ -50,6 +50,9 @@ class CardController extends GetxController {
   final RxList<PaymentModel> cardPayments = <PaymentModel>[].obs;
   final Rx<PaymentModel?> autoPreparedPayment = Rx<PaymentModel?>(null);
 
+  // Insurance coverage state
+  final RxBool isInsuranceCovered = false.obs;
+
   // Form Controllers
   final TextEditingController fNameController = TextEditingController();
   final TextEditingController mNameController = TextEditingController();
@@ -234,6 +237,7 @@ class CardController extends GetxController {
       // Step 3: Set up reactivation state with existing card and auto-prepared payment
       autoPreparedPayment.value = foundAutoPreparedPayment;
       selectedPaymentProof.value = null; // Clear any previous proof
+      isInsuranceCovered.value = false; // Reset insurance coverage flag
 
       // Step 4: Navigate to reactivation payment view
       Get.toNamed(Routes.cardReactivationPayment);
@@ -300,7 +304,7 @@ class CardController extends GetxController {
         id: autoPreparedPayment.value!.id,
         requestedAmount: autoPreparedPayment.value!.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false,
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);
@@ -429,6 +433,7 @@ class CardController extends GetxController {
     createdCardData.value = null;
     cardPayments.clear();
     autoPreparedPayment.value = null;
+    isInsuranceCovered.value = false;
   }
 
   Future<void> _preFillFromProfile() async {
@@ -577,7 +582,7 @@ class CardController extends GetxController {
         id: autoPrepared.id,
         requestedAmount: autoPrepared.expectedAmount,
         paymentProof: uploadedFileName,
-        isInsuranceCovered: false, // Default to false, can be made configurable
+        isInsuranceCovered: isInsuranceCovered.value,
       );
 
       await cardRepository.createPaymentRequest(paymentRequest);

@@ -516,6 +516,209 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
 
                         const SizedBox(height: 24),
 
+                        // Insurance Coverage Section
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.primaryBlue.withValues(
+                                alpha: 0.2,
+                              ),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Is the payment insurance covered?',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Select if your insurance will cover this payment',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Obx(
+                                () => Row(
+                                  children: [
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () =>
+                                            controller
+                                                    .isInsuranceCovered
+                                                    .value =
+                                                false,
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                            horizontal: 16,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                !controller
+                                                    .isInsuranceCovered
+                                                    .value
+                                                ? AppColors.primaryBlue
+                                                      .withValues(alpha: 0.1)
+                                                : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color:
+                                                  !controller
+                                                      .isInsuranceCovered
+                                                      .value
+                                                  ? AppColors.primaryBlue
+                                                  : AppColors.textHint,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                !controller
+                                                        .isInsuranceCovered
+                                                        .value
+                                                    ? Icons.radio_button_checked
+                                                    : Icons
+                                                          .radio_button_unchecked,
+                                                color:
+                                                    !controller
+                                                        .isInsuranceCovered
+                                                        .value
+                                                    ? AppColors.primaryBlue
+                                                    : AppColors.textHint,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'No',
+                                                style: AppTextStyles.bodyMedium
+                                                    .copyWith(
+                                                      color:
+                                                          !controller
+                                                              .isInsuranceCovered
+                                                              .value
+                                                          ? AppColors
+                                                                .primaryBlue
+                                                          : AppColors
+                                                                .textSecondary,
+                                                      fontWeight:
+                                                          !controller
+                                                              .isInsuranceCovered
+                                                              .value
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: InkWell(
+                                        onTap: () =>
+                                            controller
+                                                    .isInsuranceCovered
+                                                    .value =
+                                                true,
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                            horizontal: 16,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color:
+                                                controller
+                                                    .isInsuranceCovered
+                                                    .value
+                                                ? AppColors.primaryBlue
+                                                      .withValues(alpha: 0.1)
+                                                : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color:
+                                                  controller
+                                                      .isInsuranceCovered
+                                                      .value
+                                                  ? AppColors.primaryBlue
+                                                  : AppColors.textHint,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                controller
+                                                        .isInsuranceCovered
+                                                        .value
+                                                    ? Icons.radio_button_checked
+                                                    : Icons
+                                                          .radio_button_unchecked,
+                                                color:
+                                                    controller
+                                                        .isInsuranceCovered
+                                                        .value
+                                                    ? AppColors.primaryBlue
+                                                    : AppColors.textHint,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Yes',
+                                                style: AppTextStyles.bodyMedium
+                                                    .copyWith(
+                                                      color:
+                                                          controller
+                                                              .isInsuranceCovered
+                                                              .value
+                                                          ? AppColors
+                                                                .primaryBlue
+                                                          : AppColors
+                                                                .textSecondary,
+                                                      fontWeight:
+                                                          controller
+                                                              .isInsuranceCovered
+                                                              .value
+                                                          ? FontWeight.bold
+                                                          : FontWeight.normal,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
                         // Available Payment Methods Section
                         Text(
                           'Available Payment Methods',
