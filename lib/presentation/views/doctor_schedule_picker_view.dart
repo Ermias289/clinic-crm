@@ -60,6 +60,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
 
     _controller.init(
       serviceDurationInMinutes: _service.durationInMinutes,
+      serviceId: _service.id,
       serviceDoctors: domainDoctors,
       serviceBranches: _service.branches,
     );
@@ -754,50 +755,60 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                 ),
               ),
               const Divider(height: 1),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+              Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: const ColorScheme.light(
+                    primary: AppColors.primaryBlue,
+                    onPrimary: Colors.white,
+                    onSurface: AppColors.textPrimary,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                    ),
+                  ),
                 ),
                 child: Obx(() {
-                  final dates = _controller.availableDates;
                   final selected = _controller.selectedDate.value;
+                  final dates = _controller.availableDates;
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: dates.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final d = dates[index];
-                      final isSelected =
-                          selected != null && _isSameDate(d, selected);
+                  if (dates.isEmpty) {
+                    return Container(
+                      height: 200,
+                      alignment: Alignment.center,
+                      child: Text(
+                        'No available dates',
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                    );
+                  }
 
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectDate(d);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
-                            ),
-                            boxShadow: AppColors.softShadow,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
+                  return CalendarDatePicker(
+                    initialDate: selected ??
+                        (dates.any((d) => _isSameDate(d, DateTime.now()))
+                            ? dates.firstWhere(
+                                (d) => _isSameDate(d, DateTime.now()))
+                            : dates.first),
+                    firstDate: dates.first,
+                    lastDate: dates.last,
+                    onDateChanged: (DateTime date) {
+                      _controller.selectDate(date);
+                      Get.back();
+                    },
+                    selectableDayPredicate: (DateTime date) {
+                      return dates.any((d) => _isSameDate(d, date));
+                    },
+                  );
+                }),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
                                 Icons.calendar_today_rounded,
                                 color: isSelected
                                     ? AppColors.primaryBlue
@@ -859,7 +870,8 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
       }
 
       if (_controller.isLoadingSchedules.value ||
-          _controller.isLoadingAppointments.value) {
+          _controller.isLoadingAppointments.value ||
+          _controller.isLoadingFreeSlots.value) {
         return _LoadingCard(label: 'Loading available times...');
       }
 
@@ -870,154 +882,69 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
           icon: Icons.schedule_rounded,
           actionLabel: 'Change date',
           onAction: () {
-            // Scroll user back to date section by doing nothing; date pills are above.
-            // They can choose another date.
+            _openDateBottomSheet();
           },
         );
       }
 
+      final times = _controller.availableTimes;
       final selected = _controller.selectedTime.value;
 
-      final label = selected != null
-          ? _formatTime(context, selected)
-          : 'Choose Time';
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 2.2,
+        ),
+        itemCount: times.length,
+        itemBuilder: (context, index) {
+          final t = times[index];
+          final isSelected = selected == t;
 
-      return _SelectionCard(
-        title: 'Select Time',
-        value: label,
-        icon: Icons.access_time_rounded,
-        isSelected: selected != null,
-        onTap: () => _openTimeBottomSheet(),
+          return InkWell(
+            onTap: () => _controller.selectTime(t),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primaryBlue.withOpacity(0.08)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : AppColors.textHint.withOpacity(0.15),
+                  width: 1.2,
+                ),
+                boxShadow: AppColors.softShadow,
+              ),
+              child: Text(
+                _formatTime(context, t),
+                style: AppTextStyles.bodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+                ),
+              ),
+            ),
+          );
+        },
       );
     });
-  }
-
-  void _openTimeBottomSheet() {
-    Get.bottomSheet(
-      Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 42,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: AppColors.textHint.withOpacity(0.4),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Text('Choose Time', style: AppTextStyles.h3),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Get.back(),
-                      icon: const Icon(Icons.close_rounded),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
-                ),
-                child: Obx(() {
-                  final times = _controller.availableTimes;
-                  final selected = _controller.selectedTime.value;
-
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: times.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final t = times[index];
-                      final isSelected =
-                          selected != null && _isSameTime(t, selected);
-
-                      return InkWell(
-                        onTap: () {
-                          _controller.selectTime(t);
-                          Get.back();
-                        },
-                        borderRadius: BorderRadius.circular(14),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primaryBlue.withOpacity(0.08)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppColors.primaryBlue
-                                  : AppColors.textHint.withOpacity(0.15),
-                              width: 1.2,
-                            ),
-                            boxShadow: AppColors.softShadow,
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.access_time_rounded,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _formatTime(context, t),
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                isSelected
-                                    ? Icons.check_circle_rounded
-                                    : Icons.radio_button_unchecked_rounded,
-                                color: isSelected
-                                    ? AppColors.primaryBlue
-                                    : AppColors.textHint,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        ),
-      ),
-      isScrollControlled: true,
-    );
   }
 
   bool _isSameDate(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
-  bool _isSameTime(TimeOfDay a, TimeOfDay b) =>
-      a.hour == b.hour && a.minute == b.minute;
+  String _formatTime(BuildContext context, String t) {
+    final time = _controller.parseTimeOfDay(t);
+    if (time == null) return t;
 
-  String _formatTime(BuildContext context, TimeOfDay t) {
-    final dt = DateTime(2025, 1, 1, t.hour, t.minute);
+    final dt = DateTime(2025, 1, 1, time.hour, time.minute);
     return DateFormat.jm().format(dt);
   }
 }

@@ -5,4 +5,10 @@ abstract class AppointmentRepository {
   Future<List<AppointmentModel>> getAppointments(int userId);
   Future<List<AppointmentModel>> getAppointmentsByDoctorId(int doctorId);
   Future<bool> cancelAppointment(int id, String reason);
+  Future<List<String>> getFreeSlots(
+    int docId,
+    String date,
+    int branchId,
+    int serviceId,
+  );
 }

@@ -7,6 +7,12 @@ abstract class AppointmentRemoteDataSource {
   Future<List<AppointmentModel>> getAppointmentsByUserId(int userId);
   Future<List<AppointmentModel>> getAppointmentsByDoctorId(int doctorId);
   Future<bool> cancelAppointment(int id, String reason);
+  Future<List<String>> getFreeSlots(
+    int docId,
+    String date,
+    int branchId,
+    int serviceId,
+  );
 }
 
 class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
@@ -147,6 +153,33 @@ class AppointmentRemoteDataSourceImpl implements AppointmentRemoteDataSource {
       }
 
       return true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<String>> getFreeSlots(
+    int docId,
+    String date,
+    int branchId,
+    int serviceId,
+  ) async {
+    try {
+      final url =
+          '/Appointment/getFreeSlots?docId=$docId&day=$date&branchId=$branchId&serviceId=$serviceId';
+      final response = await apiClient.get(url);
+
+      if (response.hasError) {
+        throw Exception('Unable to load available time slots');
+      }
+
+      final body = response.body;
+      if (body is List) {
+        return body.map((e) => e.toString()).toList();
+      }
+
+      return [];
     } catch (e) {
       rethrow;
     }
