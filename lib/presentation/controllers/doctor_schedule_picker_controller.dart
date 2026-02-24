@@ -47,6 +47,10 @@ class DoctorSchedulePickerController extends GetxController {
   final existingAppointments = <AppointmentModel>[].obs;
   final branches = <BranchSettingModel>[].obs;
 
+  // Service-specific data (passed from service detail page)
+  List<MedicalProfessional>? _serviceDoctors;
+  List<BranchSettingModel>? _serviceBranches;
+
   // Selection
   // Selection
   final selectedBranch = Rxn<BranchSettingModel>();
@@ -65,8 +69,16 @@ class DoctorSchedulePickerController extends GetxController {
   final errorMessage = RxnString();
 
   /// Initialize controller by loading doctors.
-  Future<void> init({int? serviceDurationInMinutes}) async {
+  /// Can optionally accept service-specific doctors and branches
+  Future<void> init({
+    int? serviceDurationInMinutes,
+    List<MedicalProfessional>? serviceDoctors,
+    List<BranchSettingModel>? serviceBranches,
+  }) async {
     _serviceDurationInMinutes = serviceDurationInMinutes;
+    _serviceDoctors = serviceDoctors;
+    _serviceBranches = serviceBranches;
+
     // Load branches and doctors sequentially
     await loadBranches();
     await loadDoctors();
@@ -82,8 +94,13 @@ class DoctorSchedulePickerController extends GetxController {
   Future<void> loadBranches() async {
     isLoadingBranches.value = true;
     try {
-      final list = await _branchSettingRepository.getBranchSettings();
-      branches.assignAll(list);
+      // Use service-specific branches if provided, otherwise fetch all
+      if (_serviceBranches != null && _serviceBranches!.isNotEmpty) {
+        branches.assignAll(_serviceBranches!);
+      } else {
+        final list = await _branchSettingRepository.getBranchSettings();
+        branches.assignAll(list);
+      }
 
       // Don't auto-select here - let loadDoctors handle it after doctors are loaded
     } catch (e) {
@@ -97,7 +114,13 @@ class DoctorSchedulePickerController extends GetxController {
     errorMessage.value = null;
     isLoadingDoctors.value = true;
     try {
-      final list = await _doctorRepository.getDoctors();
+      // Use service-specific doctors if provided, otherwise fetch all
+      List<MedicalProfessional> list;
+      if (_serviceDoctors != null && _serviceDoctors!.isNotEmpty) {
+        list = _serviceDoctors!;
+      } else {
+        list = await _doctorRepository.getDoctors();
+      }
 
       final activeDoctors = list.where((d) => d.isActive).toList();
 

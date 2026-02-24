@@ -5,7 +5,10 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/image_utils.dart';
-import '../../domain/models/medical_service_model.dart';
+import '../../domain/models/medical_service_model.dart'
+    as medical_service_model;
+import '../../domain/models/medical_service_model.dart' show MedicalService;
+import '../../domain/models/medical_professional_model.dart';
 import '../controllers/doctor_schedule_picker_controller.dart';
 
 /// Flow: Service (already chosen) -> Doctor -> Date -> Time (from schedule only)
@@ -46,7 +49,40 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     _controller = Get.find<DoctorSchedulePickerController>();
     // Ensure fresh state each time this page is opened
     _controller.resetAll();
-    _controller.init(serviceDurationInMinutes: _service.durationInMinutes);
+
+    // Convert service doctors to domain model doctors
+    List<MedicalProfessional>? domainDoctors;
+    if (_service.medicalProfessionals != null) {
+      domainDoctors = _service.medicalProfessionals!
+          .map((serviceDoctor) => _convertToDomainDoctor(serviceDoctor))
+          .toList();
+    }
+
+    _controller.init(
+      serviceDurationInMinutes: _service.durationInMinutes,
+      serviceDoctors: domainDoctors,
+      serviceBranches: _service.branches,
+    );
+  }
+
+  /// Convert service model MedicalProfessional to domain model MedicalProfessional
+  MedicalProfessional _convertToDomainDoctor(
+    medical_service_model.MedicalProfessional serviceDoctor,
+  ) {
+    return MedicalProfessional(
+      id: serviceDoctor.id,
+      fullName: serviceDoctor.fullName,
+      phoneNumber: serviceDoctor.phoneNumber,
+      email: serviceDoctor.email,
+      specialization: serviceDoctor.specialty,
+      profilePictureUrl: serviceDoctor.profilePicture,
+      jobTitle: serviceDoctor.jobTitle,
+      educationalBackground: serviceDoctor.educationalBackground,
+      yearsOfExperience: serviceDoctor.yearsOfExperience,
+      isActive: serviceDoctor.isActive,
+      branches:
+          null, // Service doctors don't have branch info in the service model
+    );
   }
 
   @override
