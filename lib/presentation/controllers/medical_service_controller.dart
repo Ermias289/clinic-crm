@@ -43,6 +43,12 @@ class MedicalServiceController extends GetxController {
   }
 
   bool _shouldLoadServices() {
+    final token = box.read('token');
+    // If we don't have a token, we can't fetch services (assuming they require auth)
+    if (token == null) {
+      return false;
+    }
+
     final lastLoginTime = box.read('last_login_time') ?? 0;
     final lastServicesLoadTime = box.read('last_services_load_time') ?? 0;
 
