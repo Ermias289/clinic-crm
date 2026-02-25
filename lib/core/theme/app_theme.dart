@@ -11,7 +11,7 @@ class AppTheme {
       // Color Scheme
       colorScheme: ColorScheme.light(
         primary: AppColors.primaryBlue,
-        secondary: AppColors.accentBlue,
+        secondary: AppColors.fountainBlue, // Use fountain blue for secondary
         surface: AppColors.cardBackground,
         error: Colors.red.shade700,
       ),

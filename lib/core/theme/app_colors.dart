@@ -1,32 +1,39 @@
 import 'package:flutter/material.dart';
 
-/// App color palette aligned with AD Dental Clinic branding
+/// App color palette aligned with Ahadu Dental Clinic branding
 class AppColors {
-  // Primary Colors - Deep Blue theme
-  static const Color primaryBlue = Color(0xFF0A3656); // Main deep blue color
-  static const Color primaryBlueDark = Color(0xFF072638); // Darker blue
-  static const Color primaryBlueLight = Color(0xFF0E4A75); // Lighter blue
+  // Primary Colors - Ahadu Black theme
+  static const Color primaryBlue = Color(0xFF000000); // Ahadu Black
+  static const Color primaryBlueDark = Color(0xFF000000); // Ahadu Black
+  static const Color primaryBlueLight = Color(0xFF000000); // Ahadu Black
 
-  // Accent Colors - Orange
-  static const Color accentBlue = Color(0xFFE57725); // Orange accent
+  // Accent Colors - Fountain Blue for loading and accents
+  static const Color accentBlue = Color(0xFF5DADE2); // Fountain Blue
+  static const Color fountainBlue = Color(
+    0xFF5DADE2,
+  ); // Fountain Blue for loading
   static const Color successGreen = Color(0xFF43A047); // softened green
   static const Color warningOrange = Color(0xFFF9A825); // muted orange
 
   // Background Colors
-  static const Color backgroundLight = Color(
-    0xFFF5F8FA,
-  ); // Very light blue tint
-  static const Color backgroundWhite = Color(0xFFFFFFFF); // Pure white
+  static const Color backgroundLight = Color(0xFFF5F6FA);
+  static const Color backgroundWhite = Color(
+    0xFFE6D9EF,
+  ); // soft lavender-gray (logo highlight)
   static const Color cardBackground = Color(0xFFFFFFFF);
 
-  // Text Colors
+  // Text Colors (slight refinement for readability)
   static const Color textPrimary = Color(0xFF1F1F1F);
   static const Color textSecondary = Color(0xFF6B6B6B);
   static const Color textHint = Color(0xFF9E9E9E);
 
-  // Gradient - Deep Blue to Orange
+  // Gradient - White gradient for Ahadu theme
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryBlue, accentBlue],
+    colors: [
+      Color(0xFFFFFFFF), // White 45%
+      Color(0xFFFFFFFF), // White 15%
+    ],
+    stops: [0.45, 0.15],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

@@ -1,4 +1,4 @@
-package com.addental.app
+package com.ahadudental.app
 
 import io.flutter.embedding.android.FlutterActivity
 
