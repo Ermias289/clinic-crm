@@ -14,11 +14,13 @@ class PaymentHistoryView extends GetView<PaymentController> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        title: const Text('Payment History', style: AppTextStyles.h3),
-        backgroundColor: Colors.white,
+        title: const Text('Payment History', style: AppTextStyles.h2),
+        backgroundColor: AppColors.primaryBlue,
+        foregroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
           onPressed: () => Get.back(),
         ),
       ),

@@ -27,13 +27,13 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6B6B6B);
   static const Color textHint = Color(0xFF9E9E9E);
 
-  // Gradient - White gradient for Ahadu theme
+  // Gradient - Ahadu Black and Fountain Blue gradient
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [
-      Color(0xFFFFFFFF), // White 45%
-      Color(0xFFFFFFFF), // White 15%
+      primaryBlue, // Ahadu Black
+      Color(0xFF2C3E50), // Dark Blue-Grey for depth
+      fountainBlue, // Fountain Blue
     ],
-    stops: [0.45, 0.15],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

@@ -106,15 +106,7 @@ class ServiceDetailView extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [
-            AppColors.primaryBlue,
-            AppColors.primaryBlueLight,
-            AppColors.accentBlue,
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppColors.primaryGradient,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
@@ -196,8 +188,8 @@ class ServiceDetailView extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primaryBlue.withValues(alpha: 0.1),
-            AppColors.accentBlue.withValues(alpha: 0.1),
+            AppColors.primaryBlue.withValues(alpha: 0.08),
+            AppColors.accentBlue.withValues(alpha: 0.08),
           ],
         ),
       ),

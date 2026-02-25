@@ -1003,11 +1003,15 @@ class _Header extends StatelessWidget {
         child: Stack(
           children: [
             Positioned(
-              right: -20,
-              top: -20,
-              child: CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.white.withOpacity(0.1),
+              right: -30,
+              top: -30,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withOpacity(0.08),
+                ),
               ),
             ),
             Padding(
