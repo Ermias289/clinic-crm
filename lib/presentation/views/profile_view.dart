@@ -16,7 +16,7 @@ class ProfileView extends GetView<ProfileController> {
   // Method to launch Terms and Conditions URL
   Future<void> _launchTermsAndConditions() async {
     final Uri url = Uri.parse(
-      'https://termsandconditions.nexabusinessgroup.com/',
+      'https://libterms.nexabusinessgroup.com/',
     );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       ErrorHandler.showError('Could not open Terms and Conditions');
