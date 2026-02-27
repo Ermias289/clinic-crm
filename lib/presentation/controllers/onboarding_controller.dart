@@ -12,7 +12,7 @@ class OnboardingController extends GetxController {
   final List<OnboardingPageModel> pages = [
     OnboardingPageModel(
       icon: Icons.medical_services_rounded,
-      title: 'Welcome to AD Dental Clinic',
+      title: 'Welcome to Seid Dental Clinic',
       description:
           'Experience exceptional dental care with our state-of-the-art facility and expert team',
       iconColor: AppColors.primaryBlue,
@@ -28,7 +28,7 @@ class OnboardingController extends GetxController {
       icon: Icons.calendar_today_outlined,
       title: 'Easy Appointment Booking',
       description:
-          'Schedule your visits at AD Dental Clinic with our convenient online booking system',
+          'Schedule your visits at Seid Dental Clinic with our convenient online booking system',
       iconColor: AppColors.successGreen,
     ),
     OnboardingPageModel(

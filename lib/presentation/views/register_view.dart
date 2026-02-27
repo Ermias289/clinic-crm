@@ -15,9 +15,7 @@ class RegisterView extends GetView<RegisterController> {
 
   // Method to launch Terms and Conditions URL
   Future<void> _launchTermsAndConditions() async {
-    final Uri url = Uri.parse(
-      'https://adterms.nexabusinessgroup.com/',
-    );
+    final Uri url = Uri.parse('https://adterms.nexabusinessgroup.com/');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       ErrorHandler.showError('Could not open Terms and Conditions');
     }
@@ -149,7 +147,7 @@ class RegisterView extends GetView<RegisterController> {
                             ),
                           ),
                           Text(
-                            "Join AD Dental Clinic family",
+                            "Join Seid Dental Clinic family",
                             style: AppTextStyles.bodyMedium.copyWith(
                               color: Colors.white.withOpacity(0.9),
                               fontSize: 14,

@@ -1,8 +1,8 @@
-# Google Play Store Submission Guide - AD Dental Clinic App
+# Google Play Store Submission Guide - Seid Dental Clinic App
 
 ## 📱 App Overview
-**App Name:** AD Dental Clinic  
-**Package Name:** com.addental.app  
+**App Name:** Seid Dental Clinic  
+**Package Name:** com.seiddental.app  
 **Category:** Medical / Health & Fitness  
 **Target Audience:** Dental patients and clinic management  
 
@@ -12,7 +12,7 @@
 
 ### App Title (30 characters max)
 ```
-AD Dental Clinic
+Seid Dental Clinic
 ```
 
 ### Short Description (80 characters max)
@@ -22,7 +22,7 @@ Comprehensive dental care app for appointments, services & health management
 
 ### Full Description (4000 characters max)
 ```
-Transform your dental care experience with AD Dental Clinic - the comprehensive mobile app designed to streamline your dental health management and clinic interactions.
+Transform your dental care experience with Seid Dental Clinic - the comprehensive mobile app designed to streamline your dental health management and clinic interactions.
 
 🦷 KEY FEATURES:
 
@@ -74,7 +74,7 @@ CLINIC INFORMATION
 • Smooth navigation and performance
 • Offline capability for essential features
 
-Whether you're scheduling your next cleaning, exploring treatment options, or managing your dental health records, AD Dental Clinic app provides everything you need in one convenient platform.
+Whether you're scheduling your next cleaning, exploring treatment options, or managing your dental health records, Seid Dental Clinic app provides everything you need in one convenient platform.
 
 Download now and take control of your dental health journey!
 ```

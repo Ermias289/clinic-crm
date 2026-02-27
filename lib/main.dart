@@ -22,7 +22,10 @@ void main() async {
   // Global Error Handling
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.presentError(details);
-    ErrorHandler.handleError(details.exception, customTitle: 'Application Error');
+    ErrorHandler.handleError(
+      details.exception,
+      customTitle: 'Application Error',
+    );
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
@@ -57,7 +60,7 @@ class MyApp extends StatelessWidget {
     final onboardingComplete = box.read('onboarding_complete') ?? false;
 
     return GetMaterialApp(
-      title: 'AD Dental Clinic',
+      title: 'Seid Dental Clinic',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
       initialRoute: onboardingComplete ? Routes.login : Routes.onboarding,

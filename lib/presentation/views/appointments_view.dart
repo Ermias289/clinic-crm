@@ -190,7 +190,7 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'AD Dental Clinic',
+                                          'Seid Dental Clinic',
                                           style: AppTextStyles.h3.copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
@@ -402,7 +402,9 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                 arguments: appointment,
                               );
                               if (result == true) {
-                                ErrorHandler.showSuccess('Appointment cancelled successfully');
+                                ErrorHandler.showSuccess(
+                                  'Appointment cancelled successfully',
+                                );
                                 // Ensure list is refreshed
                                 controller.refreshAppointments();
                               }
@@ -424,90 +426,95 @@ class _AppointmentsViewState extends State<AppointmentsView>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Flexible(
-                                                    child: Builder(
-                                                      builder: (context) {
-                                                        final serviceName =
-                                                            appointment
-                                                                .dentistryService
-                                                                ?.name ??
-                                                            'Service';
-                                                        return Text(
-                                                          serviceName,
-                                                          style: AppTextStyles
-                                                              .bodyLarge
-                                                              .copyWith(
-                                                                fontWeight:
-                                                                    FontWeight.bold,
-                                                              ),
-                                                          maxLines: 1,
-                                                          overflow:
-                                                              TextOverflow.ellipsis,
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
-                                                  if (appointment.reference !=
-                                                      null) ...[
-                                                    const SizedBox(width: 8),
-                                                    Container(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 2,
-                                                      ),
-                                                      decoration: BoxDecoration(
-                                                        color: AppColors.primaryBlue
-                                                            .withOpacity(0.1),
-                                                        borderRadius:
-                                                            BorderRadius.circular(4),
-                                                      ),
-                                                      child: Text(
-                                                        appointment.reference!,
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Flexible(
+                                                  child: Builder(
+                                                    builder: (context) {
+                                                      final serviceName =
+                                                          appointment
+                                                              .dentistryService
+                                                              ?.name ??
+                                                          'Service';
+                                                      return Text(
+                                                        serviceName,
                                                         style: AppTextStyles
-                                                            .bodySmall
+                                                            .bodyLarge
                                                             .copyWith(
-                                                          color:
-                                                              AppColors.primaryBlue,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 10,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
-                                              const SizedBox(height: 4),
-                                              if (appointment.medicalProfessional !=
-                                                  null) ...[
-                                                Text(
-                                                  '${appointment.medicalProfessional!.prefix} ${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
-                                                  style: AppTextStyles.bodySmall
-                                                      .copyWith(
-                                                    color: AppColors.textHint,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      );
+                                                    },
                                                   ),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
                                                 ),
+                                                if (appointment.reference !=
+                                                    null) ...[
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors
+                                                          .primaryBlue
+                                                          .withOpacity(0.1),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            4,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      appointment.reference!,
+                                                      style: AppTextStyles
+                                                          .bodySmall
+                                                          .copyWith(
+                                                            color: AppColors
+                                                                .primaryBlue,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            fontSize: 10,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            if (appointment
+                                                    .medicalProfessional !=
+                                                null) ...[
+                                              Text(
+                                                '${appointment.medicalProfessional!.prefix} ${appointment.medicalProfessional!.fName} ${appointment.medicalProfessional!.lName}',
+                                                style: AppTextStyles.bodySmall
+                                                    .copyWith(
+                                                      color: AppColors.textHint,
+                                                    ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ],
-                                          ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 12),
-                                        Container(
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 6,
