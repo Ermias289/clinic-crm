@@ -2,7 +2,7 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api.ahadudental.com</domain>
-        <domain includeSubdomains="true">termsandconditions.nexabusinessgroup.com</domain>
+        <domain includeSubdomains="true">ahaduterms.nexabusinessgroup.com</domain>
         <domain includeSubdomains="true">nexabusinessgroup.com</domain>
     </domain-config>
 </network-security-config>  
