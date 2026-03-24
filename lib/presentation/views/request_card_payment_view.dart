@@ -186,7 +186,7 @@ class _RequestCardPaymentViewState extends State<RequestCardPaymentView> {
                                 style: AppTextStyles.bodySmall,
                               ),
                               Text(
-                                '\${service.durationInMinutes * 10}.00',
+                                'ETB ${service.durationInMinutes * 10}.00',
                                 style: AppTextStyles.h3.copyWith(
                                   color: Colors.green,
                                 ),
