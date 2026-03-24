@@ -171,7 +171,7 @@ class CardReactivationPaymentView extends StatelessWidget {
                                     const Divider(height: 24),
                                     _buildSummaryRow(
                                       'Reactivation Fee',
-                                      '\$${payment?.expectedAmount.toStringAsFixed(2) ?? "0.00"}',
+                                      'ETB ${payment?.expectedAmount.toStringAsFixed(2) ?? "0.00"}',
                                       isTotal: true,
                                     ),
                                   ],
