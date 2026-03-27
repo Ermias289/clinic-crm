@@ -4,8 +4,7 @@ import 'auth_interceptor.dart';
 
 class ApiClient extends GetConnect {
   @override
-  String get baseUrl =>
-      '${dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000'}/api';
+  String get baseUrl => '${dotenv.env['API_BASE_URL']!}/api';
 
   @override
   void onInit() {

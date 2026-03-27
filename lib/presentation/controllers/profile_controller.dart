@@ -125,7 +125,6 @@ class ProfileController extends GetxController {
         'email': emailController.text,
         'phoneNumber': phoneController.text,
         'userRoleId': currentUser.value?.userRoleId ?? 2,
-        'password': 'Password@123', // TODO: Remove or handle properly
       };
 
       final updatedUser = await userDataSource.updateUser(userId, data);
@@ -133,8 +132,6 @@ class ProfileController extends GetxController {
 
       // Update stored username
       box.write('user', updatedUser.username);
-
-      isEditing.value = false;
 
       isEditing.value = false;
 
@@ -175,8 +172,6 @@ class ProfileController extends GetxController {
       oldPasswordController.clear();
       newPasswordController.clear();
       confirmPasswordController.clear();
-
-      Get.back(); // Close password dialog
 
       Get.back(); // Close password dialog
 

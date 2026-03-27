@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Lucid Dental Clinic needs camera access to take profile photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Lucid Dental Clinic needs photo library access to select profile photos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Lucid Dental Clinic needs permission to save photos to your library.</string>
 </dict>
 </plist>
