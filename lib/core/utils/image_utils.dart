@@ -8,7 +8,7 @@ class ImageUtils {
     if (filename.startsWith('http')) return filename;
 
     // Get base URL from environment
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000';
+    final baseUrl = dotenv.env['API_BASE_URL']!;
 
     // Construct the full URL for file download
     return '$baseUrl/api/FileUpload/$filename';
