@@ -4,15 +4,11 @@ using Clinic_CRM.ApplicationDbContext;
 using Clinic_CRM.DTOs;
 using Clinic_CRM.DTOs.PaymentDTOs;
 using Clinic_CRM.Models;
-using Clinic_CRM.Services.EmailService;
 using Clinic_CRM.Services.NotificationServices;
 using Clinic_CRM.Services.UserServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client.AppConfig;
-using static System.Net.WebRequestMethods;
 using static Clinic_CRM.Helpers.Constants;
-using static Org.BouncyCastle.Math.EC.ECCurve;
-using System.IO;
 
 namespace Clinic_CRM.Services.PaymentServices
 {
@@ -22,19 +18,15 @@ namespace Clinic_CRM.Services.PaymentServices
         private readonly Context _context;
         private readonly IUserService _userService;
         private readonly INotificationService _notify;
-        private readonly IEmailService _emailService;
-        private readonly IWebHostEnvironment _env;
-        //private readonly IConfiguration _config;
 
 
-        public PaymentService(INotificationService notify,IMapper mapper, Context context, IUserService userService, IEmailService emailService, IWebHostEnvironment env)
+
+        public PaymentService(INotificationService notify,IMapper mapper, Context context, IUserService userService)
         {
             _mapper = mapper;
             _context = context;
             _userService = userService;
             _notify = notify;
-            _emailService = emailService;
-            _env = env;
         }
 
         public async Task<bool> AutoPrepare(AutoPaymentPrepareDTO dto)
@@ -63,8 +55,6 @@ namespace Clinic_CRM.Services.PaymentServices
 
             if (existingPayment != null)
                 return false;
-            payment.CreatedAt = DateTime.Now;
-
 
             //prepares prefix for the card
             var prefix = await _context.CompanySetting
@@ -130,22 +120,27 @@ namespace Clinic_CRM.Services.PaymentServices
             if (pendingPayments.Any())
                 throw new KeyNotFoundException("You have a pending payment.");
 
-            var insured = await _context.PaymentTypes.Where(x => x.Name.ToLower() == "insurance".ToLower()).FirstOrDefaultAsync();
-            var bank = await _context.PaymentTypes.Where(x => x.Name.ToLower() == "bank-transfer".ToLower()).FirstOrDefaultAsync();
-            var currentUser = _userService.GetCurrentUser();
+            var paymentTypes = await _context.PaymentTypes.ToListAsync();
+            var currentUser = _userService.GetCurrentUserNoInclude();
+
+            if (paymentTypes != null && currentUser?.UserRole?.Name == USER_ROLES.PATIENT)
+            {
+                payment.PaymentTypeId = paymentTypes ?
+                        .FirstOrDefault(x => x.Name.ToLower() == "bank-transfer")?.Id;
+            }
+            
+            if (dto.IsInsuranceCovered)
+            {
+                payment.PaymentTypeId = paymentTypes?
+                    .FirstOrDefault(x => x.Name.ToLower() == "insurance")?.Id;
+
+            }
+
+
 
             _mapper.Map(dto, payment);
-           
-            if(currentUser.UserRole.Name == USER_ROLES.PATIENT && dto.IsInsuranceCovered)
-            {
-                payment.PaymentTypeId = insured != null ? insured.Id : null;
-            }
-            else if(currentUser.UserRole.Name == USER_ROLES.PATIENT && !dto.IsInsuranceCovered)
-            {
-                payment.PaymentTypeId = bank != null ? bank.Id : null;
-            }
 
-                var card = await _context.Cards.FindAsync(payment.CardId);
+            var card = await _context.Cards.FindAsync(payment.CardId);
 
             if (card == null)
                 throw new KeyNotFoundException("Card Not Found");
@@ -154,14 +149,48 @@ namespace Clinic_CRM.Services.PaymentServices
                 throw new KeyNotFoundException("Card Is Already Active. No Pending Payment");
 
             payment.Status = PAYMENT_STATUS.REQUESTED;
+            payment.CreatedAt = DateTime.Now;
             payment.UnPaidAmount = payment.ExpectedAmount;
             payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
             payment.RequestedAt = DateTime.Now;
 
+            //var existPayment = await _context.Payments.Where(x => x.CardId == payment.CardId && x.Status == PAYMENT_STATUS.AUTOPREPARED)
+            //    .OrderBy(x => x.UnPaidAmount)
+            //    .FirstOrDefaultAsync();
+
+
+            //if (existPayment.Any(x => x.Status != PAYMENT_STATUS.APPROVED || x.Status != PAYMENT_STATUS.CANCELED || x.Status == PAYMENT_STATUS.REJECTED && x.Reference != payment.Reference))
+            //    throw new KeyNotFoundException("There is incomplete payment process, please complete that first.");
+
+            //if (existPayment.Any())
+            //{
+            //    var existingPayment = existPayment.Where( x => x.Status == PAYMENT_STATUS.PARTIALLYPAID).FirstOrDefault();
+            //    var paid = existPayment.Sum(x => x.PaidAmount);
+
+            //    if(existingPayment != null)
+            //    {
+            //        payment.ExpectedAmount = existingPayment.UnPaidAmount;
+            //        payment.UnPaidAmount = existingPayment.UnPaidAmount;
+            //        payment.PaidAmount = paid;
+            //        payment.RequestedById = _userService.GetCurrentUserNoInclude().Id;
+            //    }
+            //}
+
+
+
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
 
-          
+            //var prefix = await _context.CompanySetting
+            //    .AsNoTracking()
+            //    .Select(x => x.Prefix)
+            //    .FirstOrDefaultAsync() ?? "";
+
+            ////payment.Reference = $"{prefix}/{PREFIX.CARD_PAYMENT}/{payment.Id.ToString().PadLeft(PREFIX.PADDING, '0')}/{payment.CreatedAt.Year}";
+            //await _context.SaveChangesAsync();
+
+            //var user = await _context.Users.Where(x => x.Id == card.Patient.UserId).FirstOrDefaultAsync();
+
             var receptions = await _context.Users
                 .Where(x => x.UserRole.Name == USER_ROLES.RECEPTIONIST
                          || x.UserRole.Name == USER_ROLES.ADMIN
@@ -293,25 +322,6 @@ namespace Clinic_CRM.Services.PaymentServices
                 card.ExpiredAt = payment.ApprovedAt.AddDays(cardType.ExpirationDuration);
             }
 
-            var userEmail = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).Select(x => x.Email).FirstOrDefaultAsync();
-
-            string templatePath = Path.Combine(_env.ContentRootPath, "paymentApproved.html");
-            string htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);
-            htmlBody = htmlBody.Replace("{{NAME}}", payment.Card.Patient.FName + " " + payment.Card.Patient.LName);
-            htmlBody = htmlBody.Replace("{{AMOUNT}}", payment.PaidAmount.ToString() + " ETB");
-            htmlBody = htmlBody.Replace("{{REFERENCE}}", payment.Reference);
-            htmlBody = htmlBody.Replace("{{DATE}}", payment.ApprovedAt.ToString());
-
-
-            if (userEmail != null)
-                await _emailService.SendEmailAsync(
-                userEmail,
-                "Payment Approved",
-                htmlBody,
-                true
-                 );
-
-
             _context.Payments.Update(payment);
             await _context.SaveChangesAsync();
 
@@ -425,25 +435,6 @@ namespace Clinic_CRM.Services.PaymentServices
                 RequestedAmount = payment.ExpectedAmount,
                 CardId = payment.CardId
             });
-
-            var userEmail = await _context.Users.Where(x => x.Id == payment.Card.Patient.UserId).Select(x => x.Email).FirstOrDefaultAsync();
-
-            string templatePath = Path.Combine(_env.ContentRootPath, "paymentRejected.html");
-            string htmlBody = await System.IO.File.ReadAllTextAsync(templatePath);
-            htmlBody = htmlBody.Replace("{{NAME}}", payment.Card.Patient.FName + " " +payment.Card.Patient.LName);
-            htmlBody = htmlBody.Replace("{{AMOUNT}}", payment.ExpectedAmount.ToString() + " ETB");
-            htmlBody = htmlBody.Replace("{{REFERENCE}}", payment.Reference);
-            htmlBody = htmlBody.Replace("{{DATE}}", payment.ApprovedAt.ToString());
-            htmlBody = htmlBody.Replace("{{REASON}}", payment.RejectionRemark);
-
-
-            if (userEmail != null)
-                await _emailService.SendEmailAsync(
-                userEmail,
-                "Payment Rejected",
-                htmlBody,
-                true
-                 );
 
             if (receptions.Count > 0)
                 await _notify.SendUserAsync(

@@ -34,10 +34,6 @@ namespace Clinic_CRM.Models
         public DateTime CanceledAt { get; set; }
         public string CancelReason { get; set; } = string.Empty;
 
-
-        public bool OneDayReminderSent { get; set; } = false;
-        public bool OneHourReminderSent { get; set; } = false;
-
         public DateTime CreatedAt { get; set; }
         public DateTime UpdateAt { get; set; }
     }
