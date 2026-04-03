@@ -54,7 +54,7 @@ class OnboardingView extends GetView<OnboardingController> {
                           ),
                           child: index == 0
                               ? Image.asset(
-                                  'assets/icon/app_icon.png',
+                                  'assets/icon/app_icon.jpg',
                                   width: 100,
                                   height: 100,
                                 )
