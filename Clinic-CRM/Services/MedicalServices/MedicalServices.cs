@@ -45,6 +45,8 @@ namespace Clinic_CRM.Services.MedicalServices
             return await _context.MedicalServices
                 .AsNoTracking()
                 .AsSplitQuery()
+                .Include(x => x.MedicalProfessionals)
+                .Include(x => x.Branches)
                 .Select(x => new MedicalService
                 {
                     Id = x.Id,
@@ -56,7 +58,7 @@ namespace Clinic_CRM.Services.MedicalServices
                     ServiceReference = x.ServiceReference,
 
 
-                    MedicalProfessionals = x.MedicalProfessionals.Where(mp => mp.Status == "Active") .Select(mp => new MedicalProfessional
+                    MedicalProfessionals = x.MedicalProfessionals.Select(mp => new MedicalProfessional
                     {
                         FName = mp.FName,
                         LName = mp.LName,
@@ -227,6 +229,8 @@ namespace Clinic_CRM.Services.MedicalServices
                         (docId == null || x.Id == docId)
                  )
                 .AsNoTracking()
+                .Include(x => x.MedicalProfessionals)
+                .Include(x => x.Branches)
                 .Select(x => new MedicalService
                 {
                     Id = x.Id,

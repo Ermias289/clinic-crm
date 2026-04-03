@@ -79,6 +79,12 @@ namespace Clinic_CRM.Migrations
                     b.Property<int>("MedicalProfessionalId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("OneDayReminderSent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("OneHourReminderSent")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("PatientId")
                         .HasColumnType("int");
 
