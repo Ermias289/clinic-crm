@@ -14,6 +14,7 @@ namespace Clinic_CRM.Models
         public string ServicePicture {  get; set; } = string.Empty;
         public ICollection<MedicalProfessional>? MedicalProfessionals { get; set; }
         public ICollection<BranchSetting>? Branches { get; set; }
+        public ICollection<DocService>? DocService { get; set; }
         //public ICollection<DentistryServiceToMedicalProfessionals>? DentistryServiceToMedicalProfessionals { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

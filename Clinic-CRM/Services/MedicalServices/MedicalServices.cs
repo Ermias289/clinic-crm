@@ -42,6 +42,7 @@ namespace Clinic_CRM.Services.MedicalServices
         
         public async Task<List<MedicalService>> GetAllMedicalServices()
         {
+
             return await _context.MedicalServices
                 .AsNoTracking()
                 .AsSplitQuery()
@@ -55,36 +56,36 @@ namespace Clinic_CRM.Services.MedicalServices
                     Description = x.Description,
                     ServiceReference = x.ServiceReference,
 
+                    MedicalProfessionals = x.DocService
+                        .Select(ds => new MedicalProfessional
+                        {
+                            Id = ds.MedicalProfessional.Id,
+                            FName = ds.MedicalProfessional.FName,
+                            MName = ds.MedicalProfessional.MName,
+                            LName = ds.MedicalProfessional.LName,
+                            Email = ds.MedicalProfessional.Email,
+                            PhoneNumber = ds.MedicalProfessional.PhoneNumber,
+                            Specialty = ds.MedicalProfessional.Specialty,
+                            JobTitle = ds.MedicalProfessional.JobTitle,
+                            ProfilePicture = ds.MedicalProfessional.ProfilePicture,
+                            LicenseNumber = ds.MedicalProfessional.LicenseNumber,
+                            EducationalBackground = ds.MedicalProfessional.EducationalBackground,
+                            YearsOfExperience = ds.MedicalProfessional.YearsOfExperience,
+                            CreatedAt = ds.MedicalProfessional.CreatedAt,
+                            UserId = ds.MedicalProfessional.UserId
+                        })
+                        .Distinct()
+                        .ToList(),
 
-                    MedicalProfessionals = x.MedicalProfessionals.Where(mp => mp.Status == "Active") .Select(mp => new MedicalProfessional
-                    {
-                        FName = mp.FName,
-                        LName = mp.LName,
-                        MName = mp.MName,
-                        LicenseNumber = mp.LicenseNumber,
-                        CreatedAt = mp.CreatedAt,
-                        EducationalBackground = mp.EducationalBackground,
-                        Email = mp.Email,
-                        Id = mp.Id,
-                        JobTitle = mp.JobTitle,
-                        //Prefix = mp.Prefix,
-                        Specialty = mp.Specialty,
-                        //Status = mp.Status,
-                        YearsOfExperience = mp.YearsOfExperience,
-                        UserId = mp.UserId,
-                        ProfilePicture = mp.ProfilePicture,
-                        PhoneNumber = mp.PhoneNumber,
-                    }).ToList(),
-
-                    Branches = x.Branches.Select(x => new BranchSetting
+                    Branches = x.DocService.Select(x => new BranchSetting
                     {
                         Id = x.Id,
-                        Address = x.Address,
-                        City = x.City,
-                        Location = x.Location,
-                        Name = x.Name,
-                        SubCity = x.SubCity,
-                        PhoneNumber = x.PhoneNumber,
+                        Address = x.BranchSetting.Address,
+                        City = x.BranchSetting.City,
+                        Location = x.BranchSetting.Location,
+                        Name = x.BranchSetting.Name,
+                        SubCity = x.BranchSetting.SubCity,
+                        PhoneNumber = x.BranchSetting.PhoneNumber,
                     }).ToList(),
                 })
                 .ToListAsync();
@@ -227,6 +228,8 @@ namespace Clinic_CRM.Services.MedicalServices
                         (docId == null || x.Id == docId)
                  )
                 .AsNoTracking()
+                .Include(x => x.MedicalProfessionals)
+                .Include(x => x.Branches)
                 .Select(x => new MedicalService
                 {
                     Id = x.Id,
