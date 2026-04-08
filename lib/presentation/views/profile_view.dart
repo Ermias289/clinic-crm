@@ -465,6 +465,17 @@ class ProfileView extends GetView<ProfileController> {
                                   type: ButtonType.primary,
                                   icon: Icons.logout,
                                 ),
+                                const SizedBox(height: 16),
+                                TextButton(
+                                  onPressed: () => _showDeleteAccountConfirmation(context),
+                                  child: Text(
+                                    'Delete Account',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                                 const SizedBox(height: 20),
                               ],
                             ),
@@ -475,6 +486,34 @@ class ProfileView extends GetView<ProfileController> {
                   ],
                 ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteAccountConfirmation(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text(
+          'Are you sure you want to delete your account? This action is irreversible and all your data will be permanently removed.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Get.back();
+              controller.deleteAccount();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }
