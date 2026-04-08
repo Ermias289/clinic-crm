@@ -41,7 +41,8 @@ namespace Clinic_CRM.Services.CardServices
                             .ThenInclude(p => p.User)
                         .Include(a => a.Dentistry)
                         .Where(a => a.Status == APPOINTMENT_STATUS.SCHEDULED &&
-                                    a.Day == tomorrow)
+                                     a.Day == tomorrow &&
+                                    !a.OneDayReminderSent)
                         .AsNoTracking()
                         .ToListAsync();
 
@@ -56,6 +57,7 @@ namespace Clinic_CRM.Services.CardServices
                                 NOTIFICATION_CONSTANTS.APPOINTMENT,
                                 new List<int> { patientUser.Id }
                             );
+                            appointment.OneDayReminderSent = true;
                         }
                     }
 
@@ -69,7 +71,8 @@ namespace Clinic_CRM.Services.CardServices
                         .Include(a => a.Dentistry)
                         .Where(a => a.Status == APPOINTMENT_STATUS.SCHEDULED &&
                                     a.ScheduledAt >= nowUtc &&
-                                    a.ScheduledAt <= oneHourLaterUtc)
+                                    a.ScheduledAt <= oneHourLaterUtc &&
+                                    !a.OneHourReminderSent)
                         .AsNoTracking()
                         .ToListAsync();
 
@@ -84,8 +87,12 @@ namespace Clinic_CRM.Services.CardServices
                                 NOTIFICATION_CONSTANTS.APPOINTMENT,
                                 new List<int> { patientUser.Id }
                             );
+                            appointment.OneHourReminderSent = true;
                         }
+
                     }
+                    await _context.SaveChangesAsync();
+    
                 }
                 catch (Exception ex)
                 {

@@ -34,7 +34,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("DentistryServicesId");
 
-                    b.ToTable("BranchSettingMedicalService");
+                    b.ToTable("BranchSettingMedicalService", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Appointment", b =>
@@ -79,6 +79,12 @@ namespace Clinic_CRM.Migrations
                     b.Property<int>("MedicalProfessionalId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("OneDayReminderSent")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("OneHourReminderSent")
+                        .HasColumnType("bit");
+
                     b.Property<int?>("PatientId")
                         .HasColumnType("int");
 
@@ -118,7 +124,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("ScheduledById");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointments", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Card", b =>
@@ -182,7 +188,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("RequestedById");
 
-                    b.ToTable("Cards");
+                    b.ToTable("Cards", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.DocService", b =>
@@ -210,7 +216,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("MedicalServiceId");
 
-                    b.ToTable("DocServices");
+                    b.ToTable("DocServices", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.DoctorSchedule", b =>
@@ -249,7 +255,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("MedicalProfessionalId");
 
-                    b.ToTable("DoctorSchedules");
+                    b.ToTable("DoctorSchedules", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.MedicalProfessional", b =>
@@ -337,7 +343,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("MedicalProfessionals");
+                    b.ToTable("MedicalProfessionals", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.MedicalService", b =>
@@ -375,7 +381,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MedicalServices");
+                    b.ToTable("MedicalServices", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Notification", b =>
@@ -405,7 +411,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.OTP", b =>
@@ -435,7 +441,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OTPs");
+                    b.ToTable("OTPs", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Patient", b =>
@@ -529,7 +535,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Patients");
+                    b.ToTable("Patients", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Payment", b =>
@@ -644,7 +650,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("RequestedById");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.Bank", b =>
@@ -665,7 +671,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Banks");
+                    b.ToTable("Banks", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.BankAccount", b =>
@@ -691,7 +697,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("BankId");
 
-                    b.ToTable("BankAccounts");
+                    b.ToTable("BankAccounts", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.Banner", b =>
@@ -711,7 +717,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Banners");
+                    b.ToTable("Banners", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.BranchSetting", b =>
@@ -753,7 +759,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("CompanySettingId");
 
-                    b.ToTable("BranchSettings");
+                    b.ToTable("BranchSettings", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.CardSetting", b =>
@@ -783,7 +789,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("CardTypeId");
 
-                    b.ToTable("CardSettings");
+                    b.ToTable("CardSettings", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.CardType", b =>
@@ -804,7 +810,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CardTypes");
+                    b.ToTable("CardTypes", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.CompanySetting", b =>
@@ -867,7 +873,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CompanySetting");
+                    b.ToTable("CompanySetting", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.PaymentType", b =>
@@ -888,7 +894,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentTypes");
+                    b.ToTable("PaymentTypes", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.UserOnBoardingSetting", b =>
@@ -913,7 +919,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserOnBoardingSettings");
+                    b.ToTable("UserOnBoardingSettings", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.Settings.WorkingDaySetting", b =>
@@ -944,7 +950,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("CompanySettingId");
 
-                    b.ToTable("Workdays");
+                    b.ToTable("Workdays", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.User", b =>
@@ -1003,7 +1009,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasIndex("UserRoleId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.UserNotification", b =>
@@ -1033,7 +1039,7 @@ namespace Clinic_CRM.Migrations
                     b.HasIndex("UserId", "NotificationId")
                         .IsUnique();
 
-                    b.ToTable("UserNotifications");
+                    b.ToTable("UserNotifications", (string)null);
                 });
 
             modelBuilder.Entity("Clinic_CRM.Models.UserRole", b =>
@@ -1242,7 +1248,7 @@ namespace Clinic_CRM.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserRoles");
+                    b.ToTable("UserRoles", (string)null);
                 });
 
             modelBuilder.Entity("BranchSettingMedicalService", b =>

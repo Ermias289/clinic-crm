@@ -21,6 +21,9 @@ namespace Clinic_CRM.Models
 
         public string Status { get; set; } = string.Empty;
 
+        public bool OneDayReminderSent { get; set; } = false;
+        public bool OneHourReminderSent { get; set; } = false;
+
         public User ScheduledBy { get; set; }
         public int? ScheduledById { get; set; }
         public DateTime ScheduledAt { get; set; }
