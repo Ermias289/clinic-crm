@@ -22,32 +22,36 @@ class DashboardController extends GetxController {
           ElevatedButton(
             onPressed: () {
               Get.back(); // Close dialog
-              // Clear all stored user data
-              box.remove('token');
-              box.remove('user');
-              box.remove('userId');
-              box.remove('userFullname');
-              box.remove('userFName');
-              box.remove('userEmail');
-              box.remove('last_login_time');
-              box.remove('last_services_load_time');
-
-              // Clear ProfileController data if it exists
-              if (Get.isRegistered<ProfileController>()) {
-                Get.find<ProfileController>().clearUserData();
-              }
-
-              // Clear MedicalServiceController data if it exists
-              if (Get.isRegistered<MedicalServiceController>()) {
-                Get.find<MedicalServiceController>().resetState();
-              }
-
-              Get.offAllNamed('/login');
+              clearSessionAndGoToLogin();
             },
             child: Text('Logout'),
           ),
         ],
       ),
     );
+  }
+
+  void clearSessionAndGoToLogin() {
+    // Clear all stored user data
+    box.remove('token');
+    box.remove('user');
+    box.remove('userId');
+    box.remove('userFullname');
+    box.remove('userFName');
+    box.remove('userEmail');
+    box.remove('last_login_time');
+    box.remove('last_services_load_time');
+
+    // Clear ProfileController data if it exists
+    if (Get.isRegistered<ProfileController>()) {
+      Get.find<ProfileController>().clearUserData();
+    }
+
+    // Clear MedicalServiceController data if it exists
+    if (Get.isRegistered<MedicalServiceController>()) {
+      Get.find<MedicalServiceController>().resetState();
+    }
+
+    Get.offAllNamed('/login');
   }
 }

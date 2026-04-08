@@ -4,4 +4,5 @@ abstract class UserRepository {
   Future<List<UserModel>> getAllUsers();
   Future<UserModel> getUserById(int id);
   Future<UserModel> updateUser(int id, Map<String, dynamic> data);
+  Future<void> deleteUser(int id);
 }
