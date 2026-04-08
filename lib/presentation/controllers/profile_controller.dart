@@ -5,6 +5,7 @@ import 'package:lucid_dental_clinic/presentation/controllers/dashboard_controlle
 import '../../data/datasources/user_remote_datasource.dart';
 import '../../data/models/user_model.dart';
 import '../../core/utils/error_handler.dart';
+import 'dashboard_controller.dart';
 
 class ProfileController extends GetxController {
   final UserRemoteDataSource userDataSource;
