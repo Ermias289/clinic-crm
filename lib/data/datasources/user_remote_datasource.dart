@@ -68,4 +68,16 @@ class UserRemoteDataSource {
       throw Exception(errorMsg);
     }
   }
+
+  Future<void> deleteUser(int id) async {
+    final response = await client.delete('/User/$id');
+
+    if (response.hasError) {
+      final errorMsg = ErrorHandler.extractErrorMessage(
+        response,
+        fallback: 'Failed to delete account',
+      );
+      throw Exception(errorMsg);
+    }
+  }
 }
