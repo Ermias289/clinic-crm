@@ -1,4 +1,4 @@
-name: lucid_dental
+name: lucid_dental_clinic
 description: "Lucid Dental Clinic - Your comprehensive dental care companion app for appointments, services, and health management."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
