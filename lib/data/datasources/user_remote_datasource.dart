@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import '../../core/api_client.dart';
+import '../../core/utils/error_handler.dart';
 import '../models/user_model.dart';
 
 class UserRemoteDataSource {
@@ -48,6 +49,14 @@ class UserRemoteDataSource {
 
     if (response.hasError) {
       throw Exception(response.statusText);
+    }
+  }
+
+  Future<void> deleteUser(int id) async {
+    final response = await client.delete('/User/$id');
+
+    if (response.hasError) {
+      throw Exception(response.statusText ?? 'Failed to delete account');
     }
   }
 }
