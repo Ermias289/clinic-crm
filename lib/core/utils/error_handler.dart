@@ -210,4 +210,14 @@ class ErrorHandler {
       print('Stack trace: $stackTrace');
     }
   }
+
+  /// Handles error by showing a snackbar with network-aware message
+  static void handleError(
+    dynamic error, {
+    String? customTitle,
+    dynamic response,
+  }) {
+    final message = getNetworkAwareMessage(error, response);
+    showError(message, title: customTitle ?? 'Error');
+  }
 }
