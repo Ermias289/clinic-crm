@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Mail, Lock, KeyRound } from 'lucide-react';
 import axios from "axios";
@@ -18,6 +19,7 @@ const LoginPage = () => {
   
   const [step, setStep] = useState<AuthStep>('login');
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   
   // Login form
   const [email, setEmail] = useState('');
@@ -41,9 +43,18 @@ const handleLogin = async (e: React.FormEvent) => {
     return;
   }
 
+  setLoginError(null);
   setIsLoading(true);
   try {
-    await authService.login({ email, password });
+    const loginResult = await authService.login({ email, password });
+    const roleName = loginResult?.user?.userRole?.name?.toLowerCase?.().trim();
+
+    if (roleName === 'patient') {
+      authService.logout();
+      setLoginError('Patient accounts are not permitted to sign in here. Please use a staff or admin account.');
+      setIsLoading(false);
+      return;
+    }
 
     toast({
       title: 'Success',
@@ -60,6 +71,7 @@ const handleLogin = async (e: React.FormEvent) => {
         message = error.message;
       }
 
+      setLoginError(message);
       toast({
         title: "Login Failed",
         description: message,
@@ -212,6 +224,12 @@ const handleLogin = async (e: React.FormEvent) => {
                 <CardDescription>Enter your credentials to access your account</CardDescription>
               </CardHeader>
               <CardContent>
+                {loginError ? (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertTitle>Access denied</AlertTitle>
+                    <AlertDescription>{loginError}</AlertDescription>
+                  </Alert>
+                ) : null}
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email or Phone</Label>

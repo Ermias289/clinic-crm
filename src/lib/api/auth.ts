@@ -57,11 +57,14 @@ export const authService = {
       }
     );
     
-    if (response.data.token) {
+    const roleName = response.data.user?.userRole?.name?.toLowerCase?.().trim();
+
+    if (response.data.token && roleName !== 'patient') {
       localStorage.setItem('authToken', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      // console.log('Login response:', response.data);
-
+    } else {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
     }
 
     return response.data;

@@ -6,7 +6,15 @@ interface Props {
 }
 
 const ProtectedRoute = ({ children }: Props) => {
-  const isAuth = authService.isAuthenticated();
+  const user = authService.getCurrentUser();
+  const token = localStorage.getItem('authToken');
+  const isPatient = user?.userRole?.name?.toLowerCase?.().trim() === 'patient';
+  const isAuth = !!token && !isPatient;
+
+  if (!isAuth && isPatient) {
+    authService.logout();
+  }
+
   return isAuth ? children : <Navigate to="/login" replace />;
 };
 
