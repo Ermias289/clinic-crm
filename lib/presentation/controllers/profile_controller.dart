@@ -238,6 +238,28 @@ class ProfileController extends GetxController {
     );
   }
 
+  Future<void> deleteAccount() async {
+    try {
+      isLoading.value = true;
+
+      final userId = box.read('userId');
+      if (userId == null) throw Exception('User ID not found');
+
+      await userDataSource.deleteUser(userId);
+
+      // Show success message before navigation to ensure it's queued
+      ErrorHandler.showSuccess('Your account has been deleted successfully.');
+
+      // On success, clear session and go to login
+      final dashboardController = Get.find<DashboardController>();
+      dashboardController.clearSessionAndGoToLogin();
+    } catch (e) {
+      ErrorHandler.handleError(e, customTitle: 'Account Deletion Failed');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   @override
   void onClose() {
     usernameController.dispose();
