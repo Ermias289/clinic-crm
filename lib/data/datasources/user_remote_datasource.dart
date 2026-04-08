@@ -51,4 +51,12 @@ class UserRemoteDataSource {
       throw Exception('Unable to change password');
     }
   }
+
+  Future<void> deleteUser(int id) async {
+    final response = await client.delete('/User/$id');
+
+    if (response.hasError) {
+      throw Exception('Unable to delete account');
+    }
+  }
 }
