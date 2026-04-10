@@ -240,7 +240,7 @@ class AboutUsView extends GetView<AboutUsController> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'We are a leading technology solutions provider specializing in innovative mobile and web applications. Our team is dedicated to creating cutting-edge digital experiences that transform businesses and improve user engagement.',
+                          'Nexa Technologies is a leading technology solutions provider specializing in innovative mobile and web applications. We design, develop, and manage digital platforms that help organizations deliver seamless, modern experiences to their users.',
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: Colors.white.withValues(alpha: 0.9),
                           ),

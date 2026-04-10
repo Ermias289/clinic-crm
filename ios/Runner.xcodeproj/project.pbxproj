@@ -476,7 +476,7 @@
 				ENABLE_BITCODE = NO;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lucid Dental Clinic";
+				INFOPLIST_KEY_CFBundleDisplayName = "Lucid Dental";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -644,7 +644,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = "Lucid Dental Clinic";
+				PRODUCT_NAME = "Lucid Dental";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -665,7 +665,7 @@
 				DEVELOPMENT_TEAM = X7TNUKF4WN;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lucid Dental Clinic";
+				INFOPLIST_KEY_CFBundleDisplayName = "Lucid Dental";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -693,7 +693,7 @@
 				ENABLE_BITCODE = NO;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Lucid Dental Clinic";
+				INFOPLIST_KEY_CFBundleDisplayName = "Lucid Dental";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
