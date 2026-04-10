@@ -190,11 +190,21 @@ class _AppointmentsViewState extends State<AppointmentsView>
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          'Lucid Dental Clinic',
+                                          'Lucid Dental',
                                           style: AppTextStyles.h3.copyWith(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
                                           ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Powered by Nexa',
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: Colors.white
+                                                    .withOpacity(0.85),
+                                                fontSize: 11,
+                                              ),
                                         ),
                                       ],
                                     ),

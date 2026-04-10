@@ -112,6 +112,14 @@ class ContactUsView extends GetView<ContactUsController> {
                                     fontSize: 16,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Powered by Nexa',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ],
                             ),
                             Container(
@@ -349,6 +357,14 @@ class ContactUsView extends GetView<ContactUsController> {
                         ),
 
                       const SizedBox(height: 16),
+                      // Text(
+                      //   'Powered by Nexa',
+                      //   style: AppTextStyles.bodySmall.copyWith(
+                      //     color: AppColors.textSecondary,
+                      //   ),
+                      //   textAlign: TextAlign.center,
+                      // ),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),

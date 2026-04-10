@@ -151,6 +151,13 @@ class DashboardView extends GetView<DashboardController> {
                             color: AppColors.textPrimary,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Powered by Nexa',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                         const SizedBox(height: 16),
 
                         // Feature Grid
@@ -232,6 +239,15 @@ class DashboardView extends GetView<DashboardController> {
                           ],
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Powered by Nexa',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),

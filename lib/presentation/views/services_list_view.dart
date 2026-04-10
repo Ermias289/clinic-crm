@@ -139,6 +139,14 @@ class _ServicesListView extends StatelessWidget {
                             fontSize: 13,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Powered by Nexa',
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            fontSize: 11,
+                          ),
+                        ),
                       ],
                     ),
                   ),

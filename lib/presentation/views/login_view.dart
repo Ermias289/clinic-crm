@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import '../../config/app_routes.dart';
 import '../controllers/login_controller.dart';
 import '../widgets/custom_text_field.dart';
-import '../widgets/custom_button.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
@@ -103,7 +102,7 @@ class LoginView extends GetView<LoginController> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "Lucid Dental Clinic",
+                            "Lucid Dental",
                             style: AppTextStyles.h1.copyWith(
                               color: Colors.white,
                               fontSize: 32,
@@ -115,6 +114,22 @@ class LoginView extends GetView<LoginController> {
                             style: AppTextStyles.bodyLarge.copyWith(
                               color: Colors.white.withOpacity(0.9),
                             ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Powered by Nexa",
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Operated and managed by Nexa for Lucid Dental.",
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),

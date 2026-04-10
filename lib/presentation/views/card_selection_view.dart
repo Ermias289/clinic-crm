@@ -110,6 +110,14 @@ class CardSelectionView extends GetView<CardController> {
                                     fontSize: 16,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Powered by Nexa',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: Colors.white.withOpacity(0.85),
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ],
                             ),
                             Container(
@@ -170,6 +178,19 @@ class CardSelectionView extends GetView<CardController> {
                 ),
                 itemCount: controller.cardSettings.length,
                 itemBuilder: (context, index) {
+                  // if (index == controller.cardSettings.length) {
+                  //   return Padding(
+                  //     padding: const EdgeInsets.only(top: 8, bottom: 16),
+                  //     child: Center(
+                  //       child: Text(
+                  //         'Powered by Nexa',
+                  //         style: AppTextStyles.bodySmall.copyWith(
+                  //           color: AppColors.textSecondary,
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   );
+                  // }
                   final card = controller.cardSettings[index];
                   return _buildCardItem(card);
                 },

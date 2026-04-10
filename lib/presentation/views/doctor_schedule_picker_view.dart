@@ -108,6 +108,13 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                     ],
 
                     Text('Branch', style: AppTextStyles.h3),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Powered by Nexa',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Choose your preferred branch location',
@@ -120,6 +127,13 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                     const SizedBox(height: 28),
 
                     Text('Doctor', style: AppTextStyles.h3),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Powered by Nexa',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Choose your preferred doctor',
@@ -132,6 +146,13 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                     const SizedBox(height: 28),
 
                     Text('Date', style: AppTextStyles.h3),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Powered by Nexa',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Available dates are based on the selected doctor’s schedule',
@@ -144,6 +165,13 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
                     const SizedBox(height: 28),
 
                     Text('Time', style: AppTextStyles.h3),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Powered by Nexa',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Only available time slots are shown',
@@ -1051,6 +1079,13 @@ class _Header extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       'Select branch, doctor, date, and time from schedule',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Powered by Nexa',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: Colors.white70,
                       ),

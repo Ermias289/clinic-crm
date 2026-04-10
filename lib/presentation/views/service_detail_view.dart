@@ -173,12 +173,26 @@ class ServiceDetailView extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      const Spacer(),
-                      Text(
-                        'Service Details',
-                        style: AppTextStyles.h3.copyWith(color: Colors.white),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Service Details',
+                              style: AppTextStyles.h3.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Powered by Nexa',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const Spacer(),
                       const SizedBox(width: 48), // Balance the back button
                     ],
                   ),

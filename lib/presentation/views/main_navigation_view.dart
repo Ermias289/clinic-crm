@@ -119,7 +119,7 @@ class MainNavigationView extends GetView<MainNavigationController> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 10.5,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                   color: isSelected
                       ? AppColors.primaryBlue

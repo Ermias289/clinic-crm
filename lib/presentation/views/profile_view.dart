@@ -138,6 +138,16 @@ class ProfileView extends GetView<ProfileController> {
                                                   fontSize: 16,
                                                 ),
                                           ),
+
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'Operated and managed by Nexa for Lucid Dental.',
+                                            style: AppTextStyles.bodySmall
+                                                .copyWith(
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
+                                                ),
+                                          ),
                                         ],
                                       ),
                                       Container(

@@ -92,7 +92,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
           userCard = null;
         });
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       // User doesn't have a card yet, or network error
       setState(() {
         userCard = null;
@@ -168,6 +168,14 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
               Text(
                 'Confirm Appointment',
                 style: AppTextStyles.h2.copyWith(fontSize: 22),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Powered by Nexa',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -296,7 +304,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
 
   Future<void> _bookAppointment() async {
     try {
-      // Show loading
+      // Show loadingR
       Get.dialog(
         const Center(
           child: CircularProgressIndicator(color: AppColors.primaryBlue),
@@ -389,7 +397,7 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
         children: [
           // Header Section
           Container(
-            height: 180,
+            height: 200,
             width: double.infinity,
             decoration: BoxDecoration(
               gradient: AppColors.primaryGradient,
@@ -437,15 +445,29 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                               constraints: const BoxConstraints(),
                             ),
                             const SizedBox(width: 16),
-                            Text(
-                              'Book Appointment',
-                              style: AppTextStyles.h2.copyWith(
-                                color: Colors.white,
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Book Appointment',
+                                    style: AppTextStyles.h2.copyWith(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Powered by Nexa',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
                         Text(
                           'Service',
                           style: AppTextStyles.caption.copyWith(
@@ -483,6 +505,13 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Doctor, Date & Time', style: AppTextStyles.h3),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Powered by Nexa',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             'Choose from the doctor\'s available schedule',
@@ -539,6 +568,30 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
                             ),
                           ),
                           const SizedBox(height: 24),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundLight,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'By continuing, you agree that your appointment data will be used and managed by Nexa for Lucid Dental services.',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Powered by Nexa',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
                         ],
                       ),
                     ),

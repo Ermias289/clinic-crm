@@ -25,9 +25,21 @@ class NotificationsView extends GetView<NotificationController> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Get.back(),
         ),
-        title: Text(
-          'Notifications',
-          style: AppTextStyles.h2.copyWith(color: AppColors.textPrimary),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Notifications',
+              style: AppTextStyles.h2.copyWith(color: AppColors.textPrimary),
+            ),
+            Text(
+              'Powered by Nexa',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
         ),
         actions: [
           Obx(() {

@@ -108,6 +108,14 @@ class AboutUsView extends GetView<AboutUsController> {
                                     color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Powered by Nexa',
+                                  style: AppTextStyles.bodySmall.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 12,
+                                  ),
+                                ),
                               ],
                             ),
                             Container(
@@ -139,6 +147,14 @@ class AboutUsView extends GetView<AboutUsController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildInfoCard(
+                    icon: Icons.verified_user_outlined,
+                    title: 'Ownership',
+                    content:
+                        'Data is Operated and managed by Nexa for Lucid Dental.',
+                  ),
+                  const SizedBox(height: 20),
+
                   // Mission Card
                   _buildInfoCard(
                     icon: Icons.flag_outlined,
@@ -209,12 +225,13 @@ class AboutUsView extends GetView<AboutUsController> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Get in Touch with Developer',
+                          'Get in Touch with Developer and Data Manager',
                           style: AppTextStyles.h3.copyWith(color: Colors.white),
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Developed by Nexa Business Group',
+                          'Developed and Managed by Nexa Business Group',
                           style: AppTextStyles.bodyLarge.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -450,8 +467,6 @@ class AboutUsView extends GetView<AboutUsController> {
                                 url,
                                 mode: LaunchMode.externalApplication,
                               );
-                            } catch (e) {
-                              // Show error message if URL can't be launched
                             } catch (e) {
                               // Show error message if URL can't be launched
                               ErrorHandler.showError('Could not launch website. Please check your internet connection.');

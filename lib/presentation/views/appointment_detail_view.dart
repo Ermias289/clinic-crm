@@ -113,6 +113,13 @@ class AppointmentDetailView extends GetView<AppointmentDetailController> {
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Powered by Nexa',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
               ],
             ),
           ),

@@ -147,7 +147,14 @@ class OnboardingView extends GetView<OnboardingController> {
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
+            Text(
+              'Powered by Nexa',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
