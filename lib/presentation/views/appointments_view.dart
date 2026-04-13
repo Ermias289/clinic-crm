@@ -164,193 +164,202 @@ class _AppointmentsViewState extends State<AppointmentsView>
                           // Content
                           Padding(
                             padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // Top section
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Top section
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Patient Card',
+                                            style: AppTextStyles.bodySmall
+                                                .copyWith(
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
+                                                  letterSpacing: 1.0,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Lucid Dental',
+                                            style: AppTextStyles.h3.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Powered by Nexa',
+                                            style: AppTextStyles.bodySmall
+                                                .copyWith(
+                                                  color: Colors.white
+                                                      .withOpacity(0.85),
+                                                  fontSize: 11,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                      // Notification Icon
+                                      const NotificationBadge(iconSize: 32),
+                                    ],
+                                  ),
+
+                                  // Middle section - Patient Name & Card Number
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userName.toUpperCase(),
+                                        style: AppTextStyles.h2.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 2,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (userCard != null) ...[
+                                        const SizedBox(height: 8),
                                         Text(
-                                          'Patient Card',
-                                          style: AppTextStyles.bodySmall
+                                          userCard.cardNumber,
+                                          style: AppTextStyles.bodyMedium
                                               .copyWith(
                                                 color: Colors.white.withOpacity(
                                                   0.9,
                                                 ),
-                                                letterSpacing: 1.0,
+                                                letterSpacing: 3,
                                                 fontWeight: FontWeight.w500,
                                               ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Lucid Dental',
-                                          style: AppTextStyles.h3.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'Powered by Nexa',
-                                          style: AppTextStyles.bodySmall
-                                              .copyWith(
-                                                color: Colors.white
-                                                    .withOpacity(0.85),
-                                                fontSize: 11,
-                                              ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ],
-                                    ),
-                                    // Notification Icon
-                                    const NotificationBadge(iconSize: 32),
-                                  ],
-                                ),
-
-                                // Middle section - Patient Name & Card Number
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      userName.toUpperCase(),
-                                      style: AppTextStyles.h2.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 2,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    if (userCard != null) ...[
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        userCard.cardNumber,
-                                        style: AppTextStyles.bodyMedium
-                                            .copyWith(
-                                              color: Colors.white.withOpacity(
-                                                0.9,
-                                              ),
-                                              letterSpacing: 3,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
                                     ],
-                                  ],
-                                ),
+                                  ),
 
-                                // Bottom section: Expiry & Status
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Show Expiry Date if card exists
-                                        if (userCard != null) ...[
-                                          Text(
-                                            'EXP ${expiryDate != null ? DateFormat('MM/yy').format(expiryDate) : 'N/A'}',
-                                            style: AppTextStyles.bodyMedium
-                                                .copyWith(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
+                                  // Bottom section: Expiry & Status
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // Show Expiry Date if card exists
+                                          if (userCard != null) ...[
+                                            Text(
+                                              'EXP ${expiryDate != null ? DateFormat('MM/yy').format(expiryDate) : 'N/A'}',
+                                              style: AppTextStyles.bodyMedium
+                                                  .copyWith(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                          ],
+                                          // Show Active Appointments Count
+                                          Obx(
+                                            () => Text(
+                                              '${controller.appointments.length} Active Appts',
+                                              style: AppTextStyles.bodySmall
+                                                  .copyWith(
+                                                    color: Colors.white
+                                                        .withOpacity(0.8),
+                                                  ),
+                                            ),
                                           ),
-                                          const SizedBox(height: 4),
                                         ],
-                                        // Show Active Appointments Count
-                                        Obx(
-                                          () => Text(
-                                            '${controller.appointments.length} Active Appts',
+                                      ),
+                                      if (userCard != null)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isActive
+                                                ? Colors.white.withOpacity(0.2)
+                                                : Colors.orange.withOpacity(
+                                                    0.8,
+                                                  ),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                isActive
+                                                    ? Icons.verified_user
+                                                    : userCard.status
+                                                              .toLowerCase() ==
+                                                          'pending'
+                                                    ? Icons.hourglass_empty
+                                                    : Icons
+                                                          .warning_amber_rounded,
+                                                color: Colors.white,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 4),
+                                              Flexible(
+                                                child: Text(
+                                                  userCard.status.toUpperCase(),
+                                                  style: AppTextStyles.bodySmall
+                                                      .copyWith(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 10,
+                                                      ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(
+                                              0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'NO CARD',
                                             style: AppTextStyles.bodySmall
                                                 .copyWith(
-                                                  color: Colors.white
-                                                      .withOpacity(0.8),
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 10,
                                                 ),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    if (userCard != null)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: isActive
-                                              ? Colors.white.withOpacity(0.2)
-                                              : Colors.orange.withOpacity(0.8),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              isActive
-                                                  ? Icons.verified_user
-                                                  : userCard.status
-                                                            .toLowerCase() ==
-                                                        'pending'
-                                                  ? Icons.hourglass_empty
-                                                  : Icons.warning_amber_rounded,
-                                              color: Colors.white,
-                                              size: 16,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Flexible(
-                                              child: Text(
-                                                userCard.status.toUpperCase(),
-                                                style: AppTextStyles.bodySmall
-                                                    .copyWith(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 10,
-                                                    ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    else
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          'NO CARD',
-                                          style: AppTextStyles.bodySmall
-                                              .copyWith(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 10,
-                                              ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],

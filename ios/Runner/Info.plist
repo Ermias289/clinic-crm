@@ -32,6 +32,8 @@
 	<string>We save photos, such as dental records and profile images, to your photo library when you choose to download them.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We access your photo library so you can select profile photos or upload images for your dental records.</string>
+<key>NSContactsUsageDescription</key>
+<string	string>We access your contacts to help you quickly call your dentist and manage contact details easily.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIDeviceFamily</key>

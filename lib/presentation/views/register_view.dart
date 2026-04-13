@@ -128,34 +128,36 @@ class RegisterView extends GetView<RegisterController> {
                         horizontal: 24.0,
                         vertical: 5,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          IconButton(
-                            onPressed: () => Get.back(),
-                            icon: const Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.white,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            IconButton(
+                              onPressed: () => Get.back(),
+                              icon: const Icon(
+                                Icons.arrow_back_ios,
+                                color: Colors.white,
+                              ),
+                              padding: EdgeInsets.zero,
+                              alignment: Alignment.centerLeft,
                             ),
-                            padding: EdgeInsets.zero,
-                            alignment: Alignment.centerLeft,
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            "Create Account",
-                            style: AppTextStyles.h1.copyWith(
-                              color: Colors.white,
-                              fontSize: 24,
+                            const SizedBox(height: 5),
+                            Text(
+                              "Create Account",
+                              style: AppTextStyles.h1.copyWith(
+                                color: Colors.white,
+                                fontSize: 24,
+                              ),
                             ),
-                          ),
-                          Text(
-                            "Join Lucid Dental family",
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: Colors.white.withOpacity(0.9),
-                              fontSize: 14,
+                            Text(
+                              "Join Lucid Dental family",
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

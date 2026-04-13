@@ -85,53 +85,55 @@ class LoginView extends GetView<LoginController> {
                   // Header Content
                   SafeArea(
                     child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Icon(
+                                Icons.medical_services_rounded,
+                                size: 48,
+                                color: Colors.white,
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.medical_services_rounded,
-                              size: 48,
-                              color: Colors.white,
+                            const SizedBox(height: 16),
+                            Text(
+                              "Lucid Dental",
+                              style: AppTextStyles.h1.copyWith(
+                                color: Colors.white,
+                                fontSize: 32,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            "Lucid Dental",
-                            style: AppTextStyles.h1.copyWith(
-                              color: Colors.white,
-                              fontSize: 32,
+                            const SizedBox(height: 8),
+                            Text(
+                              "Welcome Back",
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Welcome Back",
-                            style: AppTextStyles.bodyLarge.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                            const SizedBox(height: 4),
+                            Text(
+                              "Powered by Nexa",
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Powered by Nexa",
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: Colors.white.withOpacity(0.9),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Operated and managed by Nexa for Lucid Dental.",
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Operated and managed by Nexa for Lucid Dental.",
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
