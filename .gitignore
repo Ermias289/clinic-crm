@@ -1,0 +1,33 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.vscode
+.svn/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The dart_tool directory is used by pub to store intermediate artifacts.
+.dart_tool/
+
+# The .pub directory is used by pub to store the package cache.
+.pub/
+
+# The build directory is used by the build system to store generated artifacts.
+build/
+
+# The .flutter-plugins file is used by the Flutter tool to track plugins.
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# API Reference
+api_reference.json

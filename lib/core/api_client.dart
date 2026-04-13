@@ -1,0 +1,24 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get/get.dart';
+import 'auth_interceptor.dart';
+
+class ApiClient extends GetConnect {
+  @override
+  String get baseUrl => '${dotenv.env['API_BASE_URL']!}/api';
+
+  @override
+  void onInit() {
+    httpClient.baseUrl = baseUrl;
+    httpClient.timeout = const Duration(seconds: 30);
+
+    httpClient.addResponseModifier((request, response) {
+      if (response.hasError) {
+        // Error occurred
+      }
+      return response;
+    });
+
+    AuthInterceptor.attach(httpClient);
+    super.onInit();
+  }
+}
