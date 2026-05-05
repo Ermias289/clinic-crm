@@ -8,8 +8,7 @@ class AuthInterceptor {
     client.addRequestModifier<dynamic>((request) {
       final token = box.read('token');
       if (token != null) {
-      request.headers['Authorization'] = 'Bearer $token';
-      } else {
+        request.headers['Authorization'] = 'Bearer $token';
       }
       return request;
     });
