@@ -42,7 +42,7 @@ class ServiceDetailController extends GetxController {
   Future<void> loadBranches() async {
     try {
       isLoadingBranches.value = true;
-      
+
       // Prioritize branches already embedded in the service object
       if (service.branches != null) {
         branches.assignAll(service.branches!);

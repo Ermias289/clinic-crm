@@ -326,14 +326,15 @@ class _AppointmentBookingViewState extends State<AppointmentBookingView> {
       final dateOnly = DateFormat('yyyy-MM-dd').format(selectedDate!);
       final timeOnly = DateFormat('H:mm').format(selectedDateTime!);
 
-      final response = await apiClient.post('/Appointment', {
+      final requestBody = {
         'dentistryId': service.id,
         'medicalProfessionalId': selectedDoctorId,
         'patientId': patientId,
         'branchId': selectedBranchId,
         'day': dateOnly,
         'reservationTime': timeOnly,
-      });
+      };
+      final response = await apiClient.post('/Appointment', requestBody);
 
       // Close loading dialog
       Get.back();

@@ -70,14 +70,22 @@ class DoctorSchedulePickerController extends GetxController {
   // User-friendly error
   final errorMessage = RxnString();
 
+  /// When [BranchSetting.id] does not match [DoctorSchedule.branchSettingId], the
+  /// slot/booking APIs still need the id from the schedule rows (e.g. 1 not 45).
+  int? _apiBranchIdFromSchedules;
+
   MedicalService? _service;
+
+  /// Branch id to send to `getFreeSlots` and [Get.back] for `branchId` (backend key).
+  int get apiBranchIdForBooking =>
+      _apiBranchIdFromSchedules ?? selectedBranch.value!.id;
 
   /// Initialize controller by loading doctors.
   Future<void> init({required MedicalService service}) async {
     _service = service;
     _serviceDurationInMinutes = service.durationInMinutes;
     _serviceId = service.id;
-    
+
     // Load branches and doctors sequentially
     await loadBranches();
     await loadDoctors();
@@ -95,12 +103,12 @@ class DoctorSchedulePickerController extends GetxController {
     try {
       // Prioritize branches already embedded in the service object
       if (_service?.branches != null) {
-        branches.assignAll(_service!.branches!);
+        branches.assignAll(_dedupeBranches(_service!.branches!));
         return;
       }
 
       final list = await _branchSettingRepository.getBranchSettings();
-      branches.assignAll(list);
+      branches.assignAll(_dedupeBranches(list));
 
       // Don't auto-select here - let loadDoctors handle it after doctors are loaded
     } catch (e) {
@@ -110,12 +118,35 @@ class DoctorSchedulePickerController extends GetxController {
     }
   }
 
+  List<BranchSettingModel> _dedupeBranches(List<BranchSettingModel> source) {
+    final seenIds = <int>{};
+    final seenFallbackKeys = <String>{};
+    final unique = <BranchSettingModel>[];
+
+    for (final branch in source) {
+      final id = branch.id;
+      if (id > 0) {
+        if (seenIds.add(id)) {
+          unique.add(branch);
+        }
+        continue;
+      }
+
+      final fallbackKey = '${branch.name ?? ''}|${branch.address ?? ''}';
+      if (seenFallbackKeys.add(fallbackKey)) {
+        unique.add(branch);
+      }
+    }
+
+    return unique;
+  }
+
   Future<void> loadDoctors() async {
     errorMessage.value = null;
     isLoadingDoctors.value = true;
     try {
       final List<MedicalProfessional> list;
-      
+
       // Prioritize doctors already embedded in the service object
       if (_service?.medicalProfessionals != null) {
         list = _service!.medicalProfessionals!;
@@ -141,9 +172,6 @@ class DoctorSchedulePickerController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = 'Failed to load doctors.';
-      // Keep a dev-friendly log.
-      // ignore: avoid_print
-      debugPrint('loadDoctors error: $e');
     } finally {
       isLoadingDoctors.value = false;
     }
@@ -189,6 +217,7 @@ class DoctorSchedulePickerController extends GetxController {
     availableDates.clear();
     availableTimes.clear();
     schedulesForSelectedDoctor.clear();
+    _apiBranchIdFromSchedules = null;
   }
 
   Future<void> selectDoctor(MedicalProfessional doctor) async {
@@ -202,6 +231,7 @@ class DoctorSchedulePickerController extends GetxController {
     availableDates.clear();
     availableTimes.clear();
     schedulesForSelectedDoctor.clear();
+    _apiBranchIdFromSchedules = null;
     existingAppointments.clear();
 
     // Load both schedules and existing appointments
@@ -232,7 +262,7 @@ class DoctorSchedulePickerController extends GetxController {
       await _fetchFreeSlotsFromApi(
         selectedDoctor.value!.id,
         DateFormat('yyyy-MM-dd').format(date),
-        selectedBranch.value!.id,
+        apiBranchIdForBooking,
         _serviceId!,
       );
     } else {
@@ -263,7 +293,6 @@ class DoctorSchedulePickerController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = 'Failed to load available times from server.';
-      debugPrint('_fetchFreeSlotsFromApi error: $e');
     } finally {
       isLoadingFreeSlots.value = false;
     }
@@ -306,6 +335,7 @@ class DoctorSchedulePickerController extends GetxController {
     _allDoctors.clear();
     branches.clear();
     errorMessage.value = null;
+    _apiBranchIdFromSchedules = null;
   }
 
   // -------------------------
@@ -319,27 +349,39 @@ class DoctorSchedulePickerController extends GetxController {
     try {
       final schedules = await _doctorRepository.getSchedulesForDoctor(doctorId);
 
-      // Only keep active schedules (if field exists; our model defaults to true).
-      final active = schedules.where((s) => s.isActive).toList();
+      // API may return stray rows; only this doctor's schedules drive availability.
+      final forDoctor = schedules
+          .where((s) => s.medicalProfessionalId == doctorId)
+          .toList();
 
-      // Filter schedules by selected branch
+      // Only keep active schedules (if field exists; our model defaults to true).
+      final active = forDoctor.where((s) => s.isActive).toList();
+
+      // Prefer schedules tied to the selected branch (or global when branch is null).
       final branchId = selectedBranch.value?.id;
       if (branchId != null) {
+        final branchScoped = active
+            .where(
+              (s) => s.branchSettingId == branchId || s.branchSettingId == null,
+            )
+            .toList();
+        // When BranchSetting ids and DoctorSchedule.branchSettingId disagree
+        // (e.g. UI branch 45 vs schedule branch 1), still show availability instead
+        // of an empty calendar.
         schedulesForSelectedDoctor.assignAll(
-          active
-              .where(
-                (s) =>
-                    s.branchSettingId == branchId || s.branchSettingId == null,
-              )
-              .toList(),
+          branchScoped.isNotEmpty ? branchScoped : active,
         );
       } else {
         schedulesForSelectedDoctor.assignAll(active);
       }
+
+      _apiBranchIdFromSchedules = _inferApiBranchIdFromSchedules(
+        schedulesForSelectedDoctor,
+        selectedBranch.value?.id,
+      );
     } catch (e) {
+      _apiBranchIdFromSchedules = null;
       errorMessage.value = 'Failed to load schedule for this doctor.';
-      // ignore: avoid_print
-      debugPrint('_loadSchedulesForDoctor error: $e');
     } finally {
       isLoadingSchedules.value = false;
     }
@@ -424,16 +466,16 @@ class DoctorSchedulePickerController extends GetxController {
       // If dayOfWeek is provided, only include matching days.
       final targetDow = _parseDayOfWeek(schedule.dayOfWeek);
 
-        for (
-          var day = clampedStart;
-          !day.isAfter(clampedEnd);
-          day = day.add(const Duration(days: 1))
-        ) {
-          if (targetDow != null && day.weekday != targetDow) continue;
+      for (
+        var day = clampedStart;
+        !day.isAfter(clampedEnd);
+        day = day.add(const Duration(days: 1))
+      ) {
+        if (targetDow != null && day.weekday != targetDow) continue;
 
-          // If the schedule applies to this day, it's potentially available.
-          dates.add(day);
-        }
+        // If the schedule applies to this day, it's potentially available.
+        dates.add(day);
+      }
     }
 
     final sorted = dates.toList()..sort((a, b) => a.compareTo(b));
@@ -473,6 +515,38 @@ class DoctorSchedulePickerController extends GetxController {
     if (lower.startsWith('sun')) return DateTime.sunday;
 
     return null;
+  }
+
+  /// Picks the branch id the backend uses on schedules/slots when it differs from UI branch id.
+  static int? _inferApiBranchIdFromSchedules(
+    List<DoctorSchedule> schedules,
+    int? uiSelectedBranchId,
+  ) {
+    if (schedules.isEmpty) return null;
+    final ids = schedules
+        .map((s) => s.branchSettingId)
+        .whereType<int>()
+        .toSet();
+    if (ids.isEmpty) return null;
+    if (uiSelectedBranchId != null && ids.contains(uiSelectedBranchId)) {
+      return uiSelectedBranchId;
+    }
+    if (ids.length == 1) return ids.first;
+    final counts = <int, int>{};
+    for (final s in schedules) {
+      final bid = s.branchSettingId;
+      if (bid != null) counts[bid] = (counts[bid] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return null;
+    var bestId = counts.keys.first;
+    var bestCount = counts[bestId]!;
+    for (final e in counts.entries) {
+      if (e.value > bestCount) {
+        bestId = e.key;
+        bestCount = e.value;
+      }
+    }
+    return bestId;
   }
 
   /// Parses time from common backend formats:

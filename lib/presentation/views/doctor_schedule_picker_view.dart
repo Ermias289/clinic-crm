@@ -74,7 +74,7 @@ class _DoctorSchedulePickerViewState extends State<DoctorSchedulePickerView> {
     Get.back(
       result: {
         'service': _service,
-        'branchId': branch.id,
+        'branchId': _controller.apiBranchIdForBooking,
         'branchName': branch.name ?? 'Unknown Branch',
         'doctorId': doctor.id,
         'doctorName': doctor.fullName,
